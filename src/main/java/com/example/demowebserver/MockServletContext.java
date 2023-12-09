@@ -261,14 +261,15 @@ public class MockServletContext implements ServletContext {
         return null;
     }
 
+    // todo 可能出现问题的地方
     @Override
     public RequestDispatcher getRequestDispatcher(String s) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public RequestDispatcher getNamedDispatcher(String s) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
