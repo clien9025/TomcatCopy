@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * @author zhanyang
  */
-public class ApplicationFilterRegistration implements FilterRegistration.Dynamic{
+public class ApplicationFilterRegistration implements FilterRegistration.Dynamic {
     @Override
     public void addMappingForServletNames(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... servletNames) {
 
@@ -19,42 +19,44 @@ public class ApplicationFilterRegistration implements FilterRegistration.Dynamic
 
     @Override
     public Collection<String> getServletNameMappings() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void addMappingForUrlPatterns(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urlPatterns) {
-
+        System.out.println("public void addMappingForUrlPatterns(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urlPatterns) {");
+//        throw new UnsupportedOperationException();
     }
 
     @Override
     public Collection<String> getUrlPatternMappings() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setAsyncSupported(boolean isAsyncSupported) {
+        System.out.println("public void setAsyncSupported(boolean isAsyncSupported) {");
 //        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getName() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getClassName() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean setInitParameter(String name, String value) {
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String getInitParameter(String name) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
