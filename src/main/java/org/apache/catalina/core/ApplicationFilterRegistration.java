@@ -1,4 +1,4 @@
-package com.example.demowebserver;
+package org.apache.catalina.core;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterRegistration;
@@ -8,7 +8,10 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ZhanYangFilterRegistrationDynamic implements FilterRegistration.Dynamic{
+/**
+ * @author zhanyang
+ */
+public class ApplicationFilterRegistration implements FilterRegistration.Dynamic{
     @Override
     public void addMappingForServletNames(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... servletNames) {
 
@@ -31,7 +34,7 @@ public class ZhanYangFilterRegistrationDynamic implements FilterRegistration.Dyn
 
     @Override
     public void setAsyncSupported(boolean isAsyncSupported) {
-
+//        throw new UnsupportedOperationException();
     }
 
     @Override

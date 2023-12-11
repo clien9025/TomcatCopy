@@ -12,15 +12,15 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author zhanyang
  */
-//@Configuration
+@Configuration
 public class ZhanYangServletWebServerFactoryConfiguration {
 
-//    @Configuration(proxyBeanMethods = false)
-//    @ConditionalOnClass({ Servlet.class, ZhanYang.class })
-//    @ConditionalOnMissingBean(value = ServletWebServerFactory.class, search = SearchStrategy.CURRENT)
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass({ Servlet.class, ZhanYang.class })
+    @ConditionalOnMissingBean(value = ServletWebServerFactory.class, search = SearchStrategy.CURRENT)
     static class EmbeddedZhanYang {
 
-//        @Bean
+        @Bean
         ZhanYangServletWebServerFactory zhanYangTomcatServletWebServerFactory() {
             return new ZhanYangServletWebServerFactory();
         }

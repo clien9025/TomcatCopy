@@ -1,4 +1,4 @@
-package com.example.demowebserver;
+package org.apache.catalina.core;
 
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * @author zhanyang
  */
-public class ZhanYangServletRegistrationDynamic implements ServletRegistration.Dynamic{
+public class ApplicationServletRegistration implements ServletRegistration.Dynamic{
 
     // todo: 调用了
     @Override
@@ -37,7 +37,7 @@ public class ZhanYangServletRegistrationDynamic implements ServletRegistration.D
 
     @Override
     public void setAsyncSupported(boolean isAsyncSupported) {
-
+//        throw new UnsupportedOperationException();
     }
 
     @Override

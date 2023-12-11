@@ -2,6 +2,8 @@ package com.example.demowebserver;
 
 import jakarta.servlet.*;
 import jakarta.servlet.descriptor.JspConfigDescriptor;
+import org.apache.catalina.core.ApplicationFilterRegistration;
+import org.apache.catalina.core.ApplicationServletRegistration;
 
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -60,7 +62,7 @@ public class MockServletContext implements ServletContext {
     public ServletRegistration.Dynamic addServlet(String s, Servlet servlet) {
         // todo 这里需要自己实现
 //        new ServletRegistration
-        ZhanYangServletRegistrationDynamic dynamic = new ZhanYangServletRegistrationDynamic();
+        ApplicationServletRegistration dynamic = new ApplicationServletRegistration();
         return dynamic;
     }
 
@@ -97,7 +99,7 @@ public class MockServletContext implements ServletContext {
     // todo 需要自己实现
     @Override
     public FilterRegistration.Dynamic addFilter(String s, Filter filter) {
-        ZhanYangFilterRegistrationDynamic dynamic = new ZhanYangFilterRegistrationDynamic();
+        ApplicationFilterRegistration dynamic = new ApplicationFilterRegistration();
         return dynamic;
     }
 
