@@ -452,7 +452,9 @@ public interface Manager {
      * @return the flag value
      */
     default boolean getSessionActivityCheck() {
-        return Globals.STRICT_SERVLET_COMPLIANCE;
+        // todo 这里注释
+        throw new UnsupportedOperationException();
+//        return Globals.STRICT_SERVLET_COMPLIANCE;
     }
 
 
@@ -477,7 +479,9 @@ public interface Manager {
      * @return the flag value
      */
     default boolean getSessionLastAccessAtStart() {
-        return Globals.STRICT_SERVLET_COMPLIANCE;
+        // todo 这里注释
+//        return Globals.STRICT_SERVLET_COMPLIANCE;
+        throw new UnsupportedOperationException();
     }
 
 
