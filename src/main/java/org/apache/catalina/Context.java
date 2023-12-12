@@ -1978,20 +1978,21 @@ public interface Context extends Container, ContextBind {
      * @throws IOException if an error occurs or if the resource does not exist
      */
     default Resource findConfigFileResource(String name) throws IOException {
-        if (name.startsWith(WEBAPP_PROTOCOL)) {
-            String path = name.substring(WEBAPP_PROTOCOL.length());
-            WebResource resource = getResources().getResource(path);
-            if (resource.canRead() && resource.isFile()) {
-                InputStream stream = resource.getInputStream();
-                try {
-                    return new Resource(stream, resource.getURL().toURI());
-                } catch (URISyntaxException e) {
-                    stream.close();
-                }
-            }
-            throw new FileNotFoundException(name);
-        }
-        return ConfigFileLoader.getSource().getResource(name);
+//        if (name.startsWith(WEBAPP_PROTOCOL)) {
+//            String path = name.substring(WEBAPP_PROTOCOL.length());
+//            WebResource resource = getResources().getResource(path);
+//            if (resource.canRead() && resource.isFile()) {
+//                InputStream stream = resource.getInputStream();
+//                try {
+//                    return new Resource(stream, resource.getURL().toURI());
+//                } catch (URISyntaxException e) {
+//                    stream.close();
+//                }
+//            }
+//            throw new FileNotFoundException(name);
+//        }
+//        return ConfigFileLoader.getSource().getResource(name);
+        throw new UnsupportedOperationException();
     }
 
 
