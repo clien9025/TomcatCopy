@@ -303,30 +303,31 @@ public interface Container extends Lifecycle {
      * @return the configuration path
      */
     static String getConfigPath(Container container, String resourceName) {
-        StringBuilder result = new StringBuilder();
-        Container host = null;
-        Container engine = null;
-        while (container != null) {
-            if (container instanceof Host) {
-                host = container;
-            } else if (container instanceof Engine) {
-                engine = container;
-            }
-            container = container.getParent();
-        }
-        if (host != null && ((Host) host).getXmlBase() != null) {
-            result.append(((Host) host).getXmlBase()).append('/');
-        } else {
-            result.append("conf/");
-            if (engine != null) {
-                result.append(engine.getName()).append('/');
-            }
-            if (host != null) {
-                result.append(host.getName()).append('/');
-            }
-        }
-        result.append(resourceName);
-        return result.toString();
+//        StringBuilder result = new StringBuilder();
+//        Container host = null;
+//        Container engine = null;
+//        while (container != null) {
+//            if (container instanceof Host) {
+//                host = container;
+//            } else if (container instanceof Engine) {
+//                engine = container;
+//            }
+//            container = container.getParent();
+//        }
+//        if (host != null && ((Host) host).getXmlBase() != null) {
+//            result.append(((Host) host).getXmlBase()).append('/');
+//        } else {
+//            result.append("conf/");
+//            if (engine != null) {
+//                result.append(engine.getName()).append('/');
+//            }
+//            if (host != null) {
+//                result.append(host.getName()).append('/');
+//            }
+//        }
+//        result.append(resourceName);
+//        return result.toString();
+        throw new UnsupportedOperationException();
     }
 
 
@@ -336,13 +337,14 @@ public interface Container extends Lifecycle {
      * @return the Service, or null if not found
      */
     static Service getService(Container container) {
-        while (container != null && !(container instanceof Engine)) {
-            container = container.getParent();
-        }
-        if (container == null) {
-            return null;
-        }
-        return ((Engine) container).getService();
+//        while (container != null && !(container instanceof Engine)) {
+//            container = container.getParent();
+//        }
+//        if (container == null) {
+//            return null;
+//        }
+//        return ((Engine) container).getService();
+        throw new UnsupportedOperationException();
     }
 
 
