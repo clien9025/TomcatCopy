@@ -2,6 +2,7 @@ package com.example.demowebserver;
 
 import jakarta.servlet.*;
 import jakarta.servlet.descriptor.JspConfigDescriptor;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.core.ApplicationFilterRegistration;
 import org.apache.catalina.core.ApplicationServletRegistration;
 
@@ -59,12 +60,42 @@ public class MockServletContext implements ServletContext {
     }
 
     @Override
-    public ServletRegistration.Dynamic addServlet(String s, Servlet servlet) {
+    public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
         // todo 这里需要自己实现，并且调用了 ApplicationServletRegistration
-//        new ServletRegistration
-        ApplicationServletRegistration dynamic = new ApplicationServletRegistration();
-        return dynamic;
+//        ApplicationServletRegistration dynamic = new ApplicationServletRegistration();
+//        return dynamic;
+        return addServlet(servletName, null, servlet, null);
     }
+
+    // todo 源码是这样实现的（上面三个 addServlet 都调用了这个方法）
+    private ServletRegistration.Dynamic addServlet(String servletName, String servletClass, Servlet servlet,
+                                                   Map<String,String> initParams) throws IllegalStateException {
+
+//        if (servletName == null || servletName.equals("")) {
+//            throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
+//        }
+//
+//        // TODO Spec breaking enhancement to ignore this restriction
+//        checkState("applicationContext.addServlet.ise");
+//
+//        Wrapper wrapper = (Wrapper) context.findChild(servletName);
+//
+//        // Assume a 'complete' ServletRegistration is one that has a class and
+//        // a name
+//        if (wrapper == null) {
+//            wrapper = context.createWrapper();
+//            wrapper.setName(servletName);
+//            context.addChild(wrapper);
+//        } else {
+//            if (wrapper.getName() != null && wrapper.getServletClass() != null) {
+//                if (wrapper.isOverridable()) {
+//                    wrapper.setOverridable(false);
+//                } else {
+//                    return null;
+//                }
+//            }
+        throw new UnsupportedOperationException();
+        }
 
     @Override
     public ServletRegistration.Dynamic addServlet(String s, Class<? extends Servlet> aClass) {

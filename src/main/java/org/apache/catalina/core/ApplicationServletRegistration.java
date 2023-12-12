@@ -3,6 +3,7 @@ package org.apache.catalina.core;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.ServletSecurityElement;
+import org.apache.catalina.Context;
 import org.apache.catalina.Wrapper;
 
 import java.util.*;
@@ -13,6 +14,12 @@ import java.util.*;
 public class ApplicationServletRegistration implements ServletRegistration.Dynamic{
 
     private final Wrapper wrapper;
+    private final Context context;
+    public ApplicationServletRegistration(Wrapper wrapper, Context context) {
+        this.wrapper = wrapper;
+        this.context = context;
+
+    }
 
     // todo: 调用了
     @Override
