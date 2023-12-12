@@ -1,4 +1,4 @@
 package org.apache.catalina.startup;
 
-public class Constants {
+public final class Constants {
 }
