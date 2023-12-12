@@ -60,7 +60,7 @@ public class MockServletContext implements ServletContext {
 
     @Override
     public ServletRegistration.Dynamic addServlet(String s, Servlet servlet) {
-        // todo 这里需要自己实现
+        // todo 这里需要自己实现，并且调用了 ApplicationServletRegistration
 //        new ServletRegistration
         ApplicationServletRegistration dynamic = new ApplicationServletRegistration();
         return dynamic;

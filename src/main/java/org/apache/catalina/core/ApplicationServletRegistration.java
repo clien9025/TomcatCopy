@@ -3,6 +3,7 @@ package org.apache.catalina.core;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.ServletSecurityElement;
+import org.apache.catalina.Wrapper;
 
 import java.util.*;
 
@@ -10,6 +11,8 @@ import java.util.*;
  * @author zhanyang
  */
 public class ApplicationServletRegistration implements ServletRegistration.Dynamic{
+
+    private final Wrapper wrapper;
 
     // todo: 调用了
     @Override
@@ -36,9 +39,9 @@ public class ApplicationServletRegistration implements ServletRegistration.Dynam
     }
 
     @Override
-    public void setAsyncSupported(boolean isAsyncSupported) {
-        System.out.println("public void setAsyncSupported(boolean isAsyncSupported) {");
-//        throw new UnsupportedOperationException();
+    public void setAsyncSupported(boolean asyncSupported) {
+//        System.out.println("public void setAsyncSupported(boolean isAsyncSupported) {");
+        wrapper.setAsyncSupported(asyncSupported);
     }
 
     @Override
