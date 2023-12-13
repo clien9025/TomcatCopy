@@ -2,6 +2,7 @@ package com.example.demowebserver;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
+import org.apache.catalina.core.ApplicationContext;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -37,7 +38,7 @@ public class ZhanYang implements WebServer {
 
     private ServletContext createServletContext() {
         // 创建并返回一个 ServletContext 实例
-        return new MockServletContext();
+        return new ApplicationContext();
     }
 
     @Override

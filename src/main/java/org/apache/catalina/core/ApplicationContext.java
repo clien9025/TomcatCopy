@@ -1,10 +1,8 @@
-package com.example.demowebserver;
+package org.apache.catalina.core;
 
 import jakarta.servlet.*;
 import jakarta.servlet.descriptor.JspConfigDescriptor;
-import org.apache.catalina.Wrapper;
-import org.apache.catalina.core.ApplicationFilterRegistration;
-import org.apache.catalina.core.ApplicationServletRegistration;
+import org.apache.tomcat.util.res.StringManager;
 
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -14,11 +12,12 @@ import java.util.*;
 /**
  * @author zhanyang
  */
-public class MockServletContext implements ServletContext {
+public class ApplicationContext implements ServletContext {
     private Map<String, Object> attributes;
     private Map<String, String> parameters;
+    private static final StringManager sm = StringManager.getManager(ApplicationContext.class);
 
-    public MockServletContext() {
+    public ApplicationContext() {
         this.attributes = new HashMap<>();
         this.parameters = new HashMap<>();
     }
@@ -71,9 +70,9 @@ public class MockServletContext implements ServletContext {
     private ServletRegistration.Dynamic addServlet(String servletName, String servletClass, Servlet servlet,
                                                    Map<String,String> initParams) throws IllegalStateException {
 
-//        if (servletName == null || servletName.equals("")) {
-//            throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
-//        }
+        if (servletName == null || servletName.equals("")) {
+            throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
+        }
 //
 //        // TODO Spec breaking enhancement to ignore this restriction
 //        checkState("applicationContext.addServlet.ise");
