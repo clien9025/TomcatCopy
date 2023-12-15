@@ -22,14 +22,14 @@ public class ApplicationContext implements ServletContext {
 
     private final StandardContext context;
 
-    public ApplicationContext() {
-        this.attributes = new HashMap<>();
-        this.parameters = new HashMap<>();
-    }
+//    public ApplicationContext() {
+//        this.attributes = new HashMap<>();
+//        this.parameters = new HashMap<>();
+//    }
 
     public ApplicationContext(StandardContext context) {
-//        super();
-//        this.context = context;
+        super();
+        this.context = context;
 //        this.service = ((Engine) context.getParent().getParent()).getService();
 //        this.sessionCookieConfig = new ApplicationSessionCookieConfig(context);
 //
