@@ -50,11 +50,11 @@ public interface ContextBind {
      * {@link org.apache.catalina.ThreadBindingListener#unbind()} will be called
      * before the change is made.
      *
-     * @param usePrivilegedAction
-     *          Should a {@link java.security.PrivilegedAction} be used when
-     *          setting the current thread context class loader?
-     * @param originalClassLoader
-     *          The class loader to restore as the thread context class loader
+     * @param usePrivilegedAction Should a {@link java.security.PrivilegedAction} be used when
+     *                            setting the current thread context class loader?
+     * @param originalClassLoader The class loader to restore as the thread context class loader
      */
-    void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
+    default void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
+        throw new UnsupportedOperationException();
+    }
 }
