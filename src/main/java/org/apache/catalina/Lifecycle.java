@@ -178,17 +178,21 @@ public interface Lifecycle {
      *
      * @param listener The listener to add
      */
-    void addLifecycleListener(LifecycleListener listener);
+    default void addLifecycleListener(LifecycleListener listener) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Get the life cycle listeners associated with this life cycle.
      *
      * @return An array containing the life cycle listeners associated with this
-     *         life cycle. If this component has no listeners registered, a
-     *         zero-length array is returned.
+     * life cycle. If this component has no listeners registered, a
+     * zero-length array is returned.
      */
-    LifecycleListener[] findLifecycleListeners();
+    default LifecycleListener[] findLifecycleListeners() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -196,7 +200,9 @@ public interface Lifecycle {
      *
      * @param listener The listener to remove
      */
-    void removeLifecycleListener(LifecycleListener listener);
+    default void removeLifecycleListener(LifecycleListener listener) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -208,10 +214,12 @@ public interface Lifecycle {
      *                   initialization.</li>
      * </ol>
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
-    void init() throws LifecycleException;
+    default void init() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Prepare for the beginning of active use of the public methods other than
@@ -236,10 +244,12 @@ public interface Lifecycle {
      *                          </li>
      * </ol>
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
-    void start() throws LifecycleException;
+    default void start() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -263,17 +273,19 @@ public interface Lifecycle {
      *                         transitions to {@link LifecycleState#STOPPED}.
      *                         </li>
      * </ol>
-     *
+     * <p>
      * Note that if transitioning from {@link LifecycleState#FAILED} then the
      * three events above will be fired but the component will transition
      * directly from {@link LifecycleState#FAILED} to
      * {@link LifecycleState#STOPPING}, bypassing
      * {@link LifecycleState#STOPPING_PREP}
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that needs to be reported
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that needs to be reported
      */
-    void stop() throws LifecycleException;
+    default void stop() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Prepare to discard the object. The following {@link LifecycleEvent}s will
@@ -283,10 +295,12 @@ public interface Lifecycle {
      *                      destruction.</li>
      * </ol>
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
-    void destroy() throws LifecycleException;
+    default void destroy() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -294,7 +308,9 @@ public interface Lifecycle {
      *
      * @return The current state of the source component.
      */
-    LifecycleState getState();
+    default LifecycleState getState() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -305,7 +321,9 @@ public interface Lifecycle {
      *
      * @return The name of the current component state.
      */
-    String getStateName();
+    default String getStateName() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
