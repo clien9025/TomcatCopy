@@ -37,7 +37,7 @@ public interface ContextBind {
      * called. If no change was made then this method returns null.
      */
     default ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
-        throw new UnsupportedOperationException();git
+        throw new UnsupportedOperationException();
     }
 
     /**
