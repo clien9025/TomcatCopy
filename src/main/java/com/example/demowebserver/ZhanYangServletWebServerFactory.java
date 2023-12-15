@@ -1,5 +1,6 @@
 package com.example.demowebserver;
 
+import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
@@ -12,7 +13,7 @@ public class ZhanYangServletWebServerFactory extends AbstractServletWebServerFac
         implements ConfigurableServletWebServerFactory, ResourceLoaderAware {
 
     private ResourceLoader resourceLoader;
-    private final ZhanYang zhanYang = new ZhanYang();
+    private final TomcatWebServer zhanYang = new TomcatWebServer();
 
     @Override
     public WebServer getWebServer(ServletContextInitializer... initializers) {

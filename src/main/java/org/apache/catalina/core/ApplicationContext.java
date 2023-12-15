@@ -2,8 +2,6 @@ package org.apache.catalina.core;
 
 import jakarta.servlet.*;
 import jakarta.servlet.descriptor.JspConfigDescriptor;
-import org.apache.catalina.Engine;
-import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Wrapper;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -22,21 +20,23 @@ public class ApplicationContext implements ServletContext {
 
     private final StandardContext context;
 
-//    public ApplicationContext() {
-//        this.attributes = new HashMap<>();
-//        this.parameters = new HashMap<>();
-//    }
-
     public ApplicationContext(StandardContext context) {
-        super();
         this.context = context;
+    }
+
+    /*
+    原来的实现
+     */
+//    public ApplicationContext(StandardContext context) {
+//        super();
+//        this.context = context;
 //        this.service = ((Engine) context.getParent().getParent()).getService();
 //        this.sessionCookieConfig = new ApplicationSessionCookieConfig(context);
 //
 //        // Populate session tracking modes
 //        populateSessionTrackingModes();
-        throw new UnsupportedOperationException();
-    }
+//        throw new UnsupportedOperationException();
+//    }
 
     // 实现 ServletContext 必要的方法
     @Override

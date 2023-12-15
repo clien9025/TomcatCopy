@@ -1,8 +1,9 @@
-package com.example.demowebserver;
+package org.springframework.boot.web.embedded.tomcat;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import org.apache.catalina.core.ApplicationContext;
+import org.apache.catalina.core.StandardContext;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -11,7 +12,7 @@ import webserver.HttpServer;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ZhanYang implements WebServer {
+public class TomcatWebServer implements WebServer {
 
     private ServletContext servletContext;
     private HttpServer httpServer;
@@ -20,12 +21,14 @@ public class ZhanYang implements WebServer {
 
     private Thread serverThread;
 
-    public ZhanYang() {
+    private StandardContext context;
+
+    public TomcatWebServer() {
         this.httpServer = new HttpServer();
         this.servletContext = createServletContext();
     }
 
-    public void setServletContext(ServletContextInitializer... initializers){
+    public void setServletContext(ServletContextInitializer... initializers) {
         for (ServletContextInitializer initializer : initializers) {
             try {
                 initializer.onStartup(this.servletContext);
@@ -38,7 +41,7 @@ public class ZhanYang implements WebServer {
 
     private ServletContext createServletContext() {
         // 创建并返回一个 ServletContext 实例
-        return new ApplicationContext();
+        return new ApplicationContext(context);
     }
 
     @Override
