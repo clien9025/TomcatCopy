@@ -2,6 +2,8 @@ package org.apache.catalina.core;
 
 import jakarta.servlet.*;
 import jakarta.servlet.descriptor.JspConfigDescriptor;
+import org.apache.catalina.LifecycleState;
+import org.apache.catalina.Wrapper;
 import org.apache.tomcat.util.res.StringManager;
 
 import java.io.InputStream;
@@ -16,6 +18,8 @@ public class ApplicationContext implements ServletContext {
     private Map<String, Object> attributes;
     private Map<String, String> parameters;
     private static final StringManager sm = StringManager.getManager(ApplicationContext.class);
+
+    private final StandardContext context;
 
     public ApplicationContext() {
         this.attributes = new HashMap<>();
@@ -59,6 +63,11 @@ public class ApplicationContext implements ServletContext {
     }
 
     @Override
+    public ServletRegistration.Dynamic addServlet(String s, Class<? extends Servlet> aClass) {
+        return null;
+    }
+
+    @Override
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
         // todo 这里需要自己实现，并且调用了 ApplicationServletRegistration
 //        ApplicationServletRegistration dynamic = new ApplicationServletRegistration();
@@ -73,14 +82,14 @@ public class ApplicationContext implements ServletContext {
         if (servletName == null || servletName.equals("")) {
             throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
         }
-//
-//        // TODO Spec breaking enhancement to ignore this restriction
-//        checkState("applicationContext.addServlet.ise");
-//
-//        Wrapper wrapper = (Wrapper) context.findChild(servletName);
-//
-//        // Assume a 'complete' ServletRegistration is one that has a class and
-//        // a name
+
+        // TODO Spec breaking enhancement to ignore this restriction
+        checkState("applicationContext.addServlet.ise");
+
+        Wrapper wrapper = (Wrapper) context.findChild(servletName);
+
+        // Assume a 'complete' ServletRegistration is one that has a class and
+        // a name
 //        if (wrapper == null) {
 //            wrapper = context.createWrapper();
 //            wrapper.setName(servletName);
@@ -96,10 +105,12 @@ public class ApplicationContext implements ServletContext {
         throw new UnsupportedOperationException();
         }
 
-    @Override
-    public ServletRegistration.Dynamic addServlet(String s, Class<? extends Servlet> aClass) {
-        return null;
+    private void checkState(String messageKey) {
+//        if (!context.getState().equals(LifecycleState.STARTING_PREP)) {
+//            throw new IllegalStateException(sm.getString(messageKey, getContextPath()));
+//        }
     }
+
 
     @Override
     public ServletRegistration.Dynamic addJspFile(String s, String s1) {
