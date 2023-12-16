@@ -137,9 +137,8 @@ public interface Container extends Lifecycle {
      *
      * @return the JMX name associated with this container.
      */
-    default ObjectName getObjectName() {
-        throw new UnsupportedOperationException();
-    }
+    // 源码是这样写的
+    ObjectName getObjectName();
 
 
     /**
@@ -148,9 +147,8 @@ public interface Container extends Lifecycle {
      *
      * @return The JMX domain name
      */
-    default String getDomain() {
-        throw new UnsupportedOperationException();
-    }
+    // 源码是这样写的
+    String getDomain();
 
 
     /**
@@ -332,7 +330,8 @@ public interface Container extends Lifecycle {
     /**
      * Find the configuration path where a configuration resource
      * is located.
-     * @param container The container
+     *
+     * @param container    The container
      * @param resourceName The resource file name
      * @return the configuration path
      */
@@ -367,6 +366,7 @@ public interface Container extends Lifecycle {
 
     /**
      * Return the Service to which this container belongs.
+     *
      * @param container The container to start from
      * @return the Service, or null if not found
      */

@@ -25,11 +25,6 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
     }
 
     @Override
-    public ObjectName getObjectName() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
         throw new UnsupportedOperationException();
     }

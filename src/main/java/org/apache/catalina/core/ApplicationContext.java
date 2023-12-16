@@ -95,15 +95,15 @@ public class ApplicationContext implements ServletContext {
     // todo 源码是这样实现的（上面三个 addServlet 都调用了这个方法）
     private ServletRegistration.Dynamic addServlet(String servletName, String servletClass, Servlet servlet,
                                                    Map<String,String> initParams) throws IllegalStateException {
-
-        if (servletName == null || servletName.equals("")) {
-            throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
-        }
-
-        // TODO Spec breaking enhancement to ignore this restriction
-        checkState("applicationContext.addServlet.ise");
-
-        Wrapper wrapper = (Wrapper) context.findChild(servletName);
+//
+//        if (servletName == null || servletName.equals("")) {
+//            throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
+//        }
+//
+//        // TODO Spec breaking enhancement to ignore this restriction
+//        checkState("applicationContext.addServlet.ise");
+//
+//        Wrapper wrapper = (Wrapper) context.findChild(servletName);
 
         // Assume a 'complete' ServletRegistration is one that has a class and
         // a name

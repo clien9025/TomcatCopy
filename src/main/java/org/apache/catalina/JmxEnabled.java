@@ -31,6 +31,7 @@ public interface JmxEnabled extends MBeanRegistration {
      * @return the domain under which this component will be / has been
      * registered.
      */
+    // 源码是这样写的
     String getDomain();
 
 
@@ -48,5 +49,9 @@ public interface JmxEnabled extends MBeanRegistration {
     /**
      * @return the name under which this component has been registered with JMX.
      */
+//    default ObjectName getObjectName() {
+//        throw new UnsupportedOperationException();
+//    }
+    // 源码是这样写的
     ObjectName getObjectName();
 }

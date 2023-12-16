@@ -32,10 +32,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     }
 
-    @Override
-    public ObjectName getObjectName() {
-        return null;
-    }
 
     @Override
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {

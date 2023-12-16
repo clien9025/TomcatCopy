@@ -19,10 +19,6 @@ public class Connector extends LifecycleMBeanBase {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public ObjectName getObjectName() {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
