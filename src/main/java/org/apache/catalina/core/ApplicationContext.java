@@ -9,12 +9,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author zhanyang
  */
 public class ApplicationContext implements ServletContext {
-    private Map<String, Object> attributes;
+    protected Map<String,Object> attributes = new ConcurrentHashMap<>();
     private Map<String, String> parameters;
     private static final StringManager sm = StringManager.getManager(ApplicationContext.class);
 
@@ -41,8 +42,11 @@ public class ApplicationContext implements ServletContext {
     // 实现 ServletContext 必要的方法
     @Override
     public Object getAttribute(String name) {
-//        return attributes.get(name);
-        throw new UnsupportedOperationException();
+        // 调用者是 org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext 类
+        // 获取的 name 是：String ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE = WebApplicationContext.class.getName() + ".ROOT";
+        // 将传入的 name 作为 key 去获取 Map<String, Object> 中的 Object 的值
+        return attributes.get(name);
+//        throw new UnsupportedOperationException();
     }
 
     @Override
