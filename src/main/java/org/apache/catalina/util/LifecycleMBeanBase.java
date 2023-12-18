@@ -20,13 +20,16 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      * Method implemented by sub-classes to identify the domain in which MBeans
      * should be registered.
      *
-     * @return  The name of the domain to use to register MBeans.
+     * @return The name of the domain to use to register MBeans.
      */
-    protected abstract String getDomainInternal();
+    protected String getDomainInternal() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * 源码这里是实现了，并且类型是 final
+     *
      * @return
      */
     @Override
@@ -78,6 +81,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
 //        return oname;
         throw new UnsupportedOperationException();
     }
+
     /**
      * Sub-classes wishing to perform additional initialization should override
      * this method, ensuring that super.initInternal() is the first call in the
@@ -123,12 +127,12 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      * Allow sub-classes to specify the key properties component of the
      * {@link ObjectName} that will be used to register this component.
      *
-     * @return  The string representation of the key properties component of the
-     *          desired {@link ObjectName}
+     * @return The string representation of the key properties component of the
+     * desired {@link ObjectName}
      */
-    protected abstract String getObjectNameKeyProperties();
-
-
+    protected String getObjectNameKeyProperties() {
+        throw new UnsupportedOperationException();
+    }
 
 
 }

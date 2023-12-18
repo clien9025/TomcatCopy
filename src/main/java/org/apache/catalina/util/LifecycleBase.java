@@ -19,7 +19,9 @@ public abstract class LifecycleBase implements Lifecycle {
      *
      * @throws LifecycleException Start error occurred
      */
-    protected abstract void startInternal() throws LifecycleException;
+    protected void startInternal() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Sub-classes must ensure that the state is changed to
@@ -28,7 +30,9 @@ public abstract class LifecycleBase implements Lifecycle {
      *
      * @throws LifecycleException Stop error occurred
      */
-    protected abstract void stopInternal() throws LifecycleException;
+    protected void stopInternal() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -37,5 +41,7 @@ public abstract class LifecycleBase implements Lifecycle {
      *
      * @throws LifecycleException If the initialisation fails
      */
-    protected abstract void initInternal() throws LifecycleException;
+    protected void initInternal() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
 }

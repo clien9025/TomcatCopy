@@ -39,7 +39,9 @@ public interface Service extends Lifecycle {
      * @return the <code>Engine</code> that handles requests for all
      * <code>Connectors</code> associated with this Service.
      */
-    Engine getContainer();
+    default Engine getContainer() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the <code>Engine</code> that handles requests for all
@@ -47,51 +49,67 @@ public interface Service extends Lifecycle {
      *
      * @param engine The new Engine
      */
-    void setContainer(Engine engine);
+    default void setContainer(Engine engine) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the name of this Service.
      */
-    String getName();
+    default String getName() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the name of this Service.
      *
      * @param name The new service name
      */
-    void setName(String name);
+    default void setName(String name) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the <code>Server</code> with which we are associated (if any).
      */
-    Server getServer();
+    default Server getServer() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the <code>Server</code> with which we are associated (if any).
      *
      * @param server The server that owns this Service
      */
-    void setServer(Server server);
+    default void setServer(Server server) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the parent class loader for this component. If not set, return
      * {@link #getServer()} {@link Server#getParentClassLoader()}. If no server
      * has been set, return the system class loader.
      */
-    ClassLoader getParentClassLoader();
+    default ClassLoader getParentClassLoader() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the parent class loader for this service.
      *
      * @param parent The new parent class loader
      */
-    void setParentClassLoader(ClassLoader parent);
+    default void setParentClassLoader(ClassLoader parent) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the domain under which this container will be / has been
      * registered.
      */
-    String getDomain();
+    default String getDomain() {
+        throw new UnsupportedOperationException();
+    }
 
 
     // --------------------------------------------------------- Public Methods
@@ -102,14 +120,18 @@ public interface Service extends Lifecycle {
      *
      * @param connector The Connector to be added
      */
-    void addConnector(Connector connector);
+    default void addConnector(Connector connector) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Find and return the set of Connectors associated with this Service.
      *
      * @return the set of associated Connectors
      */
-    Connector[] findConnectors();
+    default Connector[] findConnectors() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Remove the specified Connector from the set associated from this
@@ -118,35 +140,51 @@ public interface Service extends Lifecycle {
      *
      * @param connector The Connector to be removed
      */
-    void removeConnector(Connector connector);
+    default void removeConnector(Connector connector) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Adds a named executor to the service
+     *
      * @param ex Executor
      */
-    void addExecutor(Executor ex);
+    default void addExecutor(Executor ex) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Retrieves all executors
+     *
      * @return Executor[]
      */
-    Executor[] findExecutors();
+    default Executor[] findExecutors() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Retrieves executor by name, null if not found
+     *
      * @param name String
      * @return Executor
      */
-    Executor getExecutor(String name);
+    default Executor getExecutor(String name) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Removes an executor from the service
+     *
      * @param ex Executor
      */
-    void removeExecutor(Executor ex);
+    default void removeExecutor(Executor ex) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the mapper associated with this Service.
      */
-    Mapper getMapper();
+    default Mapper getMapper() {
+        throw new UnsupportedOperationException();
+    }
 }
