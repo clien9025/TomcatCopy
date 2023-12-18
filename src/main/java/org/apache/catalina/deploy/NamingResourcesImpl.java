@@ -1,5 +1,6 @@
 package org.apache.catalina.deploy;
 
+import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.LifecycleState;
@@ -14,35 +15,28 @@ import javax.management.ObjectName;
 import java.io.Serializable;
 
 public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializable, NamingResources {
+
+
     @Override
-    public String getDomain() {
+    protected String getDomainInternal() {
+//        // Use the same domain as our associated container if we have one
+//        Object c = getContainer();
+//
+//        if (c instanceof JmxEnabled) {
+//            return ((JmxEnabled) c).getDomain();
+//        }
+//
+//        return null;
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setDomain(String domain) {
+    protected void startInternal() throws LifecycleException {
+//        fireLifecycleEvent(CONFIGURE_START_EVENT, null);
+//        setState(LifecycleState.STARTING);
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void postRegister(Boolean registrationDone) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void preDeregister() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void postDeregister() {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public void addLifecycleListener(LifecycleListener listener) {

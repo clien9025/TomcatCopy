@@ -658,10 +658,9 @@ public interface Context extends Container, ContextBind {
     /**
      * @return the Servlet context for which this Context is a facade.
      */
-    default ServletContext getServletContext() {
-        throw new UnsupportedOperationException();
-    }
-
+    // 看到自己的 org.apache.catalina.core.StandardContext 类里面竟然没有
+    // 重写 getServletContext() 这个方法，我觉得很奇怪，就来看看，原来在接口里面实现了(default)。
+    ServletContext getServletContext();
 
     /**
      * @return the default session timeout (in minutes) for this

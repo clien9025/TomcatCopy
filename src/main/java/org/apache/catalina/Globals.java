@@ -23,4 +23,22 @@ package org.apache.catalina;
  */
 public final class Globals {
 
+
+    /**
+     * Has security been turned on?
+     */
+    public static final boolean IS_SECURITY_ENABLED = (System.getSecurityManager() != null);
+
+
+    /**
+     * The servlet context attribute under which we store the alternate
+     * deployment descriptor for this web application
+     */
+    public static final String ALT_DD_ATTR = "org.apache.catalina.deploy.alt_dd";
+
+    /**
+     * Default domain for MBeans if none can be determined
+     */
+    public static final String DEFAULT_MBEAN_DOMAIN = "Catalina";
+
 }

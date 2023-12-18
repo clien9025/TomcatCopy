@@ -22,36 +22,10 @@ import java.util.Set;
 
 public class StandardContext extends ContainerBase implements Context, NotificationEmitter {
 
-    @Override
-    public String getDomain() {
-        return null;
-    }
+    protected ApplicationContext context = null;
 
-    @Override
-    public void setDomain(String domain) {
+    private String altDDName = null;
 
-    }
-
-
-    @Override
-    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
-        return null;
-    }
-
-    @Override
-    public void postRegister(Boolean registrationDone) {
-
-    }
-
-    @Override
-    public void preDeregister() throws Exception {
-
-    }
-
-    @Override
-    public void postDeregister() {
-
-    }
 
     @Override
     public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException {
@@ -71,6 +45,26 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     public MBeanNotificationInfo[] getNotificationInfo() {
         return new MBeanNotificationInfo[0];
+    }
+
+    /**
+     *  自己在 org.apache.catalina.Context 里面取消接口里面的实现
+     * （删除了 ServletContext getServletContext(); 前面的 default）
+     */
+    @Override
+    public ServletContext getServletContext() {
+//        /*
+//         *  This method is called (multiple times) during context start which is single threaded so there is concurrency
+//         *  issue here.
+//         */
+//        if (context == null) {
+//            context = new ApplicationContext(this);
+//            if (altDDName != null) {
+//                context.setAttribute(Globals.ALT_DD_ATTR, altDDName);
+//            }
+//        }
+//        return context.getFacade();
+        throw new UnsupportedOperationException();
     }
 
     @Override

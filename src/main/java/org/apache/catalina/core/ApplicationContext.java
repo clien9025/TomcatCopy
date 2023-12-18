@@ -15,13 +15,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author zhanyang
  */
 public class ApplicationContext implements ServletContext {
-    protected Map<String,Object> attributes = new ConcurrentHashMap<>();
+    protected Map<String, Object> attributes = new ConcurrentHashMap<>();
     private Map<String, String> parameters;
-    private static final StringManager sm = StringManager.getManager(ApplicationContext.class);
 
     private final StandardContext context;
 
+    private static final StringManager sm = StringManager.getManager(ApplicationContext.class);
+
+    private final ServletContext facade = new ApplicationContextFacade(this);
+
+
+    /**
+     * @return the facade associated with this ApplicationContext.
+     */
+    protected ServletContext getFacade() {
+        return this.facade;
+    }
+
     public ApplicationContext(StandardContext context) {
+        super();
         this.context = context;
     }
 
@@ -98,7 +110,7 @@ public class ApplicationContext implements ServletContext {
 
     // todo 源码是这样实现的（上面三个 addServlet 都调用了这个方法）
     private ServletRegistration.Dynamic addServlet(String servletName, String servletClass, Servlet servlet,
-                                                   Map<String,String> initParams) throws IllegalStateException {
+                                                   Map<String, String> initParams) throws IllegalStateException {
 //
 //        if (servletName == null || servletName.equals("")) {
 //            throw new IllegalArgumentException(sm.getString("applicationContext.invalidServletName", servletName));
@@ -124,7 +136,7 @@ public class ApplicationContext implements ServletContext {
 //                }
 //            }
         throw new UnsupportedOperationException();
-        }
+    }
 
     private void checkState(String messageKey) {
 //        if (!context.getState().equals(LifecycleState.STARTING_PREP)) {
@@ -366,12 +378,13 @@ public class ApplicationContext implements ServletContext {
     }
 
     @Override
-    public void log(String s) {
-        throw new UnsupportedOperationException();
+    public void log(String message) {
+        context.getLogger().info(message);
+//        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void log(String s, Throwable throwable) {
+    public void log(String message, Throwable throwable) {
         throw new UnsupportedOperationException();
     }
 
