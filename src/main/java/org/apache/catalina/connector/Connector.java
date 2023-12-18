@@ -529,18 +529,19 @@ public class Connector extends LifecycleMBeanBase {
      */
     public void setParseBodyMethods(String methods) {
 
-        HashSet<String> methodSet = new HashSet<>();
-
-        if (null != methods) {
-            methodSet.addAll(Arrays.asList(methods.split("\\s*,\\s*")));
-        }
-
-        if (methodSet.contains("TRACE")) {
-            throw new IllegalArgumentException(sm.getString("coyoteConnector.parseBodyMethodNoTrace"));
-        }
-
-        this.parseBodyMethods = methods;
-        this.parseBodyMethodsSet = methodSet;
+//        HashSet<String> methodSet = new HashSet<>();
+//
+//        if (null != methods) {
+//            methodSet.addAll(Arrays.asList(methods.split("\\s*,\\s*")));
+//        }
+//
+//        if (methodSet.contains("TRACE")) {
+//            throw new IllegalArgumentException(sm.getString("coyoteConnector.parseBodyMethodNoTrace"));
+//        }
+//
+//        this.parseBodyMethods = methods;
+//        this.parseBodyMethodsSet = methodSet;
+        throw new UnsupportedOperationException();
     }
 
 
