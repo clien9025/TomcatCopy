@@ -379,6 +379,7 @@ public class ApplicationContext implements ServletContext {
 
     @Override
     public void log(String message) {
+        // todo NullPointerException
         context.getLogger().info(message);
 //        throw new UnsupportedOperationException();
     }

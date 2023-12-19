@@ -21,7 +21,7 @@ public class TomcatWebServer implements WebServer {
 
     private Thread serverThread;
 
-    private StandardContext context;
+    private StandardContext context;// todo 这个地方是 null， 没有赋值和初始化的
 
     public TomcatWebServer() {
         this.httpServer = new HttpServer();

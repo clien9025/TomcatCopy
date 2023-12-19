@@ -75,6 +75,7 @@ public class ApplicationContextFacade implements ServletContext {
 //    }
 
     public ApplicationContextFacade(ApplicationContext context) {
+        // todo 这个 super(); 方法进不去？
         super();
         this.context = context;
 
@@ -156,11 +157,11 @@ public class ApplicationContextFacade implements ServletContext {
 
     @Override
     public void log(String msg) {
-//        if (SecurityUtil.isPackageProtectionEnabled()) {
-//            doPrivileged("log", new Object[] { msg });
-//        } else {
-//            context.log(msg);
-//        }
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            doPrivileged("log", new Object[] { msg });
+        } else {
+            context.log(msg);
+        }
         throw new UnsupportedOperationException();
 
     }
