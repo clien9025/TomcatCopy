@@ -454,18 +454,19 @@ public class Tomcat {
      * @param catalinaArguments The arguments that should be passed to Catalina
      */
     public void init(ConfigurationSource source, String[] catalinaArguments) {
-        ConfigFileLoader.setSource(source);
-        addDefaultWebXmlToWebapp = false;
-        Catalina catalina = new Catalina();
-        // Load the Catalina instance with the regular configuration files
-        // from specified source
-        if (catalinaArguments == null) {
-            catalina.load();
-        } else {
-            catalina.load(catalinaArguments);
-        }
-        // Retrieve and set the server
-        server = catalina.getServer();
+//        ConfigFileLoader.setSource(source);
+//        addDefaultWebXmlToWebapp = false;
+//        Catalina catalina = new Catalina();
+//        // Load the Catalina instance with the regular configuration files
+//        // from specified source
+//        if (catalinaArguments == null) {
+//            catalina.load();
+//        } else {
+//            catalina.load(catalinaArguments);
+//        }
+//        // Retrieve and set the server
+//        server = catalina.getServer();
+        throw new UnsupportedOperationException();
     }
 
 
@@ -546,16 +547,17 @@ public class Tomcat {
      * @return The connector object
      */
     public Connector getConnector() {
-        Service service = getService();
-        if (service.findConnectors().length > 0) {
-            return service.findConnectors()[0];
-        }
-        // The same as in standard Tomcat configuration.
-        // This creates a NIO HTTP connector.
-        Connector connector = new Connector("HTTP/1.1");
-        connector.setPort(port);
-        service.addConnector(connector);
-        return connector;
+//        Service service = getService();
+//        if (service.findConnectors().length > 0) {
+//            return service.findConnectors()[0];
+//        }
+//        // The same as in standard Tomcat configuration.
+//        // This creates a NIO HTTP connector.
+//        Connector connector = new Connector("HTTP/1.1");
+//        connector.setPort(port);
+//        service.addConnector(connector);
+//        return connector;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -564,17 +566,18 @@ public class Tomcat {
      * @param connector The connector instance to add
      */
     public void setConnector(Connector connector) {
-        Service service = getService();
-        boolean found = false;
-        for (Connector serviceConnector : service.findConnectors()) {
-            if (connector == serviceConnector) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            service.addConnector(connector);
-        }
+//        Service service = getService();
+//        boolean found = false;
+//        for (Connector serviceConnector : service.findConnectors()) {
+//            if (connector == serviceConnector) {
+//                found = true;
+//                break;
+//            }
+//        }
+//        if (!found) {
+//            service.addConnector(connector);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -594,29 +597,31 @@ public class Tomcat {
      * @param host The current host
      */
     public void setHost(Host host) {
-        Engine engine = getEngine();
-        boolean found = false;
-        for (Container engineHost : engine.findChildren()) {
-            if (engineHost == host) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            engine.addChild(host);
-        }
+//        Engine engine = getEngine();
+//        boolean found = false;
+//        for (Container engineHost : engine.findChildren()) {
+//            if (engineHost == host) {
+//                found = true;
+//                break;
+//            }
+//        }
+//        if (!found) {
+//            engine.addChild(host);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     public Host getHost() {
-        Engine engine = getEngine();
-        if (engine.findChildren().length > 0) {
-            return (Host) engine.findChildren()[0];
-        }
-
-        Host host = new StandardHost();
-        host.setName(hostname);
-        getEngine().addChild(host);
-        return host;
+//        Engine engine = getEngine();
+//        if (engine.findChildren().length > 0) {
+//            return (Host) engine.findChildren()[0];
+//        }
+//
+//        Host host = new StandardHost();
+//        host.setName(hostname);
+//        getEngine().addChild(host);
+//        return host;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -624,16 +629,17 @@ public class Tomcat {
      * @return The engine
      */
     public Engine getEngine() {
-        Service service = getServer().findServices()[0];
-        if (service.getContainer() != null) {
-            return service.getContainer();
-        }
-        Engine engine = new StandardEngine();
-        engine.setName( "Tomcat" );
-        engine.setDefaultHost(hostname);
-        engine.setRealm(createDefaultRealm());
-        service.setContainer(engine);
-        return engine;
+//        Service service = getServer().findServices()[0];
+//        if (service.getContainer() != null) {
+//            return service.getContainer();
+//        }
+//        Engine engine = new StandardEngine();
+//        engine.setName( "Tomcat" );
+//        engine.setDefaultHost(hostname);
+//        engine.setRealm(createDefaultRealm());
+//        service.setContainer(engine);
+//        return engine;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -643,25 +649,26 @@ public class Tomcat {
      */
     public Server getServer() {
 
-        if (server != null) {
-            return server;
-        }
-
-        System.setProperty("catalina.useNaming", "false");
-
-        server = new StandardServer();
-
-        initBaseDir();
-
-        // Set configuration source
-        ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(new File(basedir), null));
-
-        server.setPort( -1 );
-
-        Service service = new StandardService();
-        service.setName("Tomcat");
-        server.addService(service);
-        return server;
+//        if (server != null) {
+//            return server;
+//        }
+//
+//        System.setProperty("catalina.useNaming", "false");
+//
+//        server = new StandardServer();
+//
+//        initBaseDir();
+//
+//        // Set configuration source
+//        ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(new File(basedir), null));
+//
+//        server.setPort( -1 );
+//
+//        Service service = new StandardService();
+//        service.setName("Tomcat");
+//        server.addService(service);
+//        return server;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -762,32 +769,33 @@ public class Tomcat {
     public Context addWebapp(Host host, String contextPath, String docBase,
                              LifecycleListener config) {
 
-        silence(host, contextPath);
-
-        Context ctx = createContext(host, contextPath);
-        ctx.setPath(contextPath);
-        ctx.setDocBase(docBase);
-
-        if (addDefaultWebXmlToWebapp) {
-            ctx.addLifecycleListener(getDefaultWebXmlListener());
-        }
-
-        ctx.setConfigFile(getWebappConfigFile(docBase, contextPath));
-
-        ctx.addLifecycleListener(config);
-
-        if (addDefaultWebXmlToWebapp && (config instanceof ContextConfig)) {
-            // prevent it from looking ( if it finds one - it'll have dup error )
-            ((ContextConfig) config).setDefaultWebXml(noDefaultWebXmlPath());
-        }
-
-        if (host == null) {
-            getHost().addChild(ctx);
-        } else {
-            host.addChild(ctx);
-        }
-
-        return ctx;
+//        silence(host, contextPath);
+//
+//        Context ctx = createContext(host, contextPath);
+//        ctx.setPath(contextPath);
+//        ctx.setDocBase(docBase);
+//
+//        if (addDefaultWebXmlToWebapp) {
+//            ctx.addLifecycleListener(getDefaultWebXmlListener());
+//        }
+//
+//        ctx.setConfigFile(getWebappConfigFile(docBase, contextPath));
+//
+//        ctx.addLifecycleListener(config);
+//
+//        if (addDefaultWebXmlToWebapp && (config instanceof ContextConfig)) {
+//            // prevent it from looking ( if it finds one - it'll have dup error )
+//            ((ContextConfig) config).setDefaultWebXml(noDefaultWebXmlPath());
+//        }
+//
+//        if (host == null) {
+//            getHost().addChild(ctx);
+//        } else {
+//            host.addChild(ctx);
+//        }
+//
+//        return ctx;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -808,7 +816,8 @@ public class Tomcat {
      * {@link #getDefaultWebXmlListener()}.
      */
     public String noDefaultWebXmlPath() {
-        return Constants.NoDefaultWebXml;
+//        return Constants.NoDefaultWebXml;
+        throw new UnsupportedOperationException();
     }
 
     // ---------- Helper methods and classes -------------------
@@ -821,90 +830,92 @@ public class Tomcat {
      * @return a realm instance
      */
     protected Realm createDefaultRealm() {
-        return new SimpleRealm();
+//        return new SimpleRealm();
+        throw new UnsupportedOperationException();
     }
 
 
     private class SimpleRealm extends RealmBase {
 
-        @Override
-        protected String getPassword(String username) {
-            return userPass.get(username);
-        }
-
-        @Override
-        protected Principal getPrincipal(String username) {
-            Principal p = userPrincipals.get(username);
-            if (p == null) {
-                String pass = userPass.get(username);
-                if (pass != null) {
-                    p = new GenericPrincipal(username,
-                            userRoles.get(username));
-                    userPrincipals.put(username, p);
-                }
-            }
-            return p;
-        }
+//        @Override
+//        protected String getPassword(String username) {
+//            return userPass.get(username);
+//        }
+//
+//        @Override
+//        protected Principal getPrincipal(String username) {
+//            Principal p = userPrincipals.get(username);
+//            if (p == null) {
+//                String pass = userPass.get(username);
+//                if (pass != null) {
+//                    p = new GenericPrincipal(username,
+//                            userRoles.get(username));
+//                    userPrincipals.put(username, p);
+//                }
+//            }
+//            return p;
+//        }
     }
 
 
     protected void initBaseDir() {
-        String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
-        if (basedir == null) {
-            basedir = System.getProperty(Globals.CATALINA_BASE_PROP);
-        }
-        if (basedir == null) {
-            basedir = catalinaHome;
-        }
-        if (basedir == null) {
-            // Create a temp dir.
-            basedir = System.getProperty("user.dir") + "/tomcat." + port;
-        }
-
-        File baseFile = new File(basedir);
-        if (baseFile.exists()) {
-            if (!baseFile.isDirectory()) {
-                throw new IllegalArgumentException(sm.getString("tomcat.baseDirNotDir", baseFile));
-            }
-        } else {
-            if (!baseFile.mkdirs()) {
-                // Failed to create base directory
-                throw new IllegalStateException(sm.getString("tomcat.baseDirMakeFail", baseFile));
-            }
-            /*
-             * If file permissions were going to be set on the newly created
-             * directory, this is the place to do it. However, even simple
-             * calls such as File.setReadable(boolean,boolean) behaves
-             * differently on different platforms. Therefore, setBaseDir
-             * documents that the user needs to do this.
-             */
-        }
-        try {
-            baseFile = baseFile.getCanonicalFile();
-        } catch (IOException e) {
-            baseFile = baseFile.getAbsoluteFile();
-        }
-        server.setCatalinaBase(baseFile);
-        System.setProperty(Globals.CATALINA_BASE_PROP, baseFile.getPath());
-        basedir = baseFile.getPath();
-
-        if (catalinaHome == null) {
-            server.setCatalinaHome(baseFile);
-        } else {
-            File homeFile = new File(catalinaHome);
-            if (!homeFile.isDirectory() && !homeFile.mkdirs()) {
-                // Failed to create home directory
-                throw new IllegalStateException(sm.getString("tomcat.homeDirMakeFail", homeFile));
-            }
-            try {
-                homeFile = homeFile.getCanonicalFile();
-            } catch (IOException e) {
-                homeFile = homeFile.getAbsoluteFile();
-            }
-            server.setCatalinaHome(homeFile);
-        }
-        System.setProperty(Globals.CATALINA_HOME_PROP,
-                server.getCatalinaHome().getPath());
+//        String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
+//        if (basedir == null) {
+//            basedir = System.getProperty(Globals.CATALINA_BASE_PROP);
+//        }
+//        if (basedir == null) {
+//            basedir = catalinaHome;
+//        }
+//        if (basedir == null) {
+//            // Create a temp dir.
+//            basedir = System.getProperty("user.dir") + "/tomcat." + port;
+//        }
+//
+//        File baseFile = new File(basedir);
+//        if (baseFile.exists()) {
+//            if (!baseFile.isDirectory()) {
+//                throw new IllegalArgumentException(sm.getString("tomcat.baseDirNotDir", baseFile));
+//            }
+//        } else {
+//            if (!baseFile.mkdirs()) {
+//                // Failed to create base directory
+//                throw new IllegalStateException(sm.getString("tomcat.baseDirMakeFail", baseFile));
+//            }
+//            /*
+//             * If file permissions were going to be set on the newly created
+//             * directory, this is the place to do it. However, even simple
+//             * calls such as File.setReadable(boolean,boolean) behaves
+//             * differently on different platforms. Therefore, setBaseDir
+//             * documents that the user needs to do this.
+//             */
+//        }
+//        try {
+//            baseFile = baseFile.getCanonicalFile();
+//        } catch (IOException e) {
+//            baseFile = baseFile.getAbsoluteFile();
+//        }
+//        server.setCatalinaBase(baseFile);
+//        System.setProperty(Globals.CATALINA_BASE_PROP, baseFile.getPath());
+//        basedir = baseFile.getPath();
+//
+//        if (catalinaHome == null) {
+//            server.setCatalinaHome(baseFile);
+//        } else {
+//            File homeFile = new File(catalinaHome);
+//            if (!homeFile.isDirectory() && !homeFile.mkdirs()) {
+//                // Failed to create home directory
+//                throw new IllegalStateException(sm.getString("tomcat.homeDirMakeFail", homeFile));
+//            }
+//            try {
+//                homeFile = homeFile.getCanonicalFile();
+//            } catch (IOException e) {
+//                homeFile = homeFile.getAbsoluteFile();
+//            }
+//            server.setCatalinaHome(homeFile);
+//        }
+//        System.setProperty(Globals.CATALINA_HOME_PROP,
+//                server.getCatalinaHome().getPath());
+        throw new UnsupportedOperationException();
     }
 
     static final String[] silences = new String[] {
@@ -927,27 +938,29 @@ public class Tomcat {
      *                  level of INFO.
      */
     public void setSilent(boolean silent) {
-        this.silent = silent;
-        for (String s : silences) {
-            Logger logger = Logger.getLogger(s);
-            pinnedLoggers.put(s, logger);
-            if (silent) {
-                logger.setLevel(Level.WARNING);
-            } else {
-                logger.setLevel(Level.INFO);
-            }
-        }
+//        this.silent = silent;
+//        for (String s : silences) {
+//            Logger logger = Logger.getLogger(s);
+//            pinnedLoggers.put(s, logger);
+//            if (silent) {
+//                logger.setLevel(Level.WARNING);
+//            } else {
+//                logger.setLevel(Level.INFO);
+//            }
+//        }
+        throw new UnsupportedOperationException();
     }
 
     private void silence(Host host, String contextPath) {
-        String loggerName = getLoggerName(host, contextPath);
-        Logger logger = Logger.getLogger(loggerName);
-        pinnedLoggers.put(loggerName, logger);
-        if (silent) {
-            logger.setLevel(Level.WARNING);
-        } else {
-            logger.setLevel(Level.INFO);
-        }
+//        String loggerName = getLoggerName(host, contextPath);
+//        Logger logger = Logger.getLogger(loggerName);
+//        pinnedLoggers.put(loggerName, logger);
+//        if (silent) {
+//            logger.setLevel(Level.WARNING);
+//        } else {
+//            logger.setLevel(Level.INFO);
+//        }
+        throw new UnsupportedOperationException();
     }
 
 
@@ -973,28 +986,29 @@ public class Tomcat {
      * Uses essentially the same logic as {@link ContainerBase#logName()}.
      */
     private String getLoggerName(Host host, String contextName) {
-        if (host == null) {
-            host = getHost();
-        }
-        StringBuilder loggerName = new StringBuilder();
-        loggerName.append(ContainerBase.class.getName());
-        loggerName.append(".[");
-        // Engine name
-        loggerName.append(host.getParent().getName());
-        loggerName.append("].[");
-        // Host name
-        loggerName.append(host.getName());
-        loggerName.append("].[");
-        // Context name
-        if (contextName == null || contextName.equals("")) {
-            loggerName.append('/');
-        } else if (contextName.startsWith("##")) {
-            loggerName.append('/');
-            loggerName.append(contextName);
-        }
-        loggerName.append(']');
-
-        return loggerName.toString();
+//        if (host == null) {
+//            host = getHost();
+//        }
+//        StringBuilder loggerName = new StringBuilder();
+//        loggerName.append(ContainerBase.class.getName());
+//        loggerName.append(".[");
+//        // Engine name
+//        loggerName.append(host.getParent().getName());
+//        loggerName.append("].[");
+//        // Host name
+//        loggerName.append(host.getName());
+//        loggerName.append("].[");
+//        // Context name
+//        if (contextName == null || contextName.equals("")) {
+//            loggerName.append('/');
+//        } else if (contextName.startsWith("##")) {
+//            loggerName.append('/');
+//            loggerName.append(contextName);
+//        }
+//        loggerName.append(']');
+//
+//        return loggerName.toString();
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1010,25 +1024,26 @@ public class Tomcat {
      * @return newly created {@link Context}
      */
     private Context createContext(Host host, String url) {
-        String defaultContextClass = StandardContext.class.getName();
-        String contextClass = StandardContext.class.getName();
-        if (host == null) {
-            host = this.getHost();
-        }
-        if (host instanceof StandardHost) {
-            contextClass = ((StandardHost) host).getContextClass();
-        }
-        try {
-            if (defaultContextClass.equals(contextClass)) {
-                return new StandardContext();
-            } else {
-                return (Context) Class.forName(contextClass).getConstructor()
-                        .newInstance();
-            }
-
-        } catch (ReflectiveOperationException  | IllegalArgumentException | SecurityException e) {
-            throw new IllegalArgumentException(sm.getString("tomcat.noContextClass", contextClass, host, url), e);
-        }
+//        String defaultContextClass = StandardContext.class.getName();
+//        String contextClass = StandardContext.class.getName();
+//        if (host == null) {
+//            host = this.getHost();
+//        }
+//        if (host instanceof StandardHost) {
+//            contextClass = ((StandardHost) host).getContextClass();
+//        }
+//        try {
+//            if (defaultContextClass.equals(contextClass)) {
+//                return new StandardContext();
+//            } else {
+//                return (Context) Class.forName(contextClass).getConstructor()
+//                        .newInstance();
+//            }
+//
+//        } catch (ReflectiveOperationException  | IllegalArgumentException | SecurityException e) {
+//            throw new IllegalArgumentException(sm.getString("tomcat.noContextClass", contextClass, host, url), e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1038,32 +1053,33 @@ public class Tomcat {
      *
      */
     public void enableNaming() {
-        // Make sure getServer() has been called as that is where naming is
-        // disabled
-        getServer();
-        server.addLifecycleListener(new NamingContextListener());
-
-        System.setProperty("catalina.useNaming", "true");
-
-        String value = "org.apache.naming";
-        String oldValue =
-                System.getProperty(javax.naming.Context.URL_PKG_PREFIXES);
-        if (oldValue != null) {
-            if (oldValue.contains(value)) {
-                value = oldValue;
-            } else {
-                value = value + ":" + oldValue;
-            }
-        }
-        System.setProperty(javax.naming.Context.URL_PKG_PREFIXES, value);
-
-        value = System.getProperty
-                (javax.naming.Context.INITIAL_CONTEXT_FACTORY);
-        if (value == null) {
-            System.setProperty
-                    (javax.naming.Context.INITIAL_CONTEXT_FACTORY,
-                            "org.apache.naming.java.javaURLContextFactory");
-        }
+//        // Make sure getServer() has been called as that is where naming is
+//        // disabled
+//        getServer();
+//        server.addLifecycleListener(new NamingContextListener());
+//
+//        System.setProperty("catalina.useNaming", "true");
+//
+//        String value = "org.apache.naming";
+//        String oldValue =
+//                System.getProperty(javax.naming.Context.URL_PKG_PREFIXES);
+//        if (oldValue != null) {
+//            if (oldValue.contains(value)) {
+//                value = oldValue;
+//            } else {
+//                value = value + ":" + oldValue;
+//            }
+//        }
+//        System.setProperty(javax.naming.Context.URL_PKG_PREFIXES, value);
+//
+//        value = System.getProperty
+//                (javax.naming.Context.INITIAL_CONTEXT_FACTORY);
+//        if (value == null) {
+//            System.setProperty
+//                    (javax.naming.Context.INITIAL_CONTEXT_FACTORY,
+//                            "org.apache.naming.java.javaURLContextFactory");
+//        }
+        throw new UnsupportedOperationException();
     }
 
 
@@ -1095,34 +1111,35 @@ public class Tomcat {
      * @param ctx   The context to set the defaults for
      */
     public static void initWebappDefaults(Context ctx) {
-        // Default servlet
-        Wrapper servlet = addServlet(
-                ctx, "default", "org.apache.catalina.servlets.DefaultServlet");
-        servlet.setLoadOnStartup(1);
-        servlet.setOverridable(true);
-
-        // JSP servlet (by class name - to avoid loading all deps)
-        servlet = addServlet(
-                ctx, "jsp", "org.apache.jasper.servlet.JspServlet");
-        servlet.addInitParameter("fork", "false");
-        servlet.setLoadOnStartup(3);
-        servlet.setOverridable(true);
-
-        // Servlet mappings
-        ctx.addServletMappingDecoded("/", "default");
-        ctx.addServletMappingDecoded("*.jsp", "jsp");
-        ctx.addServletMappingDecoded("*.jspx", "jsp");
-
-        // Sessions
-        ctx.setSessionTimeout(30);
-
-        // MIME type mappings
-        addDefaultMimeTypeMappings(ctx);
-
-        // Welcome files
-        ctx.addWelcomeFile("index.html");
-        ctx.addWelcomeFile("index.htm");
-        ctx.addWelcomeFile("index.jsp");
+//        // Default servlet
+//        Wrapper servlet = addServlet(
+//                ctx, "default", "org.apache.catalina.servlets.DefaultServlet");
+//        servlet.setLoadOnStartup(1);
+//        servlet.setOverridable(true);
+//
+//        // JSP servlet (by class name - to avoid loading all deps)
+//        servlet = addServlet(
+//                ctx, "jsp", "org.apache.jasper.servlet.JspServlet");
+//        servlet.addInitParameter("fork", "false");
+//        servlet.setLoadOnStartup(3);
+//        servlet.setOverridable(true);
+//
+//        // Servlet mappings
+//        ctx.addServletMappingDecoded("/", "default");
+//        ctx.addServletMappingDecoded("*.jsp", "jsp");
+//        ctx.addServletMappingDecoded("*.jspx", "jsp");
+//
+//        // Sessions
+//        ctx.setSessionTimeout(30);
+//
+//        // MIME type mappings
+//        addDefaultMimeTypeMappings(ctx);
+//
+//        // Welcome files
+//        ctx.addWelcomeFile("index.html");
+//        ctx.addWelcomeFile("index.htm");
+//        ctx.addWelcomeFile("index.jsp");
+        throw new UnsupportedOperationException();
     }
 
 
@@ -1133,15 +1150,16 @@ public class Tomcat {
      *                mappings should be added.
      */
     public static void addDefaultMimeTypeMappings(Context context) {
-        Properties defaultMimeMappings = new Properties();
-        try (InputStream is = Tomcat.class.getResourceAsStream("MimeTypeMappings.properties")) {
-            defaultMimeMappings.load(is);
-            for (Map.Entry<Object, Object>  entry: defaultMimeMappings.entrySet()) {
-                context.addMimeMapping((String) entry.getKey(), (String) entry.getValue());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(sm.getString("tomcat.defaultMimeTypeMappingsFail"), e);
-        }
+//        Properties defaultMimeMappings = new Properties();
+//        try (InputStream is = Tomcat.class.getResourceAsStream("MimeTypeMappings.properties")) {
+//            defaultMimeMappings.load(is);
+//            for (Map.Entry<Object, Object>  entry: defaultMimeMappings.entrySet()) {
+//                context.addMimeMapping((String) entry.getKey(), (String) entry.getValue());
+//            }
+//        } catch (IOException e) {
+//            throw new IllegalStateException(sm.getString("tomcat.defaultMimeTypeMappingsFail"), e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
 
@@ -1156,23 +1174,24 @@ public class Tomcat {
 
         @Override
         public void lifecycleEvent(LifecycleEvent event) {
-            try {
-                Context context = (Context) event.getLifecycle();
-                if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
-                    context.setConfigured(true);
-
-                    // Process annotations
-                    WebAnnotationSet.loadApplicationAnnotations(context);
-
-                    // LoginConfig is required to process @ServletSecurity
-                    // annotations
-                    if (context.getLoginConfig() == null) {
-                        context.setLoginConfig(new LoginConfig("NONE", null, null, null));
-                        context.getPipeline().addValve(new NonLoginAuthenticator());
-                    }
-                }
-            } catch (ClassCastException e) {
-            }
+//            try {
+//                Context context = (Context) event.getLifecycle();
+//                if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
+//                    context.setConfigured(true);
+//
+//                    // Process annotations
+//                    WebAnnotationSet.loadApplicationAnnotations(context);
+//
+//                    // LoginConfig is required to process @ServletSecurity
+//                    // annotations
+//                    if (context.getLoginConfig() == null) {
+//                        context.setLoginConfig(new LoginConfig("NONE", null, null, null));
+//                        context.getPipeline().addValve(new NonLoginAuthenticator());
+//                    }
+//                }
+//            } catch (ClassCastException e) {
+//            }
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -1185,9 +1204,10 @@ public class Tomcat {
     public static class DefaultWebXmlListener implements LifecycleListener {
         @Override
         public void lifecycleEvent(LifecycleEvent event) {
-            if (Lifecycle.BEFORE_START_EVENT.equals(event.getType())) {
-                initWebappDefaults((Context) event.getLifecycle());
-            }
+//            if (Lifecycle.BEFORE_START_EVENT.equals(event.getType())) {
+//                initWebappDefaults((Context) event.getLifecycle());
+//            }
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -1198,56 +1218,57 @@ public class Tomcat {
      * more direct control over the servlet.
      */
     public static class ExistingStandardWrapper extends StandardWrapper {
-        private final Servlet existing;
-
-        public ExistingStandardWrapper( Servlet existing ) {
-            this.existing = existing;
-            this.asyncSupported = hasAsync(existing);
-        }
-
-        private static boolean hasAsync(Servlet existing) {
-            boolean result = false;
-            Class<?> clazz = existing.getClass();
-            WebServlet ws = clazz.getAnnotation(WebServlet.class);
-            if (ws != null) {
-                result = ws.asyncSupported();
-            }
-            return result;
-        }
-
-        @Override
-        public synchronized Servlet loadServlet() throws ServletException {
-            if (!instanceInitialized) {
-                existing.init(facade);
-                instanceInitialized = true;
-            }
-            return existing;
-        }
-        @Override
-        public long getAvailable() {
-            return 0;
-        }
-        @Override
-        public boolean isUnavailable() {
-            return false;
-        }
-        @Override
-        public Servlet getServlet() {
-            return existing;
-        }
-        @Override
-        public String getServletClass() {
-            return existing.getClass().getName();
-        }
+//        private final Servlet existing;
+//
+//        public ExistingStandardWrapper( Servlet existing ) {
+//            this.existing = existing;
+//            this.asyncSupported = hasAsync(existing);
+//        }
+//
+//        private static boolean hasAsync(Servlet existing) {
+//            boolean result = false;
+//            Class<?> clazz = existing.getClass();
+//            WebServlet ws = clazz.getAnnotation(WebServlet.class);
+//            if (ws != null) {
+//                result = ws.asyncSupported();
+//            }
+//            return result;
+//        }
+//
+//        @Override
+//        public synchronized Servlet loadServlet() throws ServletException {
+//            if (!instanceInitialized) {
+//                existing.init(facade);
+//                instanceInitialized = true;
+//            }
+//            return existing;
+//        }
+//        @Override
+//        public long getAvailable() {
+//            return 0;
+//        }
+//        @Override
+//        public boolean isUnavailable() {
+//            return false;
+//        }
+//        @Override
+//        public Servlet getServlet() {
+//            return existing;
+//        }
+//        @Override
+//        public String getServletClass() {
+//            return existing.getClass().getName();
+//        }
     }
 
     protected URL getWebappConfigFile(String path, String contextName) {
-        File docBase = new File(path);
-        if (docBase.isDirectory()) {
-            return getWebappConfigFileFromDirectory(docBase, contextName);
-        } else {
-            return getWebappConfigFileFromWar(docBase, contextName);
-        }
+//        File docBase = new File(path);
+//        if (docBase.isDirectory()) {
+//            return getWebappConfigFileFromDirectory(docBase, contextName);
+//        } else {
+//            return getWebappConfigFileFromWar(docBase, contextName);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     private URL getWebappConfigFileFromDirectory(File docBase, String contextName) {
@@ -1265,28 +1286,29 @@ public class Tomcat {
     }
 
     private URL getWebappConfigFileFromWar(File docBase, String contextName) {
-        URL result = null;
-        try (JarFile jar = new JarFile(docBase)) {
-            JarEntry entry = jar.getJarEntry(Constants.ApplicationContextXml);
-            if (entry != null) {
-                result = UriUtil.buildJarUrl(docBase, Constants.ApplicationContextXml);
-            }
-        } catch (IOException e) {
-            Logger.getLogger(getLoggerName(getHost(), contextName)).log(Level.WARNING,
-                    sm.getString("tomcat.noContextXml", docBase), e);
-        }
-        return result;
+//        URL result = null;
+//        try (JarFile jar = new JarFile(docBase)) {
+//            JarEntry entry = jar.getJarEntry(Constants.ApplicationContextXml);
+//            if (entry != null) {
+//                result = UriUtil.buildJarUrl(docBase, Constants.ApplicationContextXml);
+//            }
+//        } catch (IOException e) {
+//            Logger.getLogger(getLoggerName(getHost(), contextName)).log(Level.WARNING,
+//                    sm.getString("tomcat.noContextXml", docBase), e);
+//        }
+//        return result;
+        throw new UnsupportedOperationException();
     }
 
     static {
-        // Graal native images don't load any configuration except the VM default
-        if (JreCompat.isGraalAvailable()) {
-            try (InputStream is = new FileInputStream(new File(System.getProperty("java.util.logging.config.file", "conf/logging.properties")))) {
-                LogManager.getLogManager().readConfiguration(is);
-            } catch (SecurityException | IOException e) {
-                // Ignore, the VM default will be used
-            }
-        }
+//        // Graal native images don't load any configuration except the VM default
+//        if (JreCompat.isGraalAvailable()) {
+//            try (InputStream is = new FileInputStream(new File(System.getProperty("java.util.logging.config.file", "conf/logging.properties")))) {
+//                LogManager.getLogManager().readConfiguration(is);
+//            } catch (SecurityException | IOException e) {
+//                // Ignore, the VM default will be used
+//            }
+//        }
     }
 
     /**
@@ -1295,60 +1317,61 @@ public class Tomcat {
      * @throws Exception if an error occurs
      */
     public static void main(String[] args) throws Exception {
-        // Process some command line parameters
-        String[] catalinaArguments = null;
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--no-jmx")) {
-                Registry.disableRegistry();
-            } else if (args[i].equals("--catalina")) {
-                // This was already processed before
-                // Skip the rest of the arguments as they are for Catalina
-                ArrayList<String> result = new ArrayList<>();
-                for (int j = i + 1; j < args.length; j++) {
-                    result.add(args[j]);
-                }
-                catalinaArguments = result.toArray(new String[0]);
-                break;
-            }
-        }
-        SecurityClassLoad.securityClassLoad(Thread.currentThread().getContextClassLoader());
-        Tomcat tomcat = new Tomcat();
-        // Create a Catalina instance and let it parse the configuration files
-        // It will also set a shutdown hook to stop the Server when needed
-        // Use the default configuration source
-        tomcat.init(null, catalinaArguments);
-        boolean await = false;
-        String path = "";
-        // Process command line parameters
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--war")) {
-                if (++i >= args.length) {
-                    throw new IllegalArgumentException(sm.getString("tomcat.invalidCommandLine", args[i - 1]));
-                }
-                File war = new File(args[i]);
-                tomcat.addWebapp(path, war.getAbsolutePath());
-            } else if (args[i].equals("--path")) {
-                if (++i >= args.length) {
-                    throw new IllegalArgumentException(sm.getString("tomcat.invalidCommandLine", args[i - 1]));
-                }
-                path = args[i];
-            } else if (args[i].equals("--await")) {
-                await = true;
-            } else if (args[i].equals("--no-jmx")) {
-                // This was already processed before
-            } else if (args[i].equals("--catalina")) {
-                // This was already processed before
-                // Skip the rest of the arguments as they are for Catalina
-                break;
-            } else {
-                throw new IllegalArgumentException(sm.getString("tomcat.invalidCommandLine", args[i]));
-            }
-        }
-        tomcat.start();
-        // Ideally the utility threads are non daemon
-        if (await) {
-            tomcat.getServer().await();
-        }
+//        // Process some command line parameters
+//        String[] catalinaArguments = null;
+//        for (int i = 0; i < args.length; i++) {
+//            if (args[i].equals("--no-jmx")) {
+//                Registry.disableRegistry();
+//            } else if (args[i].equals("--catalina")) {
+//                // This was already processed before
+//                // Skip the rest of the arguments as they are for Catalina
+//                ArrayList<String> result = new ArrayList<>();
+//                for (int j = i + 1; j < args.length; j++) {
+//                    result.add(args[j]);
+//                }
+//                catalinaArguments = result.toArray(new String[0]);
+//                break;
+//            }
+//        }
+//        SecurityClassLoad.securityClassLoad(Thread.currentThread().getContextClassLoader());
+//        Tomcat tomcat = new Tomcat();
+//        // Create a Catalina instance and let it parse the configuration files
+//        // It will also set a shutdown hook to stop the Server when needed
+//        // Use the default configuration source
+//        tomcat.init(null, catalinaArguments);
+//        boolean await = false;
+//        String path = "";
+//        // Process command line parameters
+//        for (int i = 0; i < args.length; i++) {
+//            if (args[i].equals("--war")) {
+//                if (++i >= args.length) {
+//                    throw new IllegalArgumentException(sm.getString("tomcat.invalidCommandLine", args[i - 1]));
+//                }
+//                File war = new File(args[i]);
+//                tomcat.addWebapp(path, war.getAbsolutePath());
+//            } else if (args[i].equals("--path")) {
+//                if (++i >= args.length) {
+//                    throw new IllegalArgumentException(sm.getString("tomcat.invalidCommandLine", args[i - 1]));
+//                }
+//                path = args[i];
+//            } else if (args[i].equals("--await")) {
+//                await = true;
+//            } else if (args[i].equals("--no-jmx")) {
+//                // This was already processed before
+//            } else if (args[i].equals("--catalina")) {
+//                // This was already processed before
+//                // Skip the rest of the arguments as they are for Catalina
+//                break;
+//            } else {
+//                throw new IllegalArgumentException(sm.getString("tomcat.invalidCommandLine", args[i]));
+//            }
+//        }
+//        tomcat.start();
+//        // Ideally the utility threads are non daemon
+//        if (await) {
+//            tomcat.getServer().await();
+//        }
+        throw new UnsupportedOperationException();
     }
 
 }
