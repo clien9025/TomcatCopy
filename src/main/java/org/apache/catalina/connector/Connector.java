@@ -17,6 +17,8 @@
 package org.apache.catalina.connector;
 
 import org.apache.catalina.util.LifecycleMBeanBase;
+import org.apache.coyote.AbstractProtocol;
+import org.apache.coyote.ProtocolHandler;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
@@ -33,6 +35,56 @@ public class Connector extends LifecycleMBeanBase {
 
 
     public static final String INTERNAL_EXECUTOR_NAME = "Internal";
+
+
+    // 暂时调用
+    /**
+     * @return the port number on which this connector is configured to listen for requests. The special value of 0
+     *             means select a random free port when the socket is bound.
+     */
+    public int getPort() {
+//        // Try shortcut that should work for nearly all uses first as it does
+//        // not use reflection and is therefore faster.
+//        if (protocolHandler instanceof AbstractProtocol<?>) {
+//            return ((AbstractProtocol<?>) protocolHandler).getPort();
+//        }
+//        // Fall back for custom protocol handlers not based on AbstractProtocol
+//        Object port = getProperty("port");
+//        if (port instanceof Integer) {
+//            return ((Integer) port).intValue();
+//        }
+//        // Usually means an invalid protocol has been configured
+//        return -1;
+        throw new UnsupportedOperationException();
+    }
+
+    // 暂时有用
+    /**
+     * @return the protocol handler associated with the connector.
+     */
+    public ProtocolHandler getProtocolHandler() {
+//        return this.protocolHandler;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * @return the port number on which this connector is listening to requests. If the special value for
+     *             {@link #getPort} of zero is used then this method will report the actual port bound.
+     */
+    public int getLocalPort() {
+//        return ((Integer) getProperty("localPort")).intValue();
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * @return the scheme that will be assigned to requests received through this connector. Default value is "http".
+     */
+    public String getScheme() {
+//        return this.scheme;
+        throw new UnsupportedOperationException();
+    }
 
 
 
