@@ -51,24 +51,31 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      *  自己在 org.apache.catalina.Context 里面取消接口里面的实现
      * （删除了 ServletContext getServletContext(); 前面的 default）
      */
+
     @Override
     public ServletContext getServletContext() {
-//        /*
-//         *  This method is called (multiple times) during context start which is single threaded so there is concurrency
-//         *  issue here.
-//         */
-//        if (context == null) {
-//            context = new ApplicationContext(this);
-//            if (altDDName != null) {
-//                context.setAttribute(Globals.ALT_DD_ATTR, altDDName);
-//            }
-//        }
-//        return context.getFacade();
-        throw new UnsupportedOperationException();
+        /*
+         *  This method is called (multiple times) during context start which is single threaded so there is concurrency
+         *  issue here.
+         * 翻译：
+         * 此方法在上下文启动期间被调用(多次)，这是单线程的，因此这里存在并发问题。
+         */
+        // 判断 ApplicationContext 是否为空
+        if (context == null) {
+            // 若是为空，则把自己（StandardContext）作为实例传给 ApplicationContext （其实就是调用 ApplicationContext）
+            context = new ApplicationContext(this);
+            // todo String altDDName = null; 这个属性暂时还没跟到相关的逻辑
+            if (altDDName != null) {
+                context.setAttribute(Globals.ALT_DD_ATTR, altDDName);
+            }
+        }
+        // ApplicationContext context 实例调用 getFacade() 方法
+        return context.getFacade();
     }
 
     @Override
     public boolean getMapperDirectoryRedirectEnabled() {
         return false;
     }
+
 }

@@ -32,6 +32,8 @@ public class ApplicationContext implements ServletContext {
         return this.facade;
     }
 
+    // org.apache.catalina.core.StandardContext.getServletContext 方法调用到了这里
+    // 该方法是把 StandardContext context 参数传入进来
     public ApplicationContext(StandardContext context) {
         super();
         this.context = context;
