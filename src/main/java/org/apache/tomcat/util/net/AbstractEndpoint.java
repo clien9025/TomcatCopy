@@ -1,5 +1,7 @@
 package org.apache.tomcat.util.net;
 
+import java.util.concurrent.Executor;
+
 /**
  * @param <S> The type used by the socket wrapper associated with this endpoint.
  *            May be the same as U.
@@ -10,6 +12,24 @@ package org.apache.tomcat.util.net;
  * @author Remy Maucherat
  */
 public abstract class AbstractEndpoint<S,U> {
+
+
+    /**
+     * Maximum amount of worker threads.
+     */
+    private int maxThreads = 200;
+    public void setMaxThreads(int maxThreads) {
+//        this.maxThreads = maxThreads;
+//        Executor executor = this.executor;
+//        if (internalExecutor && executor instanceof ThreadPoolExecutor) {
+//            // The internal executor should always be an instance of
+//            // org.apache.tomcat.util.threads.ThreadPoolExecutor but it may be
+//            // null if the endpoint is not running.
+//            // This check also avoids various threading issues.
+//            ((ThreadPoolExecutor) executor).setMaximumPoolSize(maxThreads);
+//        }
+        throw new UnsupportedOperationException();
+    }
 
     public interface Handler<S> {
 
