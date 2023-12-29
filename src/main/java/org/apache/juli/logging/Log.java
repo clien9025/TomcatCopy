@@ -71,9 +71,11 @@ public interface Log {
      * when the log level is more than debug. </p>
      *
      * @return <code>true</code> if debug level logging is enabled, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
-    boolean isDebugEnabled();
+    default boolean isDebugEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -84,9 +86,11 @@ public interface Log {
      * when the log level is more than error. </p>
      *
      * @return <code>true</code> if error level logging is enabled, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
-    boolean isErrorEnabled();
+    default boolean isErrorEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -97,9 +101,11 @@ public interface Log {
      * when the log level is more than fatal. </p>
      *
      * @return <code>true</code> if fatal level logging is enabled, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
-    boolean isFatalEnabled();
+    default boolean isFatalEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -110,9 +116,11 @@ public interface Log {
      * when the log level is more than info. </p>
      *
      * @return <code>true</code> if info level logging is enabled, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
-    boolean isInfoEnabled();
+    default boolean isInfoEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -123,9 +131,11 @@ public interface Log {
      * when the log level is more than trace. </p>
      *
      * @return <code>true</code> if trace level logging is enabled, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
-    boolean isTraceEnabled();
+    default boolean isTraceEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -136,9 +146,11 @@ public interface Log {
      * when the log level is more than warn. </p>
      *
      * @return <code>true</code> if warn level logging is enabled, otherwise
-     *         <code>false</code>
+     * <code>false</code>
      */
-    boolean isWarnEnabled();
+    default boolean isWarnEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
 
     // -------------------------------------------------------- Logging Methods
@@ -149,16 +161,20 @@ public interface Log {
      *
      * @param message log this message
      */
-    void trace(Object message);
+    default void trace(Object message) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * <p> Log an error with trace log level. </p>
      *
      * @param message log this message
-     * @param t log this cause
+     * @param t       log this cause
      */
-    void trace(Object message, Throwable t);
+    default void trace(Object message, Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -166,16 +182,20 @@ public interface Log {
      *
      * @param message log this message
      */
-    void debug(Object message);
+    default void debug(Object message) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * <p> Log an error with debug log level. </p>
      *
      * @param message log this message
-     * @param t log this cause
+     * @param t       log this cause
      */
-    void debug(Object message, Throwable t);
+    default void debug(Object message, Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -183,16 +203,20 @@ public interface Log {
      *
      * @param message log this message
      */
-    void info(Object message);
+    default void info(Object message) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * <p> Log an error with info log level. </p>
      *
      * @param message log this message
-     * @param t log this cause
+     * @param t       log this cause
      */
-    void info(Object message, Throwable t);
+    default void info(Object message, Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -200,16 +224,20 @@ public interface Log {
      *
      * @param message log this message
      */
-    void warn(Object message);
+    default void warn(Object message) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * <p> Log an error with warn log level. </p>
      *
      * @param message log this message
-     * @param t log this cause
+     * @param t       log this cause
      */
-    void warn(Object message, Throwable t);
+    default void warn(Object message, Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -217,16 +245,20 @@ public interface Log {
      *
      * @param message log this message
      */
-    void error(Object message);
+    default void error(Object message) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * <p> Log an error with error log level. </p>
      *
      * @param message log this message
-     * @param t log this cause
+     * @param t       log this cause
      */
-    void error(Object message, Throwable t);
+    default void error(Object message, Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -234,16 +266,20 @@ public interface Log {
      *
      * @param message log this message
      */
-    void fatal(Object message);
+    default void fatal(Object message) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * <p> Log an error with fatal log level. </p>
      *
      * @param message log this message
-     * @param t log this cause
+     * @param t       log this cause
      */
-    void fatal(Object message, Throwable t);
+    default void fatal(Object message, Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 
 }

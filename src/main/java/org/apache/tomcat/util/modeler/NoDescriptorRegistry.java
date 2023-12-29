@@ -1,4 +1,4 @@
 package org.apache.tomcat.util.modeler;
 
-public class NoDescriptorRegistry {
+public class NoDescriptorRegistry extends Registry{
 }
