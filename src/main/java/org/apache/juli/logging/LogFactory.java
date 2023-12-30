@@ -146,7 +146,7 @@ public class LogFactory {
      */
     public Log getInstance(String name) throws LogConfigurationException {
         // 12/28 第四步
-        // Constructor<? extends Log> discoveredLogConstructor;
+        // Constructor<? extends Log> discoveredLogConstructor;(创建一个 发现日志的 构造器)
         if (discoveredLogConstructor == null) {
             return DirectJDKLog.getInstance(name);
         }
