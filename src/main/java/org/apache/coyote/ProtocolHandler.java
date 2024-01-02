@@ -141,7 +141,6 @@ public interface ProtocolHandler {
      * connections have closed or the method has been waiting for {@code waitTimeMillis}.
      *
      * @param waitMillis The maximum time to wait in milliseconds for the client connections to close.
-     *
      * @return The wait time, if any remaining when the method returned
      */
     long awaitConnectionsClose(long waitMillis);
@@ -168,10 +167,9 @@ public interface ProtocolHandler {
      *
      * @param sslHostConfig the configuration
      * @param replace       If {@code true} replacement of an existing configuration is permitted, otherwise any such
-     *                          attempted replacement will trigger an exception
-     *
+     *                      attempted replacement will trigger an exception
      * @throws IllegalArgumentException If the host name is not valid or if a configuration has already been provided
-     *                                      for that host and replacement is not allowed
+     *                                  for that host and replacement is not allowed
      */
     void addSslHostConfig(SSLHostConfig sslHostConfig, boolean replace);
 
@@ -226,9 +224,7 @@ public interface ProtocolHandler {
      * Create a new ProtocolHandler for the given protocol.
      *
      * @param protocol the protocol
-     *
      * @return the newly instantiated protocol handler
-     *
      * @throws ClassNotFoundException    Specified protocol was not found
      * @throws InstantiationException    Specified protocol could not be instantiated
      * @throws IllegalAccessException    Exception occurred
@@ -240,19 +236,17 @@ public interface ProtocolHandler {
     static ProtocolHandler create(String protocol)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, SecurityException {
-//        if (protocol == null || "HTTP/1.1".equals(protocol) ||
-//                org.apache.coyote.http11.Http11NioProtocol.class.getName().equals(protocol)) {
-//            return new org.apache.coyote.http11.Http11NioProtocol();
-//        } else if ("AJP/1.3".equals(protocol) ||
-//                org.apache.coyote.ajp.AjpNioProtocol.class.getName().equals(protocol)) {
-//            return new org.apache.coyote.ajp.AjpNioProtocol();
-//        } else {
-//            // Instantiate protocol handler
-//            Class<?> clazz = Class.forName(protocol);
-//            return (ProtocolHandler) clazz.getConstructor().newInstance();
-//        }
-        throw new UnsupportedOperationException();
+        /* 目的是根据传入的字符串参数protocol来创建并返回一个特定类型的ProtocolHandler实例。*/
+        if (protocol == null || "HTTP/1.1".equals(protocol) ||
+                org.apache.coyote.http11.Http11NioProtocol.class.getName().equals(protocol)) {
+            return new org.apache.coyote.http11.Http11NioProtocol();
+        } else if ("AJP/1.3".equals(protocol) ||
+                org.apache.coyote.ajp.AjpNioProtocol.class.getName().equals(protocol)) {
+            return new org.apache.coyote.ajp.AjpNioProtocol();
+        } else {
+            // Instantiate protocol handler
+            Class<?> clazz = Class.forName(protocol);
+            return (ProtocolHandler) clazz.getConstructor().newInstance();
+        }
     }
-
-
 }

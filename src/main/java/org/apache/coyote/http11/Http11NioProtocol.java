@@ -4,6 +4,7 @@ import org.apache.coyote.Adapter;
 import org.apache.coyote.UpgradeProtocol;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.NioChannel;
+import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 
 import javax.management.MBeanServer;
@@ -15,6 +16,10 @@ import java.util.concurrent.ScheduledExecutorService;
  * HTTP/1.1 protocol implementation using NIO.
  */
 public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
+
+    public Http11NioProtocol() {
+        this(new NioEndpoint());
+    }
     public Http11NioProtocol(AbstractEndpoint<NioChannel, ?> endpoint) {
         super(endpoint);
     }

@@ -21,6 +21,7 @@ import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.ProtocolHandler;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.res.StringManager;
 
 
 /**
@@ -35,6 +36,45 @@ public class Connector extends LifecycleMBeanBase {
 
 
     public static final String INTERNAL_EXECUTOR_NAME = "Internal";
+
+    /**
+     * Name of the protocol that was configured.
+     */
+    protected final String configuredProtocol;
+
+    /**
+     * The string manager for this package.
+     */
+    protected static final StringManager sm = StringManager.getManager(Connector.class);
+
+    /**
+     * Coyote protocol handler.
+     */
+    protected final ProtocolHandler protocolHandler;
+
+    /**
+     * Coyote Protocol handler class name. See {@link #Connector()} for current default.
+     */
+    protected final String protocolHandlerClassName;
+
+    public Connector(String protocol) {
+        configuredProtocol = protocol;
+        ProtocolHandler p = null;
+        try {
+            p = ProtocolHandler.create(protocol);
+        } catch (Exception e) {
+            log.error(sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"), e);
+        }
+        if (p != null) {
+            protocolHandler = p;
+            protocolHandlerClassName = protocolHandler.getClass().getName();
+        } else {
+            protocolHandler = null;
+            protocolHandlerClassName = protocol;
+        }
+        // Default for Connector depends on this system property
+        setThrowOnFailure(Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE"));
+    }
 
 
     // 暂时调用

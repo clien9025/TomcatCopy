@@ -122,15 +122,72 @@ public class StringManager {
 //        throw new UnsupportedOperationException();
     }
 
+
+    /**
+     * Get a string from the underlying resource bundle or return null if the String is not found.
+     *
+     * @param key to desired resource String
+     *
+     * @return resource String matching <i>key</i> from underlying bundle or null if not found.
+     *
+     * @throws IllegalArgumentException if <i>key</i> is null
+     */
+    public String getString(String key) {
+        if (key == null) {
+            String msg = "key may not have a null value";
+            throw new IllegalArgumentException(msg);
+        }
+
+        String str = null;
+
+        try {
+            // Avoid NPE if bundle is null and treat it like an MRE
+            if (bundle != null) {
+                str = bundle.getString(key);
+            }
+        } catch (MissingResourceException mre) {
+            // bad: shouldn't mask an exception the following way:
+            // str = "[cannot find message associated with key '" + key +
+            // "' due to " + mre + "]";
+            // because it hides the fact that the String was missing
+            // from the calling code.
+            // good: could just throw the exception (or wrap it in another)
+            // but that would probably cause much havoc on existing
+            // code.
+            // better: consistent with container pattern to
+            // simply return null. Calling code can then do
+            // a null check.
+            /*
+            这段注释解释了为什么在捕获MissingResourceException后返回null
+            而不是抛出异常或返回错误消息的原因
+            不好的做法（bad）：作者指出，掩盖异常（通过设置str为一条错误消息）并不是一个好的做法，因为这隐藏了真正缺失字符串的事实。
+            可能的做法（good）：一种可能的处理方式是直接抛出异常或将它包装在另一个异常中，但这可能会对现有代码造成很大的影响。
+            更好的做法（better）：作者建议的最佳做法是保持与“容器模式”一致，简单地返回null。这样，调用代码可以通过检查返回值是否为null来判断资源是否存在。
+            */
+            str = null;
+        }
+
+        return str;
+    }
+
+    /**
+     * Get a string from the underlying resource bundle and format it with the given set of arguments.
+     *
+     * @param key  The key for the required message
+     * @param args The values to insert into the message
+     *
+     * @return The request string formatted with the provided arguments or the key if the key was not found.
+     */
     public String getString(final String key, final Object... args) {
-//        String value = getString(key);
-//        if (value == null) {
-//            value = key;
-//        }
-//
-//        MessageFormat mf = new MessageFormat(value);
-//        mf.setLocale(locale);
-//        return mf.format(args, new StringBuffer(), null).toString();
-        throw new UnsupportedOperationException();
+        // 这个 key 暂时是：coyoteConnector.protocolHandlerInstantiationFailed
+        String value = getString(key);
+        if (value == null) {
+            value = key;
+        }
+
+        MessageFormat mf = new MessageFormat(value);
+        mf.setLocale(locale);
+        return mf.format(args, new StringBuffer(), null).toString();
+//        throw new UnsupportedOperationException();
     }
 }

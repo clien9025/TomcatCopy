@@ -4,6 +4,7 @@ import org.apache.coyote.Adapter;
 import org.apache.coyote.UpgradeProtocol;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.NioChannel;
+import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 
 import javax.management.MBeanServer;
@@ -17,8 +18,10 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
 
-    public AjpNioProtocol(AbstractEndpoint<NioChannel, ?> endpoint) {
-        super(endpoint);
+    // ------------------------------------------------------------ Constructor
+
+    public AjpNioProtocol() {
+        super(new NioEndpoint());
     }
 
     @Override

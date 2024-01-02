@@ -20,6 +20,8 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
 //        setHandler(cHandler);
 //        setConnectionLinger(Constants.DEFAULT_CONNECTION_LINGER);
 //        setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
+
+//        throw new UnsupportedOperationException();
     }
 
     public void setMaxThreads(int maxThreads) {
