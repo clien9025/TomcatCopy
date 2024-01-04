@@ -7,14 +7,13 @@ import java.net.URI;
 
 public class CatalinaBaseConfigurationSource implements ConfigurationSource {
 
-//    private final String serverXmlPath;
-//    private final File catalinaBaseFile;
-//    private final URI catalinaBaseUri;
+    private final String serverXmlPath;
+    private final File catalinaBaseFile;
+    private final URI catalinaBaseUri;
 
     public CatalinaBaseConfigurationSource(File catalinaBaseFile, String serverXmlPath) {
-//        this.catalinaBaseFile = catalinaBaseFile;
-//        catalinaBaseUri = catalinaBaseFile.toURI();
-//        this.serverXmlPath = serverXmlPath;
-        throw new UnsupportedOperationException();
+        this.catalinaBaseFile = catalinaBaseFile;
+        catalinaBaseUri = catalinaBaseFile.toURI();
+        this.serverXmlPath = serverXmlPath;
     }
 }

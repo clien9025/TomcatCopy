@@ -649,26 +649,26 @@ public class Tomcat {
      */
     public Server getServer() {
 
-//        if (server != null) {
-//            return server;
-//        }
-//
-//        System.setProperty("catalina.useNaming", "false");
-//
-//        server = new StandardServer();
-//
-//        initBaseDir();
-//
-//        // Set configuration source
-//        ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(new File(basedir), null));
-//
-//        server.setPort( -1 );
-//
-//        Service service = new StandardService();
-//        service.setName("Tomcat");
-//        server.addService(service);
-//        return server;
-        throw new UnsupportedOperationException();
+        if (server != null) {
+            return server;
+        }
+
+        System.setProperty("catalina.useNaming", "false");
+
+        server = new StandardServer();
+
+        initBaseDir();
+
+        // Set configuration source
+        ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(new File(basedir), null));
+
+        // todo 这里为什么是 -1
+        server.setPort( -1 );
+
+        Service service = new StandardService();
+        service.setName("Tomcat");
+        server.addService(service);
+        return server;
     }
 
     /**
@@ -859,28 +859,28 @@ public class Tomcat {
 
 
     protected void initBaseDir() {
-//        String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
-//        if (basedir == null) {
-//            basedir = System.getProperty(Globals.CATALINA_BASE_PROP);
-//        }
-//        if (basedir == null) {
-//            basedir = catalinaHome;
-//        }
-//        if (basedir == null) {
-//            // Create a temp dir.
-//            basedir = System.getProperty("user.dir") + "/tomcat." + port;
-//        }
-//
-//        File baseFile = new File(basedir);
-//        if (baseFile.exists()) {
-//            if (!baseFile.isDirectory()) {
-//                throw new IllegalArgumentException(sm.getString("tomcat.baseDirNotDir", baseFile));
-//            }
-//        } else {
-//            if (!baseFile.mkdirs()) {
-//                // Failed to create base directory
-//                throw new IllegalStateException(sm.getString("tomcat.baseDirMakeFail", baseFile));
-//            }
+        String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
+        if (basedir == null) {
+            basedir = System.getProperty(Globals.CATALINA_BASE_PROP);
+        }
+        if (basedir == null) {
+            basedir = catalinaHome;
+        }
+        if (basedir == null) {
+            // Create a temp dir.
+            basedir = System.getProperty("user.dir") + "/tomcat." + port;
+        }
+
+        File baseFile = new File(basedir);
+        if (baseFile.exists()) {
+            if (!baseFile.isDirectory()) {
+                throw new IllegalArgumentException(sm.getString("tomcat.baseDirNotDir", baseFile));
+            }
+        } else {
+            if (!baseFile.mkdirs()) {
+                // Failed to create base directory
+                throw new IllegalStateException(sm.getString("tomcat.baseDirMakeFail", baseFile));
+            }
 //            /*
 //             * If file permissions were going to be set on the newly created
 //             * directory, this is the place to do it. However, even simple
@@ -888,57 +888,59 @@ public class Tomcat {
 //             * differently on different platforms. Therefore, setBaseDir
 //             * documents that the user needs to do this.
 //             */
-//        }
-//        try {
-//            baseFile = baseFile.getCanonicalFile();
-//        } catch (IOException e) {
-//            baseFile = baseFile.getAbsoluteFile();
-//        }
-//        server.setCatalinaBase(baseFile);
-//        System.setProperty(Globals.CATALINA_BASE_PROP, baseFile.getPath());
-//        basedir = baseFile.getPath();
-//
-//        if (catalinaHome == null) {
-//            server.setCatalinaHome(baseFile);
-//        } else {
-//            File homeFile = new File(catalinaHome);
-//            if (!homeFile.isDirectory() && !homeFile.mkdirs()) {
-//                // Failed to create home directory
-//                throw new IllegalStateException(sm.getString("tomcat.homeDirMakeFail", homeFile));
-//            }
+////        }
 //            try {
-//                homeFile = homeFile.getCanonicalFile();
+//                baseFile = baseFile.getCanonicalFile();
 //            } catch (IOException e) {
-//                homeFile = homeFile.getAbsoluteFile();
+//                baseFile = baseFile.getAbsoluteFile();
 //            }
-//            server.setCatalinaHome(homeFile);
-//        }
-//        System.setProperty(Globals.CATALINA_HOME_PROP,
-//                server.getCatalinaHome().getPath());
-        throw new UnsupportedOperationException();
+//            server.setCatalinaBase(baseFile);
+//            System.setProperty(Globals.CATALINA_BASE_PROP, baseFile.getPath());
+//            basedir = baseFile.getPath();
+//
+//            if (catalinaHome == null) {
+//                server.setCatalinaHome(baseFile);
+//            } else {
+//                File homeFile = new File(catalinaHome);
+//                if (!homeFile.isDirectory() && !homeFile.mkdirs()) {
+//                    // Failed to create home directory
+//                    throw new IllegalStateException(sm.getString("tomcat.homeDirMakeFail", homeFile));
+//                }
+//                try {
+//                    homeFile = homeFile.getCanonicalFile();
+//                } catch (IOException e) {
+//                    homeFile = homeFile.getAbsoluteFile();
+//                }
+//                server.setCatalinaHome(homeFile);
+//            }
+//            System.setProperty(Globals.CATALINA_HOME_PROP,
+//                    server.getCatalinaHome().getPath());
+            throw new UnsupportedOperationException();
+        }
+
     }
 
-    static final String[] silences = new String[]{
-            "org.apache.coyote.http11.Http11NioProtocol",
-            "org.apache.catalina.core.StandardService",
-            "org.apache.catalina.core.StandardEngine",
-            "org.apache.catalina.startup.ContextConfig",
-            "org.apache.catalina.core.ApplicationContext",
-            "org.apache.catalina.core.AprLifecycleListener"
-    };
+        static final String[] silences = new String[]{
+                "org.apache.coyote.http11.Http11NioProtocol",
+                "org.apache.catalina.core.StandardService",
+                "org.apache.catalina.core.StandardEngine",
+                "org.apache.catalina.startup.ContextConfig",
+                "org.apache.catalina.core.ApplicationContext",
+                "org.apache.catalina.core.AprLifecycleListener"
+        };
 
-    private boolean silent = false;
+        private boolean silent = false;
 
-    /**
-     * Controls if the loggers will be silenced or not.
-     *
-     * @param silent <code>true</code> sets the log level to WARN for the
-     *               loggers that log information on Tomcat start up. This
-     *               prevents the usual startup information being logged.
-     *               <code>false</code> sets the log level to the default
-     *               level of INFO.
-     */
-    public void setSilent(boolean silent) {
+        /**
+         * Controls if the loggers will be silenced or not.
+         *
+         * @param silent <code>true</code> sets the log level to WARN for the
+         *               loggers that log information on Tomcat start up. This
+         *               prevents the usual startup information being logged.
+         *               <code>false</code> sets the log level to the default
+         *               level of INFO.
+         */
+        public void setSilent ( boolean silent){
 //        this.silent = silent;
 //        for (String s : silences) {
 //            Logger logger = Logger.getLogger(s);
@@ -949,10 +951,10 @@ public class Tomcat {
 //                logger.setLevel(Level.INFO);
 //            }
 //        }
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
-    private void silence(Host host, String contextPath) {
+        private void silence (Host host, String contextPath){
 //        String loggerName = getLoggerName(host, contextPath);
 //        Logger logger = Logger.getLogger(loggerName);
 //        pinnedLoggers.put(loggerName, logger);
@@ -961,33 +963,33 @@ public class Tomcat {
 //        } else {
 //            logger.setLevel(Level.INFO);
 //        }
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
 
-    /**
-     * By default, when calling addWebapp() to create a Context, the settings from
-     * from the default web.xml are added to the context.  Calling this method with
-     * a <code>false</code> value prior to calling addWebapp() allows to opt out of
-     * the default settings. In that event you will need to add the configurations
-     * yourself,  either programmatically or by using web.xml deployment descriptors.
-     *
-     * @param addDefaultWebXmlToWebapp <code>false</code> will prevent the class from
-     *                                 automatically adding the default settings when
-     *                                 calling addWebapp().
-     *                                 <code>true</code> will add the default settings
-     *                                 and is the default behavior.
-     * @see #addWebapp(Host, String, String, LifecycleListener)
-     */
-    public void setAddDefaultWebXmlToWebapp(boolean addDefaultWebXmlToWebapp) {
-        this.addDefaultWebXmlToWebapp = addDefaultWebXmlToWebapp;
-    }
+        /**
+         * By default, when calling addWebapp() to create a Context, the settings from
+         * from the default web.xml are added to the context.  Calling this method with
+         * a <code>false</code> value prior to calling addWebapp() allows to opt out of
+         * the default settings. In that event you will need to add the configurations
+         * yourself,  either programmatically or by using web.xml deployment descriptors.
+         *
+         * @param addDefaultWebXmlToWebapp <code>false</code> will prevent the class from
+         *                                 automatically adding the default settings when
+         *                                 calling addWebapp().
+         *                                 <code>true</code> will add the default settings
+         *                                 and is the default behavior.
+         * @see #addWebapp(Host, String, String, LifecycleListener)
+         */
+        public void setAddDefaultWebXmlToWebapp ( boolean addDefaultWebXmlToWebapp){
+            this.addDefaultWebXmlToWebapp = addDefaultWebXmlToWebapp;
+        }
 
 
-    /*
-     * Uses essentially the same logic as {@link ContainerBase#logName()}.
-     */
-    private String getLoggerName(Host host, String contextName) {
+        /*
+         * Uses essentially the same logic as {@link ContainerBase#logName()}.
+         */
+        private String getLoggerName (Host host, String contextName){
 //        if (host == null) {
 //            host = getHost();
 //        }
@@ -1010,20 +1012,20 @@ public class Tomcat {
 //        loggerName.append(']');
 //
 //        return loggerName.toString();
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
-    /**
-     * Create the configured {@link Context} for the given <code>host</code>.
-     * The default constructor of the class that was configured with
-     * {@link StandardHost#setContextClass(String)} will be used
-     *
-     * @param host host for which the {@link Context} should be created, or
-     *             <code>null</code> if default host should be used
-     * @param url  path of the webapp which should get the {@link Context}
-     * @return newly created {@link Context}
-     */
-    private Context createContext(Host host, String url) {
+        /**
+         * Create the configured {@link Context} for the given <code>host</code>.
+         * The default constructor of the class that was configured with
+         * {@link StandardHost#setContextClass(String)} will be used
+         *
+         * @param host host for which the {@link Context} should be created, or
+         *             <code>null</code> if default host should be used
+         * @param url  path of the webapp which should get the {@link Context}
+         * @return newly created {@link Context}
+         */
+        private Context createContext (Host host, String url){
 //        String defaultContextClass = StandardContext.class.getName();
 //        String contextClass = StandardContext.class.getName();
 //        if (host == null) {
@@ -1043,15 +1045,15 @@ public class Tomcat {
 //        } catch (ReflectiveOperationException  | IllegalArgumentException | SecurityException e) {
 //            throw new IllegalArgumentException(sm.getString("tomcat.noContextClass", contextClass, host, url), e);
 //        }
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
-    /**
-     * Enables JNDI naming which is disabled by default. Server must implement
-     * {@link Lifecycle} in order for the {@link NamingContextListener} to be
-     * used.
-     */
-    public void enableNaming() {
+        /**
+         * Enables JNDI naming which is disabled by default. Server must implement
+         * {@link Lifecycle} in order for the {@link NamingContextListener} to be
+         * used.
+         */
+        public void enableNaming () {
 //        // Make sure getServer() has been called as that is where naming is
 //        // disabled
 //        getServer();
@@ -1078,38 +1080,38 @@ public class Tomcat {
 //                    (javax.naming.Context.INITIAL_CONTEXT_FACTORY,
 //                            "org.apache.naming.java.javaURLContextFactory");
 //        }
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
 
-    /**
-     * Provide default configuration for a context. This is broadly the
-     * programmatic equivalent of the default web.xml and provides the following
-     * features:
-     * <ul>
-     * <li>Default servlet mapped to "/"</li>
-     * <li>JSP servlet mapped to "*.jsp" and ""*.jspx"</li>
-     * <li>Session timeout of 30 minutes</li>
-     * <li>MIME mappings (subset of those in conf/web.xml)</li>
-     * <li>Welcome files</li>
-     * </ul>
-     * TODO: Align the MIME mappings with conf/web.xml - possibly via a common
-     *       file.
-     *
-     * @param contextPath The path of the context to set the defaults for
-     */
-    public void initWebappDefaults(String contextPath) {
-        Container ctx = getHost().findChild(contextPath);
-        initWebappDefaults((Context) ctx);
-    }
+        /**
+         * Provide default configuration for a context. This is broadly the
+         * programmatic equivalent of the default web.xml and provides the following
+         * features:
+         * <ul>
+         * <li>Default servlet mapped to "/"</li>
+         * <li>JSP servlet mapped to "*.jsp" and ""*.jspx"</li>
+         * <li>Session timeout of 30 minutes</li>
+         * <li>MIME mappings (subset of those in conf/web.xml)</li>
+         * <li>Welcome files</li>
+         * </ul>
+         * TODO: Align the MIME mappings with conf/web.xml - possibly via a common
+         *       file.
+         *
+         * @param contextPath The path of the context to set the defaults for
+         */
+        public void initWebappDefaults (String contextPath){
+            Container ctx = getHost().findChild(contextPath);
+            initWebappDefaults((Context) ctx);
+        }
 
 
-    /**
-     * Static version of {@link #initWebappDefaults(String)}.
-     *
-     * @param ctx The context to set the defaults for
-     */
-    public static void initWebappDefaults(Context ctx) {
+        /**
+         * Static version of {@link #initWebappDefaults(String)}.
+         *
+         * @param ctx The context to set the defaults for
+         */
+        public static void initWebappDefaults (Context ctx){
 //        // Default servlet
 //        Wrapper servlet = addServlet(
 //                ctx, "default", "org.apache.catalina.servlets.DefaultServlet");
@@ -1138,17 +1140,17 @@ public class Tomcat {
 //        ctx.addWelcomeFile("index.html");
 //        ctx.addWelcomeFile("index.htm");
 //        ctx.addWelcomeFile("index.jsp");
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
 
-    /**
-     * Add the default MIME type mappings to the provide Context.
-     *
-     * @param context The web application to which the default MIME type
-     *                mappings should be added.
-     */
-    public static void addDefaultMimeTypeMappings(Context context) {
+        /**
+         * Add the default MIME type mappings to the provide Context.
+         *
+         * @param context The web application to which the default MIME type
+         *                mappings should be added.
+         */
+        public static void addDefaultMimeTypeMappings (Context context){
 //        Properties defaultMimeMappings = new Properties();
 //        try (InputStream is = Tomcat.class.getResourceAsStream("MimeTypeMappings.properties")) {
 //            defaultMimeMappings.load(is);
@@ -1158,21 +1160,21 @@ public class Tomcat {
 //        } catch (IOException e) {
 //            throw new IllegalStateException(sm.getString("tomcat.defaultMimeTypeMappingsFail"), e);
 //        }
-        throw new UnsupportedOperationException();
-    }
+            throw new UnsupportedOperationException();
+        }
 
 
-    /**
-     * Fix startup sequence - required if you don't use web.xml.
-     *
-     * <p>
-     * The start() method in context will set 'configured' to false - and
-     * expects a listener to set it back to true.
-     */
-    public static class FixContextListener implements LifecycleListener {
+        /**
+         * Fix startup sequence - required if you don't use web.xml.
+         *
+         * <p>
+         * The start() method in context will set 'configured' to false - and
+         * expects a listener to set it back to true.
+         */
+        public static class FixContextListener implements LifecycleListener {
 
-        @Override
-        public void lifecycleEvent(LifecycleEvent event) {
+            @Override
+            public void lifecycleEvent(LifecycleEvent event) {
 //            try {
 //                Context context = (Context) event.getLifecycle();
 //                if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
@@ -1190,43 +1192,43 @@ public class Tomcat {
 //                }
 //            } catch (ClassCastException e) {
 //            }
-            throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException();
+            }
         }
-    }
 
 
-    /**
-     * Fix reload - required if reloading and using programmatic configuration.
-     * When a context is reloaded, any programmatic configuration is lost. This
-     * listener sets the equivalent of conf/web.xml when the context starts.
-     */
-    public static class DefaultWebXmlListener implements LifecycleListener {
-        @Override
-        public void lifecycleEvent(LifecycleEvent event) {
+        /**
+         * Fix reload - required if reloading and using programmatic configuration.
+         * When a context is reloaded, any programmatic configuration is lost. This
+         * listener sets the equivalent of conf/web.xml when the context starts.
+         */
+        public static class DefaultWebXmlListener implements LifecycleListener {
+            @Override
+            public void lifecycleEvent(LifecycleEvent event) {
 //            if (Lifecycle.BEFORE_START_EVENT.equals(event.getType())) {
 //                initWebappDefaults((Context) event.getLifecycle());
 //            }
-            throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException();
+            }
         }
-    }
 
 
-    /**
-     * Helper class for wrapping existing servlets. This disables servlet
-     * lifecycle and normal reloading, but also reduces overhead and provide
-     * more direct control over the servlet.
-     */
-    public static class ExistingStandardWrapper extends StandardWrapper {
-        private final Servlet existing;
+        /**
+         * Helper class for wrapping existing servlets. This disables servlet
+         * lifecycle and normal reloading, but also reduces overhead and provide
+         * more direct control over the servlet.
+         */
+        public static class ExistingStandardWrapper extends StandardWrapper {
+            private final Servlet existing;
 
-        public ExistingStandardWrapper(Servlet existing) {
+            public ExistingStandardWrapper(Servlet existing) {
 //            this.existing = existing;
 //            this.asyncSupported = hasAsync(existing);
-            throw new UnsupportedOperationException();
-        }
+                throw new UnsupportedOperationException();
+            }
 
-        //
-        private static boolean hasAsync(Servlet existing) {
+            //
+            private static boolean hasAsync(Servlet existing) {
 //            boolean result = false;
 //            Class<?> clazz = existing.getClass();
 //            WebServlet ws = clazz.getAnnotation(WebServlet.class);
@@ -1260,20 +1262,20 @@ public class Tomcat {
 //        public String getServletClass() {
 //            return existing.getClass().getName();
 //        }
-            throw new UnsupportedOperationException();
-        }
+                throw new UnsupportedOperationException();
+            }
 
-        protected URL getWebappConfigFile(String path, String contextName) {
+            protected URL getWebappConfigFile(String path, String contextName) {
 //        File docBase = new File(path);
 //        if (docBase.isDirectory()) {
 //            return getWebappConfigFileFromDirectory(docBase, contextName);
 //        } else {
 //            return getWebappConfigFileFromWar(docBase, contextName);
 //        }
-            throw new UnsupportedOperationException();
-        }
+                throw new UnsupportedOperationException();
+            }
 
-        private URL getWebappConfigFileFromDirectory(File docBase, String contextName) {
+            private URL getWebappConfigFileFromDirectory(File docBase, String contextName) {
 //            URL result = null;
 //            File webAppContextXml = new File(docBase, Constants.ApplicationContextXml);
 //            if (webAppContextXml.exists()) {
@@ -1285,10 +1287,10 @@ public class Tomcat {
 //                }
 //            }
 //            return result;
-            throw new UnsupportedOperationException();
-        }
+                throw new UnsupportedOperationException();
+            }
 
-        private URL getWebappConfigFileFromWar(File docBase, String contextName) {
+            private URL getWebappConfigFileFromWar(File docBase, String contextName) {
 //        URL result = null;
 //        try (JarFile jar = new JarFile(docBase)) {
 //            JarEntry entry = jar.getJarEntry(Constants.ApplicationContextXml);
@@ -1300,10 +1302,10 @@ public class Tomcat {
 //                    sm.getString("tomcat.noContextXml", docBase), e);
 //        }
 //        return result;
-            throw new UnsupportedOperationException();
-        }
+                throw new UnsupportedOperationException();
+            }
 
-        static {
+            static {
 //        // Graal native images don't load any configuration except the VM default
 //        if (JreCompat.isGraalAvailable()) {
 //            try (InputStream is = new FileInputStream(new File(System.getProperty("java.util.logging.config.file", "conf/logging.properties")))) {
@@ -1312,15 +1314,15 @@ public class Tomcat {
 //                // Ignore, the VM default will be used
 //            }
 //        }
-        }
+            }
 
-        /**
-         * Main executable method for use with a Maven packager.
-         *
-         * @param args the command line arguments
-         * @throws Exception if an error occurs
-         */
-        public static void main(String[] args) throws Exception {
+            /**
+             * Main executable method for use with a Maven packager.
+             *
+             * @param args the command line arguments
+             * @throws Exception if an error occurs
+             */
+            public static void main(String[] args) throws Exception {
 //        // Process some command line parameters
 //        String[] catalinaArguments = null;
 //        for (int i = 0; i < args.length; i++) {
@@ -1375,8 +1377,9 @@ public class Tomcat {
 //        if (await) {
 //            tomcat.getServer().await();
 //        }
-            throw new UnsupportedOperationException();
-        }
+                throw new UnsupportedOperationException();
+            }
 
+        }
     }
-}
+

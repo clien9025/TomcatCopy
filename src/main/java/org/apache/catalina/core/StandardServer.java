@@ -14,6 +14,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 
+    private int port = 8005;
+
 
     /**
      * Obtain the MBean domain for this server. The domain is obtained using the following search order:
@@ -64,7 +66,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     @Override
     public void setPort(int port) {
-        throw new UnsupportedOperationException();
+        this.port = port;
     }
 
     @Override

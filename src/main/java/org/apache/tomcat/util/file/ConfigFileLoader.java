@@ -23,10 +23,9 @@ public class ConfigFileLoader {
      * @param source The source
      */
     public static final void setSource(ConfigurationSource source) {
-//        if (ConfigFileLoader.source == null) {
-//            ConfigFileLoader.source = source;
-//        }
-        throw new UnsupportedOperationException();
+        if (ConfigFileLoader.source == null) {
+            ConfigFileLoader.source = source;
+        }
     }
 
     private ConfigFileLoader() {
