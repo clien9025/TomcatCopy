@@ -48,4 +48,38 @@ import org.apache.tomcat.util.res.StringManager;
  */
 
 public class StandardService extends LifecycleMBeanBase implements Service {
+
+    // ----------------------------------------------------- Instance Variables
+
+    /**
+     * The name of this service.
+     */
+    private String name = null;
+
+    /**
+     * The <code>Server</code> that owns this Service, if any.
+     */
+    private Server server = null;
+
+
+    /**
+     * Set the name of this Service.
+     *
+     * @param name The new service name
+     */
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Set the <code>Server</code> with which we are associated (if any).
+     *
+     * @param server The server that owns this Service
+     */
+    @Override
+    public void setServer(Server server) {
+        this.server = server;
+    }
+
 }

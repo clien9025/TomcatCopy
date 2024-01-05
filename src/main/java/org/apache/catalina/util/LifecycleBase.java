@@ -9,7 +9,7 @@ public abstract class LifecycleBase implements Lifecycle {
     /**
      * The current state of the source component.
      */
-//    private volatile LifecycleState state = LifecycleState.NEW;
+    private volatile LifecycleState state = LifecycleState.NEW;
 
 
     private boolean throwOnFailure = true;
@@ -65,5 +65,12 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     protected void initInternal() throws LifecycleException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public LifecycleState getState() {
+        // private volatile LifecycleState state = LifecycleState.NEW;
+        /* 创建了一个 LifecycleState 类型的状态 state */
+        return state;
     }
 }
