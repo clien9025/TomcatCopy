@@ -1,5 +1,6 @@
 package org.apache.juli.logging;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -21,4 +22,11 @@ class DirectJDKLog implements Log {
         // 有很多类型的 demand（请求）log，有系统类型的log，有默认的 log，有本身就有的 log，等等。
         logger= Logger.getLogger(name);
     }
+
+
+    @Override
+    public final boolean isDebugEnabled() {
+        return logger.isLoggable(Level.FINE);
+    }
+
 }

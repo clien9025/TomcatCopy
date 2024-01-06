@@ -22,6 +22,7 @@ import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.ProtocolHandler;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.IntrospectionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -106,6 +107,31 @@ public class Connector extends LifecycleMBeanBase {
 //        // Usually means an invalid protocol has been configured
 //        return -1;
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Set the port number on which we listen for requests.
+     *
+     * @param port The new port number
+     */
+    public void setPort(int port) {
+        setProperty("port", String.valueOf(port));
+    }
+
+
+    /**
+     * Set a property on the protocol handler.
+     *
+     * @param name  the property name
+     * @param value the property value
+     *
+     * @return <code>true</code> if the property was successfully set
+     */
+    public boolean setProperty(String name, String value) {
+        if (protocolHandler == null) {
+            return false;
+        }
+        return IntrospectionUtils.setProperty(protocolHandler, name, value);
     }
 
     // 暂时有用
