@@ -213,9 +213,7 @@ public class CharsetCache {
                 addToCache(lcCharsetName, charset);// 找到字符集 - 用实际字符集替换占位符
                 result = charset;
             }
-//            throw new UnsupportedOperationException();
         }
-
         return result;
     }
 

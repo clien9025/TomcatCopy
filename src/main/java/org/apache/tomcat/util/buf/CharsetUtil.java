@@ -31,29 +31,32 @@ public class CharsetUtil {
 
 
     public static boolean isAsciiSuperset(Charset charset) {
-//        // Bytes 0x00 to 0x7F must decode to the first 128 Unicode characters
-//        CharsetDecoder decoder = charset.newDecoder();
-//        ByteBuffer inBytes = ByteBuffer.allocate(1);
-//        CharBuffer outChars;
-//        for (int i = 0; i < 128; i++) {
-//            inBytes.clear();
-//            inBytes.put((byte) i);
-//            inBytes.flip();
-//            try {
-//                outChars = decoder.decode(inBytes);
-//            } catch (CharacterCodingException e) {
-//                return false;
-//            }
-//            try {
-//                if (outChars.get() != i) {
-//                    return false;
-//                }
-//            } catch (BufferUnderflowException e) {
-//                return false;
-//            }
-//        }
-//
-//        return true;
-        throw new UnsupportedOperationException();
+        // Bytes 0x00 to 0x7F must decode to the first 128 Unicode characters
+        CharsetDecoder decoder = charset.newDecoder();// 这行代码创建了一个解码器，用于将字节解码为字符
+        ByteBuffer inBytes = ByteBuffer.allocate(1);// 创建了一个容量为1的字节缓冲区，用于存放将要检查的字节
+        CharBuffer outChars;
+        for (int i = 65; i < 128; i++) {
+            // 清除和放置字节
+            inBytes.clear();
+            inBytes.put((byte) i);// 十进制
+            inBytes.flip();// 准备缓冲区以从头开始读取数据
+            try {
+                // 将单个字节（inBytes）解码成 outChars(字符) 并存储在CharBuffer outChars中。这个过程是:字节--->成对应的字符
+                outChars = decoder.decode(inBytes);
+//                System.out.println("outChars.get()------------> "+outChars.get());
+//                System.out.println("-----------------------------------------------------------------------------------------------");
+            } catch (CharacterCodingException e) {
+                return false;
+            }
+            try {
+                if (outChars.get() != i) {
+                    return false;
+                }
+            } catch (BufferUnderflowException e) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
