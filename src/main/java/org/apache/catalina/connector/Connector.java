@@ -139,8 +139,7 @@ public class Connector extends LifecycleMBeanBase {
      * @return the protocol handler associated with the connector.
      */
     public ProtocolHandler getProtocolHandler() {
-//        return this.protocolHandler;
-        throw new UnsupportedOperationException();
+        return this.protocolHandler;
     }
 
 

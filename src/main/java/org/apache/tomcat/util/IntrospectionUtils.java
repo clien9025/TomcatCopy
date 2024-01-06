@@ -13,6 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utils for introspection and reflection
+ * org.apache.tomcat.util.IntrospectionUtils 是 Apache Tomcat 服务器中的一个实用工具类，主要用于内省和反射。
+ * 内省（Introspection）是一种通过反射来检查或修改程序运行时的状态的能力，这通常涉及到动态地调用方法、访问属性或检查对象类型等操作。
+ *
+ * 在Tomcat中，IntrospectionUtils 主要用途包括：
+ * 1. 属性设置：动态地为对象的属性赋值。它可以根据提供的属性名（通常是字符串）来查找相应的 setter 方法，并使用反射来调用这些方法，从而动态地设置对象的属性。
+ * 2. 方法调用：通过反射机制调用对象的方法。
+ * 3. 类型转换：将字符串转换为特定的类型，例如将字符串转换为布尔值或数字等。
+ * 4. 查找方法：查找对象的特定方法，特别是带有特定名称和/或参数的方法。
  */
 public final class IntrospectionUtils {
 
