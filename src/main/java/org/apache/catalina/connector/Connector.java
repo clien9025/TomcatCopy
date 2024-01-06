@@ -23,7 +23,13 @@ import org.apache.coyote.ProtocolHandler;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.IntrospectionUtils;
+import org.apache.tomcat.util.buf.B2CConverter;
+import org.apache.tomcat.util.buf.CharsetUtil;
 import org.apache.tomcat.util.res.StringManager;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -67,6 +73,11 @@ public class Connector extends LifecycleMBeanBase {
      * Coyote Protocol handler class name. See {@link #Connector()} for current default.
      */
     protected final String protocolHandlerClassName;
+
+    /**
+     * The URI encoding in use.
+     */
+    private Charset uriCharset = StandardCharsets.UTF_8;
 
     public Connector(String protocol) {
         configuredProtocol = protocol;
@@ -168,6 +179,34 @@ public class Connector extends LifecycleMBeanBase {
      */
     public void setService(Service service) {
         this.service = service;
+    }
+
+
+    /**
+     * Set the URI encoding to be used for the URI.
+     * 用来设置URI编码
+     * 这通常是Web服务器和应用服务器中处理请求的一个重要部分。
+     * URI（统一资源标识符）编码用于确保传输过程中的特殊字符被正确处理。
+     *
+     * 参数：String URIEncoding - 这是要设置的新URI编码，例如 "UTF-8"。
+     * 目的：该方法旨在将服务器用于解析请求URI的字符集更改为指定的编码。
+     *
+     * @param URIEncoding The new URI character encoding.
+     */
+    // 传入的 URIEncoding 是 getUriEncoding().name()=“UTF-8”(暂时调用)
+    public void setURIEncoding(String URIEncoding) {
+        try {
+            Charset charset = B2CConverter.getCharset(URIEncoding);
+            // 检查得到的字符集是否是ASCII的超集。这通常是必需的，因为HTTP协议基于ASCII，确保字符集兼容ASCII有助于防止解析错误。
+            if (!CharsetUtil.isAsciiSuperset(charset)) {
+                log.error(sm.getString("coyoteConnector.notAsciiSuperset", URIEncoding, uriCharset.name()));
+                return;
+            }
+            uriCharset = charset;
+        } catch (UnsupportedEncodingException e) {
+            // 如果 UnsupportedEncodingException 异常被抛出（表示提供的编码名称无效或不受支持），则记录一个错误。
+            log.error(sm.getString("coyoteConnector.invalidencoding", URIEncoding, uriCharset.name()), e);
+        }
     }
 
 

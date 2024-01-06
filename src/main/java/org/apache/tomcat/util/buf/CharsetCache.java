@@ -165,49 +165,58 @@ public class CharsetCache {
     private ConcurrentMap<String,Charset> cache = new ConcurrentHashMap<>();
 
     public CharsetCache() {
-//        // Pre-populate the cache
-//        for (String charsetName : INITIAL_CHARSETS) {
-//            Charset charset = Charset.forName(charsetName);
-//            addToCache(charsetName, charset);
-//        }
-//
-//        for (String charsetName : LAZY_CHARSETS) {
-//            addToCache(charsetName, DUMMY_CHARSET);
-//        }
-        throw new UnsupportedOperationException();
+        /* 将 初始化的字符集 装到 缓存 里 */
+        // Pre-populate the cache
+        for (String charsetName : INITIAL_CHARSETS) {
+            Charset charset = Charset.forName(charsetName);
+            addToCache(charsetName, charset);
+        }
+        /* 将 懒字符集 名字作为 key，将 虚拟字符集 作为 value 放到 缓存里 */
+        for (String charsetName : LAZY_CHARSETS) {
+            addToCache(charsetName, DUMMY_CHARSET);
+        }
     }
 
-
+    /**
+     * 将字符集装到 缓存里面
+     * @param name
+     * @param charset
+     */
     private void addToCache(String name, Charset charset) {
-//        cache.put(name, charset);
-//        for (String alias : charset.aliases()) {
-//            cache.put(alias.toLowerCase(Locale.ENGLISH), charset);
-//        }
-        throw new UnsupportedOperationException();
+        cache.put(name, charset);
+        for (String alias : charset.aliases()) {
+            // toLowerCase(Locale.ENGLISH) 它的作用是将字符串中的所有大写字符转换为小写字符。
+            // 这个方法接受一个 Locale 对象作为参数，它指定了转换规则的地区设置。
+            cache.put(alias.toLowerCase(Locale.ENGLISH), charset);
+        }
     }
 
 
     public Charset getCharset(String charsetName) {
-//        String lcCharsetName = charsetName.toLowerCase(Locale.ENGLISH);
-//
-//        Charset result = cache.get(lcCharsetName);
-//
-//        if (result == DUMMY_CHARSET) {
-//            // Name is known but the Charset is not in the cache
-//            Charset charset = Charset.forName(lcCharsetName);
-//            if (charset == null) {
-//                // Charset not available in this JVM - remove cache entry
-//                cache.remove(lcCharsetName);
-//                result = null;
-//            } else {
-//                // Charset is available - populate cache entry
-//                addToCache(lcCharsetName, charset);
-//                result = charset;
-//            }
-//        }
-//
-//        return result;
-        throw new UnsupportedOperationException();
+        String lcCharsetName = charsetName.toLowerCase(Locale.ENGLISH);
+        // 获取缓存里面已经在初始化时就初始化好的值，下面的 cache 里面有很多 value 是 DummyCharset 类型的站位用的实例，Dummy 英文意思就是假的
+        Charset result = cache.get(lcCharsetName);
+        // 判断 result 是否和 DUMMY_CHARSET 是同一个实例，检查获取的对象 result 是否是占位符
+        // private static final Charset DUMMY_CHARSET = new DummyCharset("Dummy", null);
+        /*当我们说 "Name is known" 时，我们的意思是：我们知道有一个名为 lcCharsetName 的字符集应该存在（可能是因为它是
+        标准字符集之一，或者以前在配置中提到过）。但是，尽管我们知道这个名称，cache 中并没有与之对应的实
+        际 Charset 对象 —— 这就是为什么我们用 DUMMY_CHARSET 作为占位符的原因。*/
+        if (result == DUMMY_CHARSET) {
+            // Name is known but the Charset is not in the cache，这里的 Name 指的是 lcCharsetName
+            Charset charset = Charset.forName(lcCharsetName);
+            if (charset == null) {
+                // Charset not available in this JVM - remove cache entry
+                cache.remove(lcCharsetName);// 删除这个占位用的字符集
+                result = null;// 说明字符集不可用
+            } else {
+                // Charset is available - populate cache entry
+                addToCache(lcCharsetName, charset);// 找到字符集 - 用实际字符集替换占位符
+                result = charset;
+            }
+//            throw new UnsupportedOperationException();
+        }
+
+        return result;
     }
 
 

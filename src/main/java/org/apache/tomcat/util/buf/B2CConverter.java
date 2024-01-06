@@ -54,17 +54,17 @@ public class B2CConverter {
      */
     public static Charset getCharset(String enc) throws UnsupportedEncodingException {
 
-//        // Encoding names should all be ASCII
-//        String lowerCaseEnc = enc.toLowerCase(Locale.ENGLISH);
-//
-//        Charset charset = charsetCache.getCharset(lowerCaseEnc);
-//
-//        if (charset == null) {
-//            // Pre-population of the cache means this must be invalid
-//            throw new UnsupportedEncodingException(sm.getString("b2cConverter.unknownEncoding", lowerCaseEnc));
-//        }
-//        return charset;
-        throw new UnsupportedOperationException();
+        /* 根据传入进来的 enc 编码来变成英语小写 */
+        // Encoding names should all be ASCII
+        String lowerCaseEnc = enc.toLowerCase(Locale.ENGLISH);
+        /* 用英语小写在 CharsetCache 类的 缓存 里面找*/
+        Charset charset = charsetCache.getCharset(lowerCaseEnc);
+
+        if (charset == null) {
+            // Pre-population of the cache means this must be invalid
+            throw new UnsupportedEncodingException(sm.getString("b2cConverter.unknownEncoding", lowerCaseEnc));
+        }
+        return charset;
     }
 
 
