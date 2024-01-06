@@ -49,7 +49,26 @@ import org.apache.tomcat.util.res.StringManager;
 
 public class StandardService extends LifecycleMBeanBase implements Service {
 
+
+
+    private static final StringManager sm = StringManager.getManager(StandardService.class);
+
+
+
     // ----------------------------------------------------- Instance Variables
+
+    /**
+     * The set of Connectors associated with this Service.
+     */
+    protected Connector connectors[] = new Connector[0];
+    private final Object connectorsLock = new Object();
+
+
+    /**
+     * The property change support for this component.
+     */
+    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
+
 
     /**
      * The name of this service.
@@ -80,6 +99,39 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     public void setServer(Server server) {
         this.server = server;
+    }
+
+
+
+    // --------------------------------------------------------- Public Methods
+
+    /**
+     * Add a new Connector to the set of defined Connectors, and associate it with this Service's Container.
+     *
+     * @param connector The Connector to be added
+     */
+    @Override
+    public void addConnector(Connector connector) {
+
+        synchronized (connectorsLock) {
+            connector.setService(this);
+            Connector results[] = new Connector[connectors.length + 1];
+            System.arraycopy(connectors, 0, results, 0, connectors.length);
+            results[connectors.length] = connector;
+            connectors = results;
+        }
+
+        try {
+            if (getState().isAvailable()) {
+                // todo 这个 start 里面没有实现
+                connector.start();
+            }
+        } catch (LifecycleException e) {
+            throw new IllegalArgumentException(sm.getString("standardService.connector.startFailed", connector), e);
+        }
+
+        // Report this property change to interested listeners
+        support.firePropertyChange("connector", null, connector);
     }
 
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.catalina.connector;
 
+import org.apache.catalina.Service;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.ProtocolHandler;
@@ -31,6 +32,15 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Remy Maucherat
  */
 public class Connector extends LifecycleMBeanBase {
+
+
+
+    // ----------------------------------------------------- Instance Variables
+
+    /**
+     * The <code>Service</code> we are associated with (if any).
+     */
+    protected Service service = null;
 
     private static final Log log = LogFactory.getLog(Connector.class);
 
@@ -124,6 +134,15 @@ public class Connector extends LifecycleMBeanBase {
     public String getScheme() {
 //        return this.scheme;
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Set the <code>Service</code> with which we are associated (if any).
+     *
+     * @param service The service that owns this Engine
+     */
+    public void setService(Service service) {
+        this.service = service;
     }
 
 
