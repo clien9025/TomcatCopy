@@ -134,4 +134,17 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         support.firePropertyChange("connector", null, connector);
     }
 
+    /**
+     * Find and return the set of Connectors associated with this Service.
+     *
+     * 查找并返回与此服务关联的连接器集（数组）
+     */
+    @Override
+    public Connector[] findConnectors() {
+        synchronized (connectorsLock) {
+            // shallow copy
+            return connectors.clone();// 返回复制的那一份 connectors（数组）
+        }
+    }
+
 }

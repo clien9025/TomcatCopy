@@ -560,21 +560,26 @@ public class Tomcat {
      * Set the specified connector in the service, if it is not already
      * present.
      *
+     * 作用：
+     *      是将指定的连接器（Connector）实例添加到服务（Service）中，前提是这个连接器尚未被添加。
+     *      这个方法的主要作用是确保服务中不会重复添加相同的连接器实例。
+     *      它首先检查服务中是否已经存在指定的连接器，如果不存在，则将其添加到服务中。
+     *      这样做可以避免重复配置和潜在的资源浪费，确保每个连接器只被添加一次。
+     *
      * @param connector The connector instance to add
      */
     public void setConnector(Connector connector) {
-//        Service service = getService();
-//        boolean found = false;
-//        for (Connector serviceConnector : service.findConnectors()) {
-//            if (connector == serviceConnector) {
-//                found = true;
-//                break;
-//            }
-//        }
-//        if (!found) {
-//            service.addConnector(connector);
-//        }
-        throw new UnsupportedOperationException();
+        Service service = getService();
+        boolean found = false;
+        for (Connector serviceConnector : service.findConnectors()) {
+            if (connector == serviceConnector) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            service.addConnector(connector);
+        }
     }
 
     /**
