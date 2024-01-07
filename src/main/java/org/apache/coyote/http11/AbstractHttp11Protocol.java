@@ -57,4 +57,28 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public void setMaxKeepAliveRequests(int mkar) {
         getEndpoint().setMaxKeepAliveRequests(mkar);
     }
+
+    /**
+     * 这行代码定义了一个私有布尔变量rejectIllegalHeader，并初始化为true。
+     * 这意味着默认行为是拒绝包含非法头部的请求。
+     */
+    private boolean rejectIllegalHeader = true;
+
+    /**
+     * If an HTTP request is received that contains an illegal header name or value (e.g. the header name is not a
+     * token) should the request be rejected (with a 400 response) or should the illegal header be ignored?
+     *翻译：如果收到包含非法标头名称或值（例如标头名称不是令牌）的 HTTP 请求，是否应该拒绝该请求（使用 400 响应）还是应该忽略非法标头？
+     *
+     * setRejectIllegalHeader 是用来设置是否拒绝包含非法头部名称或值的HTTP请求的
+     *
+     * @param rejectIllegalHeader {@code true} to reject requests with illegal header names or values, {@code false} to
+     *                                ignore the header
+     *
+     * @deprecated This will removed in Tomcat 11 onwards where {@code allowHostHeaderMismatch} will be hard-coded to
+     *                 {@code true}.
+     */
+    @Deprecated
+    public void setRejectIllegalHeader(boolean rejectIllegalHeader) {
+        this.rejectIllegalHeader = rejectIllegalHeader;
+    }
 }
