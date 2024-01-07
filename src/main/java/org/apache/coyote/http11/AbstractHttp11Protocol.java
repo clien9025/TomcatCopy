@@ -9,6 +9,16 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * Over-ridden here to make the method visible to nested classes.
+     */
+    @Override
+    protected AbstractEndpoint<S,?> getEndpoint() {
+        return super.getEndpoint();
+    }
+
+    /**
      * Maximum size of the HTTP request message header.
      * HTTP 请求消息标头的最大大小
      */
@@ -43,8 +53,8 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public void setMaxSwallowSize(int maxSwallowSize) {
         this.maxSwallowSize = maxSwallowSize;
     }
+
     public void setMaxKeepAliveRequests(int mkar) {
-//        getEndpoint().setMaxKeepAliveRequests(mkar);
-        throw new UnsupportedOperationException();
+        getEndpoint().setMaxKeepAliveRequests(mkar);
     }
 }

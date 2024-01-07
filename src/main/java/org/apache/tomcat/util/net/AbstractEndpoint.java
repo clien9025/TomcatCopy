@@ -163,6 +163,14 @@ public abstract class AbstractEndpoint<S,U> {
         return connectionLimitLatch;
     }
 
+    /**
+     * Max keep alive requests
+     */
+    private int maxKeepAliveRequests=100; // as in Apache HTTPD server
+    public void setMaxKeepAliveRequests(int maxKeepAliveRequests) {
+        this.maxKeepAliveRequests = maxKeepAliveRequests;
+    }
+
     public interface Handler<S> {
 
         /**
