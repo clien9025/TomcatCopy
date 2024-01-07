@@ -43,6 +43,10 @@ public abstract class AbstractEndpoint<S,U> {
 
     private int minSpareThreads = 10;
 
+    /**
+     * 设置线程池的最大线程数
+     * @param maxThreads
+     */
     public void setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
         Executor executor = this.executor;// 获取当前对象的executor实例
@@ -57,9 +61,15 @@ public abstract class AbstractEndpoint<S,U> {
         }
     }
 
+    /**
+     * 目的是设置线程池的最小空闲线程数，并适当地调整内部的ThreadPoolExecutor的核心池大小。
+     * @param minSpareThreads
+     */
     public void setMinSpareThreads(int minSpareThreads) {
         this.minSpareThreads = minSpareThreads;
         Executor executor = this.executor;
+        /* 首先，internalExecutor应为true，表示当前对象使用的是内部执行器；其次，executor应该是ThreadPoolExecutor的实例。
+        这确保了只有在使用内部的ThreadPoolExecutor时，后续代码才会执行。 */
         if (internalExecutor && executor instanceof ThreadPoolExecutor) {
             // The internal executor should always be an instance of
             // org.apache.tomcat.util.threads.ThreadPoolExecutor but it may be
