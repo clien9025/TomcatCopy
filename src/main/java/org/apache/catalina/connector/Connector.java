@@ -180,6 +180,25 @@ public class Connector extends LifecycleMBeanBase {
     public void setService(Service service) {
         this.service = service;
     }
+    /**
+     * Maximum size of a POST which will be automatically parsed by the container. 2 MiB by default.
+     * 容器将自动解析的 POST 的最大大小。默认为 2 MiB。
+     */
+    protected int maxPostSize = 2 * 1024 * 1024;
+
+    /**
+     * Set the maximum size of a POST which will be automatically parsed by the container.
+     * 设置 -----> 容器将自动解析的 POST 的最大大小(如下面一行注释)
+     * 作用：
+     *      允许用户设置服务器容器（如Tomcat）将自动解析的POST请求体的最大大小。这是一个配置设置，
+     *      可以帮助控制接收大量数据的能力，防止由于处理过大的POST请求而导致的性能问题或安全风险。
+     *
+     * @param maxPostSize The new maximum size in bytes of a POST which will be automatically parsed by the container
+     *                    容器将自动解析的POST请求的新最大大小（以字节为单位）
+     */
+    public void setMaxPostSize(int maxPostSize) {
+        this.maxPostSize = maxPostSize;
+    }
 
 
     /**
