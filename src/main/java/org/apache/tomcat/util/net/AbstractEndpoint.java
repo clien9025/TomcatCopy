@@ -1,5 +1,7 @@
 package org.apache.tomcat.util.net;
 
+import org.apache.tomcat.util.threads.LimitLatch;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -77,6 +79,73 @@ public abstract class AbstractEndpoint<S,U> {
             // This check also avoids various threading issues.
             ((ThreadPoolExecutor) executor).setCorePoolSize(minSpareThreads);
         }
+    }
+
+    private int maxConnections = 8*1024;
+    /**
+     * counter for nr of connections handled by an endpoint
+     * connectionLimitLatch 用于控制和限制服务器端点能够处理的最大并发连接数。
+     * 通过这种方式，它有助于避免服务器过载并维持稳定高效的运行状态。
+     *
+     * LimitLatch 维护一个计数器来跟踪当前活跃的连接数。它被初始化为最大连接数（maxConnections）。
+     *
+     * 线程获取许可：当一个新的连接请求到来时，线程会尝试从 LimitLatch 获取许可。如果当前活跃的连接数未达到maxConnections限制，则
+     * LimitLatch 会允许这个线程继续，并将计数器减一。
+     *
+     * 等待和释放：如果当前的连接数已经达到最大限制，则新的请求线程将等待，直到其他线程释放许可（即连接关闭），
+     * LimitLatch 的计数器随之增加，新的线程可以获取许可继续执行。
+     */
+    private volatile LimitLatch connectionLimitLatch = null;
+
+    /**
+     *      定义了一个 setMaxConnections 方法来更新最大连接数，并相应地更新或初始化一个 LimitLatch 对象用于实际执行这一限制。
+     *      这段代码的作用是控制端点能处理的最大并发连接数。（用来设置和管理服务器端点的最大连接数的）
+     *      当最大连接数被更新时，它相应地调整或初始化一个LimitLatch来实施这个限制。这有助于避免服务器过载，保持稳定和高效的运行。
+     * @param maxCon
+     */
+    public void setMaxConnections(int maxCon) {
+        this.maxConnections = maxCon;
+        LimitLatch latch = this.connectionLimitLatch;// 传入进来的 NioEndpoint 的 connectionLimitLatch 属性是 null
+        if (latch != null) {// 检查LimitLatch是否已经初始化
+            /* 如果maxCon等于-1，表示不限制连接数，那么调用 releaseConnectionLatch()方法释放（或关闭）计数器。*/
+            // Update the latch that enforces this（强制更新这个锁）
+            if (maxCon == -1) {
+                releaseConnectionLatch();
+            } else {
+                /* 如果maxCon不等于-1，那么设置latch的限制为maxCon */
+                latch.setLimit(maxCon);
+            }
+        } else if (maxCon > 0) {
+            // Latch是null且maxCon大于0的情况：这种情况通常发生在LimitLatch对象尚未初始化时。
+            // 1. 当端点（Endpoint）对象首次创建时，connectionLimitLatch可能被初始化为null。
+            //    在这种情况下，LimitLatch尚未被设置或使用，表示没有当前的限制。
+            // 2. 在端点的生命周期中，可能会有配置更改，这可能导致LimitLatch被置为null。
+            //    例如，如果之前决定不限制连接数（可能将LimitLatch设为null），然后更新配置以启用限制。
+            /* 如果latch是null且maxCon大于0，表示需要初始化计数器，那么调用initializeConnectionLatch()方法进行初始化 */
+            initializeConnectionLatch();
+        }
+    }
+    public int getMaxConnections() { return this.maxConnections; }
+
+    /**
+     * 释放（或关闭）计数器。
+     */
+    private void releaseConnectionLatch() {
+        LimitLatch latch = connectionLimitLatch;
+        if (latch!=null) {
+            latch.releaseAll();
+        }
+        connectionLimitLatch = null;
+    }
+
+    protected LimitLatch initializeConnectionLatch() {
+        if (maxConnections==-1) {
+            return null;
+        }
+        if (connectionLimitLatch==null) {
+            connectionLimitLatch = new LimitLatch(getMaxConnections());
+        }
+        return connectionLimitLatch;
     }
 
     public interface Handler<S> {
