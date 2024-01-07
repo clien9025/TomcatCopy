@@ -37,8 +37,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
     }
 
     public void setAcceptCount(int acceptCount) {
-//        endpoint.setAcceptCount(acceptCount);
-        throw new UnsupportedOperationException();
+        endpoint.setAcceptCount(acceptCount);
     }
     public void setProcessorCache(int processorCache) {
 //        this.processorCache = processorCache;

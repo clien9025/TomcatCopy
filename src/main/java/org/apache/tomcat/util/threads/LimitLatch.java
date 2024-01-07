@@ -13,20 +13,22 @@ public class LimitLatch {
 
         @Override
         protected int tryAcquireShared(int ignored) {
-            long newCount = count.incrementAndGet();
-            if (!released && newCount > limit) {
-                // Limit exceeded
-                count.decrementAndGet();
-                return -1;
-            } else {
-                return 1;
-            }
+//            long newCount = count.incrementAndGet();
+//            if (!released && newCount > limit) {
+//                // Limit exceeded
+//                count.decrementAndGet();
+//                return -1;
+//            } else {
+//                return 1;
+//            }
+            throw new UnsupportedOperationException();
         }
 
         @Override
         protected boolean tryReleaseShared(int arg) {
-            count.decrementAndGet();
-            return true;
+//            count.decrementAndGet();
+//            return true;
+            throw new UnsupportedOperationException();
         }
     }
 

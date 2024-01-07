@@ -45,6 +45,18 @@ public abstract class AbstractEndpoint<S,U> {
 
     private int minSpareThreads = 10;
 
+
+    /**
+     * Allows the server developer to specify the acceptCount (backlog) that
+     * should be used for server sockets. By default, this value
+     * is 100.
+     * 允许服务器开发人员指定应用于服务器套接字的acceptCount（积压）。默认情况下，该值为 100。
+     */
+    private int acceptCount = 100;
+    public void setAcceptCount(int acceptCount) { if (acceptCount > 0) {
+        this.acceptCount = acceptCount;
+    } }
+
     /**
      * 设置线程池的最大线程数
      * @param maxThreads
@@ -109,10 +121,13 @@ public abstract class AbstractEndpoint<S,U> {
         if (latch != null) {// 检查LimitLatch是否已经初始化
             /* 如果maxCon等于-1，表示不限制连接数，那么调用 releaseConnectionLatch()方法释放（或关闭）计数器。*/
             // Update the latch that enforces this（强制更新这个锁）
-            if (maxCon == -1) {
+            /* 在许多编程约定中，特定的数值被用作标志来表示特殊情况。在这种情况下，maxCon == -1被用作一个标志来指示需要进行特殊的操作。
+            这种模式在处理配置选项时非常普遍，尤其是在涉及到开/关或存在/不存在限制的情况。*/
+            if (maxCon == -1) {// 这个 maxCon 是个传入值。在这个上下文中，它表示移除对并发连接数的限制，允许无限数量的连接
                 releaseConnectionLatch();
             } else {
-                /* 如果maxCon不等于-1，那么设置latch的限制为maxCon */
+                /* 如果maxCon不等于-1，那么设置latch的限制为maxCon
+                *  如果maxCon不等于-1，代码将这个值 maxCon 视为新的有效的最大连接数，并更新LimitLatch以强制执行这个新限制。*/
                 latch.setLimit(maxCon);
             }
         } else if (maxCon > 0) {
