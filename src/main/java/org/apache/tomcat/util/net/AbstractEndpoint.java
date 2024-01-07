@@ -1,6 +1,7 @@
 package org.apache.tomcat.util.net;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @param <S> The type used by the socket wrapper associated with this endpoint.
@@ -13,22 +14,37 @@ import java.util.concurrent.Executor;
  */
 public abstract class AbstractEndpoint<S,U> {
 
+    /**
+     * External Executor based thread pool.
+     * 私有成员变量executor
+     */
+    private Executor executor = null;
+
+    /**
+     * Are we using an internal executor
+     * 受保护的 volatile 布尔类型  成员变量
+     * 这个变量可能用于标识是否使用内部的执行器
+     */
+    protected volatile boolean internalExecutor = true;
+
 
     /**
      * Maximum amount of worker threads.
+     * 只有在一个使用内部ThreadPoolExecutor的情况下，才允许动态地调整其最大线程数。
      */
     private int maxThreads = 200;
     public void setMaxThreads(int maxThreads) {
-//        this.maxThreads = maxThreads;
-//        Executor executor = this.executor;
-//        if (internalExecutor && executor instanceof ThreadPoolExecutor) {
-//            // The internal executor should always be an instance of
-//            // org.apache.tomcat.util.threads.ThreadPoolExecutor but it may be
-//            // null if the endpoint is not running.
-//            // This check also avoids various threading issues.
-//            ((ThreadPoolExecutor) executor).setMaximumPoolSize(maxThreads);
-//        }
-        throw new UnsupportedOperationException();
+        this.maxThreads = maxThreads;
+        Executor executor = this.executor;// 获取当前对象的executor实例
+        /*只有当internalExecutor为true（表明使用内部执行器）并且executor是ThreadPoolExecutor的实例时，
+        才会执行内部代码块。这确保了只有在使用内部线程池执行器且该执行器是ThreadPoolExecutor类型时，才进行后续操作。*/
+        if (internalExecutor && executor instanceof ThreadPoolExecutor) {
+            // The internal executor should always be an instance of
+            // org.apache.tomcat.util.threads.ThreadPoolExecutor but it may be
+            // null if the endpoint is not running.
+            // This check also avoids various threading issues.
+            ((ThreadPoolExecutor) executor).setMaximumPoolSize(maxThreads);
+        }
     }
 
     public interface Handler<S> {
