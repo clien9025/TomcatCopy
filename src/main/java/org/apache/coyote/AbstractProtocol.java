@@ -29,8 +29,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
     }
 
     public void setMinSpareThreads(int minSpareThreads) {
-//        endpoint.setMinSpareThreads(minSpareThreads);
-        throw new UnsupportedOperationException();
+        endpoint.setMinSpareThreads(minSpareThreads);
     }
 
     public void setMaxConnections(int maxConnections) {

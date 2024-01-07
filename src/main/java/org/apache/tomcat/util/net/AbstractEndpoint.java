@@ -33,6 +33,16 @@ public abstract class AbstractEndpoint<S,U> {
      * 只有在一个使用内部ThreadPoolExecutor的情况下，才允许动态地调整其最大线程数。
      */
     private int maxThreads = 200;
+
+    /**
+     * SSL engine.
+     */
+//    private boolean SSLEnabled = false;
+//    public boolean isSSLEnabled() { return SSLEnabled; }
+//    public void setSSLEnabled(boolean SSLEnabled) { this.SSLEnabled = SSLEnabled; }
+
+    private int minSpareThreads = 10;
+
     public void setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
         Executor executor = this.executor;// 获取当前对象的executor实例
@@ -44,6 +54,18 @@ public abstract class AbstractEndpoint<S,U> {
             // null if the endpoint is not running.
             // This check also avoids various threading issues.
             ((ThreadPoolExecutor) executor).setMaximumPoolSize(maxThreads);
+        }
+    }
+
+    public void setMinSpareThreads(int minSpareThreads) {
+        this.minSpareThreads = minSpareThreads;
+        Executor executor = this.executor;
+        if (internalExecutor && executor instanceof ThreadPoolExecutor) {
+            // The internal executor should always be an instance of
+            // org.apache.tomcat.util.threads.ThreadPoolExecutor but it may be
+            // null if the endpoint is not running.
+            // This check also avoids various threading issues.
+            ((ThreadPoolExecutor) executor).setCorePoolSize(minSpareThreads);
         }
     }
 
