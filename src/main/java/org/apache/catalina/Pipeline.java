@@ -42,7 +42,9 @@ public interface Pipeline extends Contained {
      * @return the Valve instance that has been distinguished as the basic
      * Valve for this Pipeline (if any).
      */
-    Valve getBasic();
+    default Valve getBasic() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -57,7 +59,9 @@ public interface Pipeline extends Contained {
      *
      * @param valve Valve to be distinguished as the basic Valve
      */
-    void setBasic(Valve valve);
+    default void setBasic(Valve valve) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -75,15 +79,16 @@ public interface Pipeline extends Contained {
      * call is successful.</p>
      *
      * @param valve Valve to be added
-     *
-     * @exception IllegalArgumentException if this Container refused to
-     *  accept the specified Valve
-     * @exception IllegalArgumentException if the specified Valve refuses to be
-     *  associated with this Container
-     * @exception IllegalStateException if the specified Valve is already
-     *  associated with a different Container
+     * @throws IllegalArgumentException if this Container refused to
+     *                                  accept the specified Valve
+     * @throws IllegalArgumentException if the specified Valve refuses to be
+     *                                  associated with this Container
+     * @throws IllegalStateException    if the specified Valve is already
+     *                                  associated with a different Container
      */
-    void addValve(Valve valve);
+    default void addValve(Valve valve) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -91,7 +96,9 @@ public interface Pipeline extends Contained {
      * Container, including the basic Valve (if any).  If there are no
      * such Valves, a zero-length array is returned.
      */
-    Valve[] getValves();
+    default Valve[] getValves() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -106,21 +113,28 @@ public interface Pipeline extends Contained {
      *
      * @param valve Valve to be removed
      */
-    void removeValve(Valve valve);
+    default void removeValve(Valve valve) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the Valve instance that has been distinguished as the basic
      * Valve for this Pipeline (if any).
      */
-    Valve getFirst();
+    default Valve getFirst() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Returns true if all the valves in this pipeline support async, false otherwise
+     *
      * @return true if all the valves in this pipeline support async, false otherwise
      */
-    boolean isAsyncSupported();
+    default boolean isAsyncSupported() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -131,5 +145,7 @@ public interface Pipeline extends Contained {
      *               Valve in this Pipeline that does not support async will be
      *               added
      */
-    void findNonAsyncValves(Set<String> result);
+    default void findNonAsyncValves(Set<String> result) {
+        throw new UnsupportedOperationException();
+    }
 }

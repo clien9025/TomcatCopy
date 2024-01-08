@@ -60,16 +60,6 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
     }
 
     @Override
-    public void start() throws LifecycleException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void stop() throws LifecycleException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void destroy() throws LifecycleException {
         throw new UnsupportedOperationException();
     }

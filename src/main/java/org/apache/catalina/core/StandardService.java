@@ -51,6 +51,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
 
 
+    private static final Log log = LogFactory.getLog(StandardService.class);
     private static final StringManager sm = StringManager.getManager(StandardService.class);
 
 
@@ -62,6 +63,15 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      */
     protected Connector connectors[] = new Connector[0];
     private final Object connectorsLock = new Object();
+
+    /**
+     * The list of executors held by the service.
+     */
+//    protected final ArrayList<Executor> executors = new ArrayList<>();
+
+    private Engine engine = null;
+
+//    private ClassLoader parentClassLoader = null;
 
 
     /**
@@ -79,6 +89,100 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      * The <code>Server</code> that owns this Service, if any.
      */
     private Server server = null;
+
+
+    /**
+     * Mapper.
+     */
+    protected final Mapper mapper = new Mapper();
+
+
+    /**
+     * Mapper listener.
+     */
+    protected final MapperListener mapperListener = new MapperListener(this);
+
+
+    // ------------------------------------------------------------- Properties
+
+    public long getGracefulStopAwaitMillis() {
+//        return gracefulStopAwaitMillis;
+        throw new UnsupportedOperationException();
+    }
+
+
+    public void setGracefulStopAwaitMillis(long gracefulStopAwaitMillis) {
+//        this.gracefulStopAwaitMillis = gracefulStopAwaitMillis;
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Override
+    public Engine getContainer() {
+        return engine;
+    }
+
+    /**
+     * 负责设置与服务（StandardService）关联的引擎（Engine）。在 Tomcat 中，Engine 是处理所有请求的最高级别容器。
+     * 每个 Service 只能有一个 Engine，这个方法用于确保这种关系被正确管理。主要负责设置服务的容器引擎，并管理旧引擎和新引擎之间的过渡。
+     * @param engine The new Engine
+     */
+    @Override
+    public void setContainer(Engine engine) {
+        /* 1. 移除旧的引擎（如果存在） */
+        // 如果服务已经有一个关联的引擎(oldEngine)，它会首先将这个旧引擎的服务设置为null，表示旧引擎不再关联此服务
+        Engine oldEngine = this.engine;
+        if (oldEngine != null) {
+//            oldEngine.setService(null);
+            throw new UnsupportedOperationException();
+        }
+        /* 2. 设置新引擎的服务 */
+        this.engine = engine;
+        if (this.engine != null) {
+            this.engine.setService(this);
+        }
+        /* 3. 启动新引擎 */
+        /* 如果服务当前的状态是可用的，并且新的Engine不为空，则尝试启动新的Engine */
+        if (getState().isAvailable()) {
+            if (this.engine != null) {
+//                try {
+//                    this.engine.start();
+//                } catch (LifecycleException e) {
+//                    log.error(sm.getString("standardService.engine.startFailed"), e);
+//                }
+                throw new UnsupportedOperationException();
+            }
+            /* 4. 管理MapperListener */
+            // Restart MapperListener to pick up new engine.
+            // 为了使新的 Engine 生效，需要停止并重新启动 MapperListener。MapperListener 负责路由请求到正确的目标
+            try {
+                mapperListener.stop();
+            } catch (LifecycleException e) {
+                log.error(sm.getString("standardService.mapperListener.stopFailed"), e);
+            }
+            try {
+                mapperListener.start();
+            } catch (LifecycleException e) {
+                log.error(sm.getString("standardService.mapperListener.startFailed"), e);
+            }
+            /* 5. 停止旧引擎 */
+            if (oldEngine != null) {
+                try {
+                    oldEngine.stop();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("standardService.engine.stopFailed"), e);
+                }
+            }
+        }
+        /* 6. 通知属性更改监听器 */
+        // Report this property change to interested listeners
+        support.firePropertyChange("container", oldEngine, this.engine);
+    }
 
 
     /**

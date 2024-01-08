@@ -42,7 +42,9 @@ public interface Realm extends Contained {
     /**
      * @return the CredentialHandler configured for this Realm.
      */
-    CredentialHandler getCredentialHandler();
+    default CredentialHandler getCredentialHandler() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -50,7 +52,9 @@ public interface Realm extends Contained {
      *
      * @param credentialHandler the {@link CredentialHandler} to use
      */
-    void setCredentialHandler(CredentialHandler credentialHandler);
+    default void setCredentialHandler(CredentialHandler credentialHandler) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -58,30 +62,34 @@ public interface Realm extends Contained {
      *
      * @param listener The listener to add
      */
-    void addPropertyChangeListener(PropertyChangeListener listener);
+    default void addPropertyChangeListener(PropertyChangeListener listener) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Try to authenticate with the specified username.
      *
      * @param username Username of the Principal to look up
-     *
      * @return the associated principal, or {@code null} if none is associated.
      */
-    Principal authenticate(String username);
+    default Principal authenticate(String username) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Try to authenticate using the specified username and
      * credentials.
      *
-     * @param username Username of the Principal to look up
+     * @param username    Username of the Principal to look up
      * @param credentials Password or other credentials to use in
-     * authenticating this username
-     *
+     *                    authenticating this username
      * @return the associated principal, or {@code null} if there is none
      */
-    Principal authenticate(String username, String credentials);
+    default Principal authenticate(String username, String credentials) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -90,27 +98,27 @@ public interface Realm extends Contained {
      * method described in RFC 2617 (which is a superset of RFC 2069).
      *
      * @param username Username of the Principal to look up
-     * @param digest Digest which has been submitted by the client
-     * @param nonce Unique (or supposedly unique) token which has been used
-     * for this request
-     * @param nc the nonce counter
-     * @param cnonce the client chosen nonce
-     * @param qop the "quality of protection" ({@code nc} and {@code cnonce}
-     *        will only be used, if {@code qop} is not {@code null}).
-     * @param realm Realm name
+     * @param digest   Digest which has been submitted by the client
+     * @param nonce    Unique (or supposedly unique) token which has been used
+     *                 for this request
+     * @param nc       the nonce counter
+     * @param cnonce   the client chosen nonce
+     * @param qop      the "quality of protection" ({@code nc} and {@code cnonce}
+     *                 will only be used, if {@code qop} is not {@code null}).
+     * @param realm    Realm name
      * @param digestA2 Second digest calculated as digest(Method + ":" + uri)
-     *
      * @return the associated principal, or {@code null} if there is none.
-     *
      * @deprecated Unused. Use {@link #authenticate(String, String, String,
      * String, String, String, String, String, String)}. Will be removed in
      * Tomcat 11.
      */
     @Deprecated
-    Principal authenticate(String username, String digest,
-                           String nonce, String nc, String cnonce,
-                           String qop, String realm,
-                           String digestA2);
+    default Principal authenticate(String username, String digest,
+                                   String nonce, String nc, String cnonce,
+                                   String qop, String realm,
+                                   String digestA2) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -156,29 +164,34 @@ public interface Realm extends Contained {
      *                   credentials in the returned Principal?
      * @return the associated principal, or {@code null} if there is none
      */
-    Principal authenticate(GSSContext gssContext, boolean storeCreds);
+    default Principal authenticate(GSSContext gssContext, boolean storeCreds) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Try to authenticate using a {@link GSSName}.
      *
-     * @param gssName The {@link GSSName} of the principal to look up
+     * @param gssName       The {@link GSSName} of the principal to look up
      * @param gssCredential The {@link GSSCredential} of the principal, may be
      *                      {@code null}
      * @return the associated principal, or {@code null} if there is none
      */
-    Principal authenticate(GSSName gssName, GSSCredential gssCredential);
+    default Principal authenticate(GSSName gssName, GSSCredential gssCredential) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Try to authenticate using a chain of {@link X509Certificate}s.
      *
      * @param certs Array of client certificates, with the first one in
-     *  the array being the certificate of the client itself.
-     *
+     *              the array being the certificate of the client itself.
      * @return the associated principal, or {@code null} if there is none
      */
-    Principal authenticate(X509Certificate certs[]);
+    default Principal authenticate(X509Certificate certs[]) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -186,7 +199,9 @@ public interface Realm extends Contained {
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
      */
-    void backgroundProcess();
+    default void backgroundProcess() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -195,67 +210,69 @@ public interface Realm extends Contained {
      *
      * @param request Request we are processing
      * @param context Context the Request is mapped to
-     *
      * @return the configured {@link SecurityConstraint}, or {@code null} if
-     *         there is none
+     * there is none
      */
-    SecurityConstraint [] findSecurityConstraints(Request request,
-                                                  Context context);
+    default SecurityConstraint[] findSecurityConstraints(Request request,
+                                                         Context context) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Perform access control based on the specified authorization constraint.
      *
-     * @param request Request we are processing
-     * @param response Response we are creating
+     * @param request    Request we are processing
+     * @param response   Response we are creating
      * @param constraint Security constraint we are enforcing
-     * @param context The Context to which client of this class is attached.
-     *
+     * @param context    The Context to which client of this class is attached.
      * @return {@code true} if this constraint is satisfied and processing
-     *         should continue, or {@code false} otherwise
-     *
-     * @exception IOException if an input/output error occurs
+     * should continue, or {@code false} otherwise
+     * @throws IOException if an input/output error occurs
      */
-    boolean hasResourcePermission(Request request,
-                                  Response response,
-                                  SecurityConstraint [] constraint,
-                                  Context context)
-            throws IOException;
+    default boolean hasResourcePermission(Request request,
+                                          Response response,
+                                          SecurityConstraint[] constraint,
+                                          Context context)
+            throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Check if the specified Principal has the specified
      * security role, within the context of this Realm.
      *
-     * @param wrapper wrapper context for evaluating role
+     * @param wrapper   wrapper context for evaluating role
      * @param principal Principal for whom the role is to be checked
-     * @param role Security role to be checked
-     *
+     * @param role      Security role to be checked
      * @return {@code true} if the specified Principal has the specified
-     *         security role, within the context of this Realm; otherwise return
-     *         {@code false}.
+     * security role, within the context of this Realm; otherwise return
+     * {@code false}.
      */
-    boolean hasRole(Wrapper wrapper, Principal principal, String role);
+    default boolean hasRole(Wrapper wrapper, Principal principal, String role) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Enforce any user data constraint required by the security constraint
      * guarding this request URI.
      *
-     * @param request Request we are processing
-     * @param response Response we are creating
+     * @param request    Request we are processing
+     * @param response   Response we are creating
      * @param constraint Security constraint being checked
-     *
      * @return {@code true} if this constraint
-     *         was not violated and processing should continue, or {@code false}
-     *         if we have created a response already.
-     *
-     * @exception IOException if an input/output error occurs
+     * was not violated and processing should continue, or {@code false}
+     * if we have created a response already.
+     * @throws IOException if an input/output error occurs
      */
-    boolean hasUserDataPermission(Request request,
-                                  Response response,
-                                  SecurityConstraint []constraint)
-            throws IOException;
+    default boolean hasUserDataPermission(Request request,
+                                          Response response,
+                                          SecurityConstraint[] constraint)
+            throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -263,7 +280,9 @@ public interface Realm extends Contained {
      *
      * @param listener The listener to remove
      */
-    void removePropertyChangeListener(PropertyChangeListener listener);
+    default void removePropertyChangeListener(PropertyChangeListener listener) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**

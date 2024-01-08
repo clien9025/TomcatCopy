@@ -45,7 +45,9 @@ public interface Engine extends Container {
     /**
      * @return the default host name for this Engine.
      */
-    String getDefaultHost();
+    default String getDefaultHost() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -53,28 +55,36 @@ public interface Engine extends Container {
      *
      * @param defaultHost The new default host
      */
-    void setDefaultHost(String defaultHost);
+    default void setDefaultHost(String defaultHost) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the JvmRouteId for this engine.
      */
-    String getJvmRoute();
+    default String getJvmRoute() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Set the JvmRouteId for this engine.
      *
      * @param jvmRouteId the (new) JVM Route ID. Each Engine within a cluster
-     *        must have a unique JVM Route ID.
+     *                   must have a unique JVM Route ID.
      */
-    void setJvmRoute(String jvmRouteId);
+    default void setJvmRoute(String jvmRouteId) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the <code>Service</code> with which we are associated (if any).
      */
-    Service getService();
+    default Service getService() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -82,5 +92,7 @@ public interface Engine extends Container {
      *
      * @param service The service that owns this Engine
      */
-    void setService(Service service);
+    default void setService(Service service) {
+        throw new UnsupportedOperationException();
+    }
 }

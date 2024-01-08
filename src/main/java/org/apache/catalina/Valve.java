@@ -47,9 +47,11 @@ public interface Valve {
      * the last Valve in the pipeline.
      *
      * @return the next Valve in the pipeline containing this Valve, or
-     *         <code>null</code> if this is the last Valve in the pipeline.
+     * <code>null</code> if this is the last Valve in the pipeline.
      */
-    Valve getNext();
+    default Valve getNext() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -57,7 +59,9 @@ public interface Valve {
      *
      * @param valve The new next valve, or <code>null</code> if none
      */
-    void setNext(Valve valve);
+    default void setNext(Valve valve) {
+        throw new UnsupportedOperationException();
+    }
 
 
     //---------------------------------------------------------- Public Methods
@@ -68,7 +72,9 @@ public interface Valve {
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
      */
-    void backgroundProcess();
+    default void backgroundProcess() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -110,17 +116,20 @@ public interface Valve {
      *     returned.
      * </ul>
      *
-     * @param request The servlet request to be processed
+     * @param request  The servlet request to be processed
      * @param response The servlet response to be created
-     *
-     * @exception IOException if an input/output error occurs, or is thrown
-     *  by a subsequently invoked Valve, Filter, or Servlet
-     * @exception ServletException if a servlet error occurs, or is thrown
-     *  by a subsequently invoked Valve, Filter, or Servlet
+     * @throws IOException      if an input/output error occurs, or is thrown
+     *                          by a subsequently invoked Valve, Filter, or Servlet
+     * @throws ServletException if a servlet error occurs, or is thrown
+     *                          by a subsequently invoked Valve, Filter, or Servlet
      */
-    void invoke(Request request, Response response)
-            throws IOException, ServletException;
+    default void invoke(Request request, Response response)
+            throws IOException, ServletException {
+        throw new UnsupportedOperationException();
+    }
 
 
-    boolean isAsyncSupported();
+    default boolean isAsyncSupported() {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -1,11 +1,25 @@
 package org.apache.catalina.util;
 
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
+import org.apache.catalina.*;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.res.StringManager;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class LifecycleBase implements Lifecycle {
 
+
+    private static final Log log = LogFactory.getLog(LifecycleBase.class);
+
+    private static final StringManager sm = StringManager.getManager(LifecycleBase.class);
+
+    /**
+     * The list of registered LifecycleListeners for event notifications.
+     */
+    private final List<LifecycleListener> lifecycleListeners = new CopyOnWriteArrayList<>();
     /**
      * The current state of the source component.
      */
@@ -13,6 +27,20 @@ public abstract class LifecycleBase implements Lifecycle {
 
 
     private boolean throwOnFailure = true;
+
+
+    /**
+     * Will a {@link LifecycleException} thrown by a sub-class during
+     * {@link #initInternal()}, {@link #startInternal()},
+     * {@link #stopInternal()} or {@link #destroyInternal()} be re-thrown for
+     * the caller to handle or will it be logged instead?
+     *
+     * @return {@code true} if the exception will be re-thrown, otherwise
+     *         {@code false}
+     */
+    public boolean getThrowOnFailure() {
+        return throwOnFailure;
+    }
 
 
     /**
@@ -26,6 +54,69 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     public void setThrowOnFailure(boolean throwOnFailure) {
         this.throwOnFailure = throwOnFailure;
+    }
+
+
+    /**
+     * Allow sub classes to fire {@link Lifecycle} events.
+     *
+     * @param type  Event type
+     * @param data  Data associated with event.
+     */
+    protected void fireLifecycleEvent(String type, Object data) {
+//        LifecycleEvent event = new LifecycleEvent(this, type, data);
+//        for (LifecycleListener listener : lifecycleListeners) {
+//            listener.lifecycleEvent(event);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public final synchronized void start() throws LifecycleException {
+
+//        if (LifecycleState.STARTING_PREP.equals(state) || LifecycleState.STARTING.equals(state) ||
+//                LifecycleState.STARTED.equals(state)) {
+//
+//            if (log.isDebugEnabled()) {
+//                Exception e = new LifecycleException();
+//                log.debug(sm.getString("lifecycleBase.alreadyStarted", toString()), e);
+//            } else if (log.isInfoEnabled()) {
+//                log.info(sm.getString("lifecycleBase.alreadyStarted", toString()));
+//            }
+//
+//            return;
+//        }
+//
+//        if (state.equals(LifecycleState.NEW)) {
+//            init();
+//        } else if (state.equals(LifecycleState.FAILED)) {
+//            stop();
+//        } else if (!state.equals(LifecycleState.INITIALIZED) &&
+//                !state.equals(LifecycleState.STOPPED)) {
+//            invalidTransition(BEFORE_START_EVENT);
+//        }
+//
+//        try {
+//            setStateInternal(LifecycleState.STARTING_PREP, null, false);
+//            startInternal();
+//            if (state.equals(LifecycleState.FAILED)) {
+//                // This is a 'controlled' failure. The component put itself into the
+//                // FAILED state so call stop() to complete the clean-up.
+//                stop();
+//            } else if (!state.equals(LifecycleState.STARTING)) {
+//                // Shouldn't be necessary but acts as a check that sub-classes are
+//                // doing what they are supposed to.
+//                invalidTransition(AFTER_START_EVENT);
+//            } else {
+//                setStateInternal(LifecycleState.STARTED, null, false);
+//            }
+//        } catch (Throwable t) {
+//            // This is an 'uncontrolled' failure so put the component into the
+//            // FAILED state and throw an exception.
+//            handleSubClassException(t, "lifecycleBase.startFail", toString());
+//        }
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -42,6 +133,62 @@ public abstract class LifecycleBase implements Lifecycle {
      * @throws LifecycleException Start error occurred
      */
     protected void startInternal() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public final synchronized void stop() throws LifecycleException {
+
+//        if (LifecycleState.STOPPING_PREP.equals(state) || LifecycleState.STOPPING.equals(state) ||
+//                LifecycleState.STOPPED.equals(state)) {
+//
+//            if (log.isDebugEnabled()) {
+//                Exception e = new LifecycleException();
+//                log.debug(sm.getString("lifecycleBase.alreadyStopped", toString()), e);
+//            } else if (log.isInfoEnabled()) {
+//                log.info(sm.getString("lifecycleBase.alreadyStopped", toString()));
+//            }
+//
+//            return;
+//        }
+//
+//        if (state.equals(LifecycleState.NEW)) {
+//            state = LifecycleState.STOPPED;
+//            return;
+//        }
+//
+//        if (!state.equals(LifecycleState.STARTED) && !state.equals(LifecycleState.FAILED)) {
+//            invalidTransition(BEFORE_STOP_EVENT);
+//        }
+//
+//        try {
+//            if (state.equals(LifecycleState.FAILED)) {
+//                // Don't transition to STOPPING_PREP as that would briefly mark the
+//                // component as available but do ensure the BEFORE_STOP_EVENT is
+//                // fired
+//                fireLifecycleEvent(BEFORE_STOP_EVENT, null);
+//            } else {
+//                setStateInternal(LifecycleState.STOPPING_PREP, null, false);
+//            }
+//
+//            stopInternal();
+//
+//            // Shouldn't be necessary but acts as a check that sub-classes are
+//            // doing what they are supposed to.
+//            if (!state.equals(LifecycleState.STOPPING) && !state.equals(LifecycleState.FAILED)) {
+//                invalidTransition(AFTER_STOP_EVENT);
+//            }
+//
+//            setStateInternal(LifecycleState.STOPPED, null, false);
+//        } catch (Throwable t) {
+//            handleSubClassException(t, "lifecycleBase.stopFail", toString());
+//        } finally {
+//            if (this instanceof Lifecycle.SingleUse) {
+//                // Complete stop process first
+//                setStateInternal(LifecycleState.STOPPED, null, false);
+//                destroy();
+//            }
+//        }
         throw new UnsupportedOperationException();
     }
 
@@ -72,5 +219,68 @@ public abstract class LifecycleBase implements Lifecycle {
         // private volatile LifecycleState state = LifecycleState.NEW;
         /* 创建了一个 LifecycleState 类型的状态 state */
         return state;
+    }
+
+    private synchronized void setStateInternal(LifecycleState state, Object data, boolean check)
+            throws LifecycleException {
+
+//        if (log.isDebugEnabled()) {
+//            log.debug(sm.getString("lifecycleBase.setState", this, state));
+//        }
+//
+//        if (check) {
+//            // Must have been triggered by one of the abstract methods (assume
+//            // code in this class is correct)
+//            // null is never a valid state
+//            if (state == null) {
+//                invalidTransition("null");
+//                // Unreachable code - here to stop eclipse complaining about
+//                // a possible NPE further down the method
+//                return;
+//            }
+//
+//            // Any method can transition to failed
+//            // startInternal() permits STARTING_PREP to STARTING
+//            // stopInternal() permits STOPPING_PREP to STOPPING and FAILED to
+//            // STOPPING
+//            if (!(state == LifecycleState.FAILED ||
+//                    (this.state == LifecycleState.STARTING_PREP &&
+//                            state == LifecycleState.STARTING) ||
+//                    (this.state == LifecycleState.STOPPING_PREP &&
+//                            state == LifecycleState.STOPPING) ||
+//                    (this.state == LifecycleState.FAILED &&
+//                            state == LifecycleState.STOPPING))) {
+//                // No other transition permitted
+//                invalidTransition(state.name());
+//            }
+//        }
+//
+//        this.state = state;
+//        String lifecycleEvent = state.getLifecycleEvent();
+//        if (lifecycleEvent != null) {
+//            fireLifecycleEvent(lifecycleEvent, data);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+    private void invalidTransition(String type) throws LifecycleException {
+//        String msg = sm.getString("lifecycleBase.invalidTransition", type, toString(), state);
+//        throw new LifecycleException(msg);
+        throw new UnsupportedOperationException();
+    }
+
+    private void handleSubClassException(Throwable t, String key, Object... args) throws LifecycleException {
+//        setStateInternal(LifecycleState.FAILED, null, false);
+//        ExceptionUtils.handleThrowable(t);
+//        String msg = sm.getString(key, args);
+//        if (getThrowOnFailure()) {
+//            if (!(t instanceof LifecycleException)) {
+//                t = new LifecycleException(msg, t);
+//            }
+//            throw (LifecycleException) t;
+//        } else {
+//            log.error(msg, t);
+//        }
+        throw new UnsupportedOperationException();
     }
 }

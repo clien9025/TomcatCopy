@@ -14,27 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.catalina;
+package org.apache.catalina.realm;
 
+import java.security.cert.X509Certificate;
 
 /**
- * Interface defining a listener for significant Container generated events.
- * Note that "container start" and "container stop" events are normally
- * LifecycleEvents, not ContainerEvents.
- *
- * @author Craig R. McClanahan
+ * Provides an interface for retrieving a user name from an X509Certificate.
  */
-public interface ContainerListener {
-
-
+public interface X509UsernameRetriever {
     /**
-     * Acknowledge the occurrence of the specified event.
+     * Gets a user name from an X509Certificate.
      *
-     * @param event ContainerEvent that has occurred
+     * @param cert The certificate containing the user name.
+     *
+     * @return An appropriate user name obtained from one or more fields in the certificate.
      */
-    default void containerEvent(ContainerEvent event) {
-        throw new UnsupportedOperationException();
-    }
-
-
+    String getUsername(X509Certificate cert);
 }

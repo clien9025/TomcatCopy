@@ -56,6 +56,7 @@ import org.apache.catalina.Service;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.*;
+import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.realm.RealmBase;
 import org.apache.catalina.security.SecurityClassLoad;
 import org.apache.catalina.util.ContextName;
@@ -614,17 +615,33 @@ public class Tomcat {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 它的主要作用是获取与当前服务相关联的Host对象。在Tomcat中，Host代表一个虚拟主机，是容器（Container）的一种类型。
+     *
+     * 总的来说，这个getHost方法的作用是确保有一个与服务相关联的Host对象。如果服务的引擎已经有了Host子容器，它就返回第一个；
+     * 如果没有，它就创建一个新的StandardHost，设置其名称，添加到引擎中，然后返回它。这样，无论如何调用者都能得到一个Host对象。
+     * @return
+     */
     public Host getHost() {
-//        Engine engine = getEngine();
-//        if (engine.findChildren().length > 0) {
+        /* 1. 获取引擎 */
+        // 这行代码调用getEngine方法来获取当前服务关联的引擎(Engine)对象
+        Engine engine = getEngine();
+        /* 2. 尝试从引擎获取已有的Host */
+        // 首先调用engine.findChildren()来获取引擎的所有子容器，即它所管理的所有Host。
+        // 如果引擎至少有一个子容器（即至少有一个Host），方法将返回第一个Host对象。这里假设第一个子容器就是我们想要的Host。
+        if (engine.findChildren().length > 0) {
 //            return (Host) engine.findChildren()[0];
-//        }
-//
-//        Host host = new StandardHost();
-//        host.setName(hostname);
-//        getEngine().addChild(host);
-//        return host;
-        throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException();
+        }
+
+        /* 3. 如果没有现成的Host，创建一个新的 */
+        // 这行创建了一个新的StandardHost对象，StandardHost是Host接口的一种具体实现
+        Host host = new StandardHost();
+        // 设置新创建的Host的名称。这里的hostname可能是一个先前定义的变量或属性，代表虚拟主机的名称。
+        host.setName(hostname);
+        // 将新创建的Host添加为引擎的子容器。
+        getEngine().addChild(host);
+        return host;
     }
 
     /**
@@ -633,17 +650,16 @@ public class Tomcat {
      * @return The engine
      */
     public Engine getEngine() {
-//        Service service = getServer().findServices()[0];
-//        if (service.getContainer() != null) {
-//            return service.getContainer();
-//        }
-//        Engine engine = new StandardEngine();
-//        engine.setName( "Tomcat" );
-//        engine.setDefaultHost(hostname);
-//        engine.setRealm(createDefaultRealm());
-//        service.setContainer(engine);
-//        return engine;
-        throw new UnsupportedOperationException();
+        Service service = getServer().findServices()[0];
+        if (service.getContainer() != null) {
+            return service.getContainer();
+        }
+        Engine engine = new StandardEngine();
+        engine.setName( "Tomcat" );
+        engine.setDefaultHost(hostname);
+        engine.setRealm(createDefaultRealm());
+        service.setContainer(engine);
+        return engine;
     }
 
     /**
@@ -835,31 +851,37 @@ public class Tomcat {
      * @return a realm instance
      */
     protected Realm createDefaultRealm() {
-//        return new SimpleRealm();
-        throw new UnsupportedOperationException();
+        return new SimpleRealm();
     }
 
 
     private class SimpleRealm extends RealmBase {
 
-//        @Override
-//        protected String getPassword(String username) {
-//            return userPass.get(username);
-//        }
-//
-//        @Override
-//        protected Principal getPrincipal(String username) {
-//            Principal p = userPrincipals.get(username);
-//            if (p == null) {
-//                String pass = userPass.get(username);
-//                if (pass != null) {
-//                    p = new GenericPrincipal(username,
-//                            userRoles.get(username));
-//                    userPrincipals.put(username, p);
-//                }
-//            }
-//            return p;
-//        }
+        @Override
+        protected String getPassword(String username) {
+            // userPass 实例的初始化：private final Map<String, String> userPass = new HashMap<>();
+            return userPass.get(username);
+        }
+
+        @Override
+        protected Principal getPrincipal(String username) {
+            // userPrincipals 实例的初始化：private final Map<String, Principal> userPrincipals = new HashMap<>();
+            Principal p = userPrincipals.get(username);
+            if (p == null) {
+                /* 如果给定用户名的 Principal 对象不存在（即p为null），方法将进一步尝试从userPass映射中检索该用户的密码 */
+                String pass = userPass.get(username);
+                if (pass != null) {
+                    /* 如果密码存在（即用户确实存在），则创建一个新的GenericPrincipal对象，代表这个用户。
+                    GenericPrincipal是一个简单的Principal实现，通常包含用户的名称、密码和角色 */
+                    // private final Map<String, List<String>> userRoles = new HashMap<>();
+                    p = new GenericPrincipal(username,
+                            userRoles.get(username));
+                    /* 新创建的GenericPrincipal对象被放入userPrincipals映射中，以便下次可以直接检索 */
+                    userPrincipals.put(username, p);
+                }
+            }
+            return p;
+        }
     }
 
 
@@ -911,6 +933,7 @@ public class Tomcat {
         if (catalinaHome == null) {
             server.setCatalinaHome(baseFile);
         } else {
+            // todo 这个地方上次没调进来
 //            File homeFile = new File(catalinaHome);
 //            if (!homeFile.isDirectory() && !homeFile.mkdirs()) {
 //                // Failed to create home directory
