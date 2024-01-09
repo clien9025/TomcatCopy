@@ -1,6 +1,8 @@
 package org.apache.catalina.core;
 
 import org.apache.catalina.Host;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 
 import java.util.Locale;
 
@@ -12,6 +14,30 @@ import java.util.Locale;
  * @author Remy Maucherat
  */
 public class StandardHost extends ContainerBase implements Host {
+    private static final Log log = LogFactory.getLog(StandardHost.class);
+
+
+
+    // ----------------------------------------------------------- Constructors
+
+
+    /**
+     * Create a new StandardHost component with the default basic Valve.
+     */
+    public StandardHost() {
+
+        super();
+        pipeline.setBasic(new StandardHostValve());
+
+    }
+
+
+    // ----------------------------------------------------- Instance Variables
+
+    /**
+     * The auto deploy flag for this Host.
+     */
+    private boolean autoDeploy = true;
 
 
 
@@ -48,6 +74,20 @@ public class StandardHost extends ContainerBase implements Host {
     @Override
     public String getName() {
         return name;
+    }
+
+    /**
+     * Set the auto deploy flag value for this host.
+     *
+     * @param autoDeploy The new auto deploy flag
+     */
+    @Override
+    public void setAutoDeploy(boolean autoDeploy) {
+
+        boolean oldAutoDeploy = this.autoDeploy;
+        this.autoDeploy = autoDeploy;
+        support.firePropertyChange("autoDeploy", oldAutoDeploy, this.autoDeploy);
+
     }
 
 }
