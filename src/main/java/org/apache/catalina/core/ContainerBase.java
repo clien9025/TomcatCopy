@@ -156,6 +156,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     protected final List<ContainerListener> listeners = new CopyOnWriteArrayList<>();
 
+    /**
+     * The parent class loader to be configured when we install a Loader.
+     */
+    protected ClassLoader parentClassLoader = null;
+
 
     // ------------------------------------------------------------- Properties
 
@@ -208,6 +213,21 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         Container oldParent = this.parent;
         this.parent = container;
         support.firePropertyChange("parent", oldParent, this.parent);
+
+    }
+
+    /**
+     * Set the parent class loader (if any) for this web application. This call is meaningful only
+     * <strong>before</strong> a Loader has been configured, and the specified value (if non-null) should be passed as
+     * an argument to the class loader constructor.
+     *
+     * @param parent The new parent class loader
+     */
+    @Override
+    public void setParentClassLoader(ClassLoader parent) {
+        ClassLoader oldParentClassLoader = this.parentClassLoader;
+        this.parentClassLoader = parent;
+        support.firePropertyChange("parentClassLoader", oldParentClassLoader, this.parentClassLoader);
 
     }
 
