@@ -22,9 +22,35 @@ import java.util.Set;
 
 public class StandardContext extends ContainerBase implements Context, NotificationEmitter {
 
+
+
+    // ----------------------------------------------------- Instance Variables
+
     protected ApplicationContext context = null;
 
     private String altDDName = null;
+
+    /**
+     * The display name of this web application.
+     */
+    private String displayName = null;
+
+
+    // ----------------------------------------------------- Context Properties
+
+
+    /**
+     * Set the display name of this web application.
+     *
+     * @param displayName The new display name
+     */
+    @Override
+    public void setDisplayName(String displayName) {
+
+        String oldDisplayName = this.displayName;
+        this.displayName = displayName;
+        support.firePropertyChange("displayName", oldDisplayName, this.displayName);
+    }
 
 
     @Override
@@ -66,7 +92,8 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             context = new ApplicationContext(this);
             // todo String altDDName = null; 这个属性暂时还没跟到相关的逻辑
             if (altDDName != null) {
-                context.setAttribute(Globals.ALT_DD_ATTR, altDDName);
+//                context.setAttribute(Globals.ALT_DD_ATTR, altDDName);
+                throw new UnsupportedOperationException();
             }
         }
         // ApplicationContext context 实例调用 getFacade() 方法
