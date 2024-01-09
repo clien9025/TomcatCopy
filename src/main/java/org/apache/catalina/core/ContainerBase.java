@@ -212,6 +212,16 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
     /**
+     * Set the delay between the invocation of the execute method on this container and its children.
+     *
+     * @param delay The delay in seconds between the invocation of backgroundProcess methods
+     */
+    @Override
+    public void setBackgroundProcessorDelay(int delay) {
+        backgroundProcessorDelay = delay;
+    }
+
+    /**
      * Set the Realm with which this Container is associated.
      *
      * @param realm The newly associated Realm

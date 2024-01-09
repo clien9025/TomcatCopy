@@ -627,11 +627,10 @@ public class Tomcat {
         // 这行代码调用getEngine方法来获取当前服务关联的引擎(Engine)对象
         Engine engine = getEngine();
         /* 2. 尝试从引擎获取已有的Host */
-        // 首先调用engine.findChildren()来获取引擎的所有子容器，即它所管理的所有Host。
-        // 如果引擎至少有一个子容器（即至少有一个Host），方法将返回第一个Host对象。这里假设第一个子容器就是我们想要的Host。
+        // 首先调用 engine.findChildren() 来获取引擎的所有 子容器，即它所管理的所有 Host。
+        // 如果 Engine （引擎）至少有一个 Host 子容器（即至少有一个Host），方法将返回第一个Host对象。这里假设第一个子容器就是我们想要的Host。
         if (engine.findChildren().length > 0) {
-//            return (Host) engine.findChildren()[0];
-            throw new UnsupportedOperationException();
+            return (Host) engine.findChildren()[0];
         }
 
         /* 3. 如果没有现成的Host，创建一个新的 */
