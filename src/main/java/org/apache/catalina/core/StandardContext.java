@@ -6,11 +6,13 @@ import org.apache.catalina.*;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.deploy.NamingResourcesImpl;
+import org.apache.catalina.util.CharsetMapper;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.JarScanner;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.descriptor.web.*;
 import org.apache.tomcat.util.http.CookieProcessor;
 
@@ -53,6 +55,16 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * The document root for this web application.
      */
     private String docBase = null;
+
+    /**
+     * The Locale to character set mapper for this application.
+     */
+    private CharsetMapper charsetMapper = null;
+
+    /**
+     * The Java class name of the CharsetMapper class to be created.
+     */
+    private String charsetMapperClass = "org.apache.catalina.util.CharsetMapper";
 
 
     // ----------------------------------------------------- Context Properties
@@ -119,6 +131,54 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     public void setDocBase(String docBase) {
         this.docBase = docBase;
+    }
+
+    /**
+     * @return the Locale to character set mapper for this Context.
+     *
+     * 其主要功能是返回与 当前上下文（Context）相关联的 CharsetMapper 实例。
+     */
+    public CharsetMapper getCharsetMapper() {
+
+        // Create a mapper the first time it is requested（第一次请求时创建映射器）
+        // private CharsetMapper charsetMapper = null;
+        /* 1. 检查是否已经存在一个charsetMapper实例 */
+        // 如果this.charsetMapper为null，说明还没有创建CharsetMapper实例。
+        if (this.charsetMapper == null) {
+            try {
+                /* 2. 创建CharsetMapper实例 */
+                // 如果没有现有的实例，代码会尝试通过反射来创建一个新的CharsetMapper对象。
+                // 动态加载对应的类,使用反射调用该类的无参构造函数来创建一个新实例
+                Class<?> clazz = Class.forName(charsetMapperClass);
+                this.charsetMapper = (CharsetMapper) clazz.getConstructor().newInstance();
+            } catch (Throwable t) {
+                /* 3. 异常处理 */
+                // 使用自己实现的异常工具
+                ExceptionUtils.handleThrowable(t);
+                // 如果在创建过程中出现任何错误（如类未找到、构造函数无法访问、实例化时出错等），捕获这些异常并处理。
+                this.charsetMapper = new CharsetMapper();
+            }
+        }
+
+        return this.charsetMapper;
+
+    }
+
+    /**
+     * Add a Locale Encoding Mapping (see Sec 5.4 of Servlet spec 2.4)
+     *
+     * @param locale   locale to map an encoding for
+     * @param encoding encoding to be used for a give locale
+     */
+    /**
+     * Add a Locale Encoding Mapping (see Sec 5.4 of Servlet spec 2.4)
+     *
+     * @param locale   locale to map an encoding for
+     * @param encoding encoding to be used for a give locale
+     */
+    @Override
+    public void addLocaleEncodingMappingParameter(String locale, String encoding) {
+        getCharsetMapper().addCharsetMappingFromDeploymentDescriptor(locale, encoding);
     }
 
     @Override
