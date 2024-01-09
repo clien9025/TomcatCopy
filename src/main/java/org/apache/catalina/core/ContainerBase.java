@@ -271,6 +271,18 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
 
     }
+
+
+    /**
+     * Return a name string (suitable for use by humans) that describes this Container. Within the set of child
+     * containers belonging to a particular parent, Container names must be unique.
+     */
+    @Override
+    public String getName() {
+        return name;
+    }
+
+
     // ------------------------------------------------------ Container Methods
 
 
