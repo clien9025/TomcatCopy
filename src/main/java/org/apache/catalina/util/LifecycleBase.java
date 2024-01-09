@@ -18,6 +18,11 @@ public abstract class LifecycleBase implements Lifecycle {
 
     /**
      * The list of registered LifecycleListeners for event notifications.
+     * 这行代码声明了一个lifecycleListeners列表，用于存储LifecycleListener对象。这些监听器对象是用来接收生命周期事件通知的。
+     *
+     * 使用 CopyOnWriteArrayList 表示这个列表，这是一种线程安全的List实现。
+     * 当列表被修改时（如添加或移除监听器），它会复制其内部数组，确保在迭代过程中不会发生
+     * 并发修改异常（ConcurrentModificationException）。这对于那些其监听器列表可能在多线程环境中被修改的对象来说是非常有用的。
      */
     private final List<LifecycleListener> lifecycleListeners = new CopyOnWriteArrayList<>();
     /**
@@ -56,6 +61,17 @@ public abstract class LifecycleBase implements Lifecycle {
         this.throwOnFailure = throwOnFailure;
     }
 
+    /**
+     * 这段代码是实现了一个监听器注册机制，特别是用于生命周期事件的监听。
+     * @param listener The listener to add
+     *
+     * 这个方法提供了一种机制，允许外部代码注册LifecycleListener对象。当调用此方法时，它将传入的listener添加到lifecycleListeners列表中。
+     * 这使得其他对象可以注册监听器，以便在当前对象的生命周期发生变化时接收通知。比如，当对象启动或停止时，这些注册的监听器可能会被通知。
+     */
+    @Override
+    public void addLifecycleListener(LifecycleListener listener) {
+        lifecycleListeners.add(listener);
+    }
 
     /**
      * Allow sub classes to fire {@link Lifecycle} events.

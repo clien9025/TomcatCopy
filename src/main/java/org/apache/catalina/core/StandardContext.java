@@ -28,7 +28,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     private static final Log log = LogFactory.getLog(StandardContext.class);
 
 
-
     // ----------------------------------------------------- Instance Variables
 
     protected ApplicationContext context = null;
@@ -49,6 +48,11 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * Encoded path.
      */
     private String encodedPath = null;
+
+    /**
+     * The document root for this web application.
+     */
+    private String docBase = null;
 
 
     // ----------------------------------------------------- Context Properties
@@ -75,27 +79,46 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     public void setPath(String path) {
         boolean invalid = false;
+        /* 1. 检查和修改传入的路径 */
+        // 这个条件检查是否path是null或者等于"/"。如果是，将invalid设置为true（表示路径无效），
+        // 并将类的path成员设置为空字符串""。这个条件处理了空路径或仅根路径的情况。
         if (path == null || path.equals("/")) {
             invalid = true;
             this.path = "";
+            // 这个条件检查是否path是空字符串或者以"/"开头。如果满足，直接将传入的path赋值给类的path成员。
+            // 这里，空字符串被视为有效路径，而以"/"开头的路径也被视为有效。
         } else if (path.isEmpty() || path.startsWith("/")) {
             this.path = path;
         } else {
+            // 这个块是当path既不是null、"/"、空字符串，也不是以"/"开头时的情况。
+            // 在这种情况下，将invalid设置为true（因为路径被认为是无效的或不标准的），并在路径前加上"/"，使其成为一个以"/"开头的路径。
             invalid = true;
             this.path = "/" + path;
         }
+        // 如果路径以"/"结尾，则移除结尾的"/"，因为通常URL路径不以斜杠结束
         if (this.path.endsWith("/")) {
             invalid = true;
             this.path = this.path.substring(0, this.path.length() - 1);
         }
+        /* 2. 记录无效路径的警告 */
+        // 如果路径被修改（认为是无效的），记录一个警告日志
         if (invalid) {
             log.warn(sm.getString("standardContext.pathInvalid", path, this.path));
         }
+        /* 3. 使用URLEncoder进行URL编码 */
+        // 使用URLEncoder.DEFAULT实例对修改后的路径进行URL编码。这意味着将路径中的非安全字符转换为百分号编码（例如空格变为%20）
         encodedPath = URLEncoder.DEFAULT.encode(this.path, StandardCharsets.UTF_8);
+        /* 4. 设置对象名称 */
+        // 如果对象的名称还未设置，使用处理后的路径作为对象的名称
         if (getName() == null) {
 //            setName(this.path);
             throw new UnsupportedOperationException();
         }
+    }
+
+    @Override
+    public void setDocBase(String docBase) {
+        this.docBase = docBase;
     }
 
     @Override
@@ -119,7 +142,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     }
 
     /**
-     *  自己在 org.apache.catalina.Context 里面取消接口里面的实现
+     * 自己在 org.apache.catalina.Context 里面取消接口里面的实现
      * （删除了 ServletContext getServletContext(); 前面的 default）
      */
 
