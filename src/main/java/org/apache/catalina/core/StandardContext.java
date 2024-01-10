@@ -25,6 +25,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class StandardContext extends ContainerBase implements Context, NotificationEmitter {
 
@@ -74,6 +77,13 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * web-fragment.xml files.
      */
     private JarScanner jarScanner = null;
+
+
+    /**
+     * The Loader implementation with which this Container is associated.
+     */
+    private Loader loader = null;
+    private final ReadWriteLock loaderLock = new ReentrantReadWriteLock();
 
 
     // ----------------------------------------------------- Context Properties
@@ -261,6 +271,62 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     public boolean getMapperDirectoryRedirectEnabled() {
         return false;
+    }
+
+
+    @Override
+    public Loader getLoader() {
+        Lock readLock = loaderLock.readLock();
+        readLock.lock();
+        try {
+            return loader;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public void setLoader(Loader loader) {
+
+        Lock writeLock = loaderLock.writeLock();
+        writeLock.lock();
+        Loader oldLoader = null;
+        try {
+            // Change components if necessary
+            oldLoader = this.loader;
+            if (oldLoader == loader) {
+                return;
+            }
+            this.loader = loader;
+
+            // Stop the old component if necessary
+            if (getState().isAvailable() && (oldLoader != null) && (oldLoader instanceof Lifecycle)) {
+//                try {
+//                    ((Lifecycle) oldLoader).stop();
+//                } catch (LifecycleException e) {
+//                    log.error(sm.getString("standardContext.setLoader.stop"), e);
+//                }
+                throw new UnsupportedOperationException();
+            }
+
+            // Start the new component if necessary
+            if (loader != null) {
+                loader.setContext(this);
+            }
+            if (getState().isAvailable() && (loader != null) && (loader instanceof Lifecycle)) {
+//                try {
+//                    ((Lifecycle) loader).start();
+//                } catch (LifecycleException e) {
+//                    log.error(sm.getString("standardContext.setLoader.start"), e);
+//                }
+                throw new UnsupportedOperationException();
+            }
+        } finally {
+            writeLock.unlock();
+        }
+
+        // Report this property change to interested listeners
+        support.firePropertyChange("loader", oldLoader, loader);
     }
 
 }

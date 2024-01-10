@@ -1,9 +1,11 @@
 package org.apache.catalina.loader;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.Loader;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.res.StringManager;
 
 import java.beans.PropertyChangeSupport;
 
@@ -25,6 +27,17 @@ public class WebappLoader extends LifecycleMBeanBase implements Loader {
     private static final Log log = LogFactory.getLog(WebappLoader.class);
 
     // ----------------------------------------------------- Instance Variables
+
+
+    /**
+     * The Context with which this Loader has been associated.
+     */
+    private Context context = null;
+
+    /**
+     * The string manager for this package.
+     */
+    protected static final StringManager sm = StringManager.getManager(WebappLoader.class);
 
     /**
      * The class loader being managed by this Loader component.
@@ -52,7 +65,40 @@ public class WebappLoader extends LifecycleMBeanBase implements Loader {
     protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
 
+
     // ------------------------------------------------------------- Properties
+
+    /**
+     * Return the Java class loader to be used by this Container.
+     */
+    @Override
+    public ClassLoader getClassLoader() {
+        return classLoader;
+    }
+
+
+    @Override
+    public Context getContext() {
+        return context;
+    }
+
+
+    @Override
+    public void setContext(Context context) {
+
+        if (this.context == context) {
+            return;
+        }
+
+        if (getState().isAvailable()) {
+            throw new IllegalStateException(sm.getString("webappLoader.setContext.ise"));
+        }
+
+        // Process this property change
+        Context oldContext = this.context;
+        this.context = context;
+        support.firePropertyChange("context", oldContext, this.context);
+    }
 
 
     /**
