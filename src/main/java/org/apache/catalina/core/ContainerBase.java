@@ -161,7 +161,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     protected ClassLoader parentClassLoader = null;
 
-
     // ------------------------------------------------------------- Properties
 
 

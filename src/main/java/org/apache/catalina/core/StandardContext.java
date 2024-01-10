@@ -22,6 +22,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class StandardContext extends ContainerBase implements Context, NotificationEmitter {
 
     private static final Log log = LogFactory.getLog(StandardContext.class);
+
+    private Boolean failCtxIfServletStartFails;
+
 
 
     // ----------------------------------------------------- Instance Variables
@@ -84,6 +88,12 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private Loader loader = null;
     private final ReadWriteLock loaderLock = new ReentrantReadWriteLock();
+
+
+    /**
+     * The ordered set of ServletContainerInitializers for this web application.
+     */
+    private Map<ServletContainerInitializer,Set<Class<?>>> initializers = new LinkedHashMap<>();
 
 
     // ----------------------------------------------------- Context Properties
@@ -203,6 +213,17 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         this.jarScanner = jarScanner;
     }
 
+
+    /**
+     * Add a ServletContainerInitializer instance to this web application.
+     *
+     * @param sci     The instance to add
+     * @param classes The classes in which the initializer expressed an interest
+     */
+    @Override
+    public void addServletContainerInitializer(ServletContainerInitializer sci, Set<Class<?>> classes) {
+        initializers.put(sci, classes);
+    }
 
     /**
      * Add a Locale Encoding Mapping (see Sec 5.4 of Servlet spec 2.4)
@@ -327,6 +348,19 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         // Report this property change to interested listeners
         support.firePropertyChange("loader", oldLoader, loader);
+    }
+
+    // ------------------------------------------------------ Public Properties
+
+    public Boolean getFailCtxIfServletStartFails() {
+        return failCtxIfServletStartFails;
+    }
+
+    public void setFailCtxIfServletStartFails(Boolean failCtxIfServletStartFails) {
+        Boolean oldFailCtxIfServletStartFails = this.failCtxIfServletStartFails;
+        this.failCtxIfServletStartFails = failCtxIfServletStartFails;
+        support.firePropertyChange("failCtxIfServletStartFails", oldFailCtxIfServletStartFails,
+                failCtxIfServletStartFails);
     }
 
 }
