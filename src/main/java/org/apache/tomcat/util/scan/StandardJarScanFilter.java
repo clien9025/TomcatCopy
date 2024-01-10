@@ -84,6 +84,11 @@ public class StandardJarScanFilter implements JarScanFilter {
     }
 
 
+    public String getTldSkip() {
+        return tldSkip;
+    }
+
+
     public void setTldSkip(String tldSkip) {
         this.tldSkip = tldSkip;
         Lock writeLock = configurationLock.writeLock();
@@ -93,6 +98,83 @@ public class StandardJarScanFilter implements JarScanFilter {
         } finally {
             writeLock.unlock();
         }
+    }
+
+
+    public String getTldScan() {
+        return tldScan;
+    }
+
+
+    public void setTldScan(String tldScan) {
+        this.tldScan = tldScan;
+        Lock writeLock = configurationLock.writeLock();
+        writeLock.lock();
+        try {
+            populateSetFromAttribute(tldScan, tldScanSet);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+
+    @Override
+    public boolean isSkipAll() {
+        return defaultSkipAll;
+    }
+
+
+    public boolean isDefaultTldScan() {
+        return defaultTldScan;
+    }
+
+
+    public void setDefaultTldScan(boolean defaultTldScan) {
+        this.defaultTldScan = defaultTldScan;
+    }
+
+
+    public String getPluggabilitySkip() {
+        return pluggabilitySkip;
+    }
+
+
+    public void setPluggabilitySkip(String pluggabilitySkip) {
+        this.pluggabilitySkip = pluggabilitySkip;
+        Lock writeLock = configurationLock.writeLock();
+        writeLock.lock();
+        try {
+            populateSetFromAttribute(pluggabilitySkip, pluggabilitySkipSet);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+
+    public String getPluggabilityScan() {
+        return pluggabilityScan;
+    }
+
+
+    public void setPluggabilityScan(String pluggabilityScan) {
+        this.pluggabilityScan = pluggabilityScan;
+        Lock writeLock = configurationLock.writeLock();
+        writeLock.lock();
+        try {
+            populateSetFromAttribute(pluggabilityScan, pluggabilityScanSet);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+
+    public boolean isDefaultPluggabilityScan() {
+        return defaultPluggabilityScan;
+    }
+
+
+    public void setDefaultPluggabilityScan(boolean defaultPluggabilityScan) {
+        this.defaultPluggabilityScan = defaultPluggabilityScan;
     }
 
     /**
