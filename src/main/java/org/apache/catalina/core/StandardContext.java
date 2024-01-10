@@ -7,12 +7,14 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.deploy.NamingResourcesImpl;
 import org.apache.catalina.util.CharsetMapper;
+import org.apache.catalina.util.ErrorPageSupport;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.descriptor.XmlIdentifiers;
 import org.apache.tomcat.util.descriptor.web.*;
 import org.apache.tomcat.util.http.CookieProcessor;
 import org.apache.tomcat.util.scan.StandardJarScanner;
@@ -35,7 +37,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     private static final Log log = LogFactory.getLog(StandardContext.class);
 
     private Boolean failCtxIfServletStartFails;
-
 
 
     // ----------------------------------------------------- Instance Variables
@@ -93,7 +94,17 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     /**
      * The ordered set of ServletContainerInitializers for this web application.
      */
-    private Map<ServletContainerInitializer,Set<Class<?>>> initializers = new LinkedHashMap<>();
+    private Map<ServletContainerInitializer, Set<Class<?>>> initializers = new LinkedHashMap<>();
+
+    private final ErrorPageSupport errorPageSupport = new ErrorPageSupport();
+
+    /**
+     * The public identifier of the DTD for the web application deployment descriptor version we are currently parsing.
+     * This is used to support relaxed validation rules when processing version 2.2 web.xml files.
+     * <p>
+     * 此变量用于存储当前正在解析的 Web 应用部署描述符的公共标识符（DTD的公共标识符）。
+     */
+    private String publicId = null;
 
 
     // ----------------------------------------------------- Context Properties
@@ -169,7 +180,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     /**
      * @return the Locale to character set mapper for this Context.
-     *
+     * <p>
      * 其主要功能是返回与 当前上下文（Context）相关联的 CharsetMapper 实例。
      */
     public CharsetMapper getCharsetMapper() {
@@ -215,6 +226,53 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
 
     /**
+     * Add an error page for the specified error or Java exception.
+     *
+     * @param errorPage The error page definition to be added
+     */
+    @Override
+    public void addErrorPage(ErrorPage errorPage) {
+        // Validate the input parameters
+        if (errorPage == null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.errorPage.required"));
+        }
+        String location = errorPage.getLocation();
+        if ((location != null) && !location.startsWith("/")) {
+            if (isServlet22()) {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("standardContext.errorPage.warning", location));
+                }
+                errorPage.setLocation("/" + location);
+            } else {
+                throw new IllegalArgumentException(sm.getString("standardContext.errorPage.error", location));
+            }
+        }
+
+        errorPageSupport.add(errorPage);
+        fireContainerEvent("addErrorPage", errorPage);
+    }
+
+
+    /**
+     * Are we processing a version 2.2 deployment descriptor?
+     * <p>
+     * 这个方法用于判断当前处理的是否是一个遵循 Servlet 2.2 规范的部署描述符。方法返回 true 表示当前的描述符符合 Servlet 2.2 规范。
+     * <p>
+     * 实现方式是通过比较 publicId 变量的值与 XmlIdentifiers.WEB_22_PUBLIC 常量是否相等。
+     * 如果相等，说明当前处理的 web.xml 文件是基于 Servlet 2.2 规范的，从而可能需要应用一些特定的解析规则或兼容性处理。
+     * <p>
+     * 在上下文中，这段代码可能用于一个解析器或处理器，该解析器或处理器负责解析和处理 Web 应用的部署描述符。通过检查
+     * 部署描述符的版本（在这个例子中是通过 publicId 来判断），解析器可以确定应该采用哪个版本的规则来处理描述符，从而确保兼容性和正确性。
+     *
+     * @return <code>true</code> if running a legacy Servlet 2.2 application
+     */
+    @Override
+    public boolean isServlet22() {
+        return XmlIdentifiers.WEB_22_PUBLIC.equals(publicId);
+    }
+
+
+    /**
      * Add a ServletContainerInitializer instance to this web application.
      *
      * @param sci     The instance to add
@@ -224,6 +282,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     public void addServletContainerInitializer(ServletContainerInitializer sci, Set<Class<?>> classes) {
         initializers.put(sci, classes);
     }
+
 
     /**
      * Add a Locale Encoding Mapping (see Sec 5.4 of Servlet spec 2.4)
