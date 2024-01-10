@@ -66,8 +66,15 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String charsetMapperClass = "org.apache.catalina.util.CharsetMapper";
 
+    private boolean createUploadTargets = false;
+
 
     // ----------------------------------------------------- Context Properties
+
+    @Override
+    public void setCreateUploadTargets(boolean createUploadTargets) {
+        this.createUploadTargets = createUploadTargets;
+    }
 
 
     /**
