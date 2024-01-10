@@ -227,28 +227,41 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     /**
      * Add an error page for the specified error or Java exception.
+     * <p>
+     * 它用于向一个容器中添加错误页面定义.
      *
      * @param errorPage The error page definition to be added
      */
     @Override
     public void addErrorPage(ErrorPage errorPage) {
+        /* 1. 参数验证 */
+        // 首先检查传递给方法的 errorPage 对象是否为 null。如果是 null，则抛出 IllegalArgumentException 异常。
         // Validate the input parameters
         if (errorPage == null) {
             throw new IllegalArgumentException(sm.getString("standardContext.errorPage.required"));
         }
+        /* 2. 位置验证和调整 */
         String location = errorPage.getLocation();
+        // 接着，检查错误页面的位置（由 errorPage.getLocation() 返回）。
+        // 如果这个位置不为空且不是以斜杠（/）开头，则根据是否符合 Servlet 2.2 规范进行不同处理
         if ((location != null) && !location.startsWith("/")) {
+            // 如果符合 Servlet 2.2（由 isServlet22() 方法判断），则在位置前添加斜杠，
+            // 并可能记录一条调试级别的日志（如果日志记录器的调试模式被激活）。
             if (isServlet22()) {
                 if (log.isDebugEnabled()) {
                     log.debug(sm.getString("standardContext.errorPage.warning", location));
                 }
                 errorPage.setLocation("/" + location);
             } else {
+                // 如果不符合 Servlet 2.2，抛出 IllegalArgumentException 异常
                 throw new IllegalArgumentException(sm.getString("standardContext.errorPage.error", location));
             }
         }
-
+        /* 3. 添加错误页面 */
+        // 将 errorPage 对象添加到 errorPageSupport 的内部结构中（可能是一个列表或映射），用于存储和管理错误页面
         errorPageSupport.add(errorPage);
+        /* 4. 触发容器事件 */
+        // 方法的最后，触发一个名为 "addErrorPage" 的容器事件，并将 errorPage 作为事件参数传递
         fireContainerEvent("addErrorPage", errorPage);
     }
 
