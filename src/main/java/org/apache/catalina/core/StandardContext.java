@@ -15,6 +15,7 @@ import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.descriptor.web.*;
 import org.apache.tomcat.util.http.CookieProcessor;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 
 import javax.management.*;
 import java.beans.PropertyChangeListener;
@@ -67,6 +68,12 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     private String charsetMapperClass = "org.apache.catalina.util.CharsetMapper";
 
     private boolean createUploadTargets = false;
+
+    /**
+     * The Jar scanner to use to search for Jars that might contain configuration information such as TLDs or
+     * web-fragment.xml files.
+     */
+    private JarScanner jarScanner = null;
 
 
     // ----------------------------------------------------- Context Properties
@@ -170,6 +177,22 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         return this.charsetMapper;
 
     }
+
+
+    @Override
+    public JarScanner getJarScanner() {
+        if (jarScanner == null) {
+            jarScanner = new StandardJarScanner();
+        }
+        return jarScanner;
+    }
+
+
+    @Override
+    public void setJarScanner(JarScanner jarScanner) {
+        this.jarScanner = jarScanner;
+    }
+
 
     /**
      * Add a Locale Encoding Mapping (see Sec 5.4 of Servlet spec 2.4)
