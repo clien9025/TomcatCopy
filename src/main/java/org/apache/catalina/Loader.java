@@ -55,19 +55,25 @@ public interface Loader {
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
      */
-    void backgroundProcess();
+    default void backgroundProcess() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the Java class loader to be used by this Container.
      */
-    ClassLoader getClassLoader();
+    default ClassLoader getClassLoader() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the Context with which this Loader has been associated.
      */
-    Context getContext();
+    default Context getContext() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -75,14 +81,18 @@ public interface Loader {
      *
      * @param context The associated Context
      */
-    void setContext(Context context);
+    default void setContext(Context context) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the "follow standard delegation model" flag used to configure
      * our ClassLoader.
      */
-    boolean getDelegate();
+    default boolean getDelegate() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -91,7 +101,9 @@ public interface Loader {
      *
      * @param delegate The new flag
      */
-    void setDelegate(boolean delegate);
+    default void setDelegate(boolean delegate) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -99,7 +111,9 @@ public interface Loader {
      *
      * @param listener The listener to add
      */
-    void addPropertyChangeListener(PropertyChangeListener listener);
+    default void addPropertyChangeListener(PropertyChangeListener listener) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -107,9 +121,11 @@ public interface Loader {
      * such that the loaded classes should be reloaded?
      *
      * @return <code>true</code> when the repository has been modified,
-     *         <code>false</code> otherwise
+     * <code>false</code> otherwise
      */
-    boolean modified();
+    default boolean modified() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -117,5 +133,7 @@ public interface Loader {
      *
      * @param listener The listener to remove
      */
-    void removePropertyChangeListener(PropertyChangeListener listener);
+    default void removePropertyChangeListener(PropertyChangeListener listener) {
+        throw new UnsupportedOperationException();
+    }
 }
