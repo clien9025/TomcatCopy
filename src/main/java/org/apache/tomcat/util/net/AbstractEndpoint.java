@@ -46,6 +46,15 @@ public abstract class AbstractEndpoint<S,U> {
     private int minSpareThreads = 10;
 
 
+
+    /**
+     * Server socket port.
+     */
+    private int port = -1;
+    public int getPort() { return port; }
+    public void setPort(int port ) { this.port=port; }
+
+
     /**
      * Allows the server developer to specify the acceptCount (backlog) that
      * should be used for server sockets. By default, this value

@@ -13,9 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utils for introspection and reflection
+ * <p>
  * org.apache.tomcat.util.IntrospectionUtils 是 Apache Tomcat 服务器中的一个实用工具类，主要用于内省和反射。
  * 内省（Introspection）是一种通过反射来检查或修改程序运行时的状态的能力，这通常涉及到动态地调用方法、访问属性或检查对象类型等操作。
- *
+ * <p>
  * 在Tomcat中，IntrospectionUtils 主要用途包括：
  * 1. 属性设置：动态地为对象的属性赋值。它可以根据提供的属性名（通常是字符串）来查找相应的 setter 方法，并使用反射来调用这些方法，从而动态地设置对象的属性。
  * 2. 方法调用：通过反射机制调用对象的方法。
@@ -28,13 +29,13 @@ public final class IntrospectionUtils {
     private static final StringManager sm = StringManager.getManager(IntrospectionUtils.class);
 
 
-
     /**
      * Find a method with the right name If found, call the method ( if param is
      * int or boolean we'll convert value to the right type before) - that means
      * you can have setDebug(1).
-     * @param o The object to set a property on
-     * @param name The property name
+     *
+     * @param o     The object to set a property on
+     * @param name  The property name
      * @param value The property value
      * @return <code>true</code> if operation was successful
      */
@@ -177,13 +178,13 @@ public final class IntrospectionUtils {
                     try {
                         return ((Boolean) setPropertyMethodBool.invoke(o,
                                 params)).booleanValue();
-                    }catch (IllegalArgumentException biae) {
+                    } catch (IllegalArgumentException biae) {
                         //the boolean method had the wrong
                         //parameter types. lets try the other
-                        if (setPropertyMethodVoid!=null) {
+                        if (setPropertyMethodVoid != null) {
                             setPropertyMethodVoid.invoke(o, params);
                             return true;
-                        }else {
+                        } else {
                             throw biae;
                         }
                     }
@@ -205,6 +206,7 @@ public final class IntrospectionUtils {
 
     /**
      * Reverse of Introspector.decapitalize.
+     *
      * @param name The name
      * @return the capitalized string
      */
@@ -218,10 +220,9 @@ public final class IntrospectionUtils {
     }
 
     /**
-     * @param s
-     *            the input string
+     * @param s the input string
      * @return escaped string, per Java rule
-     *
+     * <p>
      * 根据 Java 规则转义字符串
      */
     public static String escape(String s) {
@@ -248,12 +249,76 @@ public final class IntrospectionUtils {
         return b.toString();
     }
 
+    /**
+     * 总体来说，这个方法实现了一种灵活的属性获取机制，首先尝试使用专门的反射工具（如果可用），然后尝试标准的 Java Bean getter 方法，
+     * 最后尝试 getProperty 方法。这种方法使得代码能够在不同的环境和约定下工作，增加了其适用性和健壮性。
+     *
+     * @param o
+     * @param name
+     * @return
+     */
+    public static Object getProperty(Object o, String name) {
+        /* 1. 检查反射工具的启用状态 */
+        // 首先检查 XReflectionIntrospectionUtils.isEnabled() 是否返回 true。如果是，
+        // 使用 XReflectionIntrospectionUtils.getPropertyInternal(o, name) 来获取属性值，并返回
+        if (XReflectionIntrospectionUtils.isEnabled()) {
+            return XReflectionIntrospectionUtils.getPropertyInternal(o, name);
+        }
+        /* 2. 构造 getter 方法名 */
+        // 如果上述工具未启用，代码构造标准的 Java Bean getter 方法名。对于属性名 name，标准的 getter 方法名是 "get" + name，
+        // 且第一个字母大写。对于布尔属性，还会尝试 "is" + name 形式的方法名
+        String getter = "get" + capitalize(name);
+        String isGetter = "is" + capitalize(name);
+
+        try {
+            Method methods[] = findMethods(o.getClass());
+            Method getPropertyMethod = null;
+            /* 3. 查找并调用 getter 方法 */
+            // 使用 findMethods(o.getClass()) 获取对象 o 的所有方法。
+            // 遍历这些方法，寻找名为 getter 或 isGetter 且无参数的方法。
+            // 一旦找到，使用 method.invoke(o, (Object[]) null) 来调用该方法，并返回其返回值
+            // First, the ideal case - a getFoo() method
+            for (Method method : methods) {
+                Class<?> paramT[] = method.getParameterTypes();
+                if (getter.equals(method.getName()) && paramT.length == 0) {
+                    return method.invoke(o, (Object[]) null);
+                }
+                if (isGetter.equals(method.getName()) && paramT.length == 0) {
+                    return method.invoke(o, (Object[]) null);
+                }
+                /* 4. 尝试使用 getProperty 方法 */
+                // 如果没有找到标准的 getter 方法，代码会查找名为 "getProperty" 的方法。如果找到，尝试以属性名 name 作为参数调用该方法
+                if ("getProperty".equals(method.getName())) {
+                    getPropertyMethod = method;
+                }
+            }
+
+            // Ok, no setXXX found, try a getProperty("name")
+            if (getPropertyMethod != null) {
+                Object params[] = new Object[1];
+                params[0] = name;
+                return getPropertyMethod.invoke(o, params);
+            }
+
+        } catch (IllegalArgumentException | SecurityException | IllegalAccessException e) {
+            log.warn(sm.getString("introspectionUtils.getPropertyError", name, o.getClass()), e);
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof NullPointerException) {
+                // Assume the underlying object uses a storage to represent an unset property
+                return null;
+            }
+            ExceptionUtils.handleThrowable(e.getCause());
+            log.warn(sm.getString("introspectionUtils.getPropertyError", name, o.getClass()), e);
+        }
+        return null;
+    }
+
     // -------------------- other utils --------------------
 //    public static void clear() {
 //        objectMethods.clear();
 //    }
 
-    private static final Map<Class<?>,Method[]> objectMethods = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Method[]> objectMethods = new ConcurrentHashMap<>();
 
     public static Method[] findMethods(Class<?> c) {
         /* 先从 map 里面获取类，没有找到就使用反射去获取方法们 */

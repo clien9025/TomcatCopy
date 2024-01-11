@@ -60,4 +60,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
     public void setProcessorCache(int processorCache) {
         this.processorCache = processorCache;
     }
+
+
+    public int getPort() {
+        return endpoint.getPort();
+    }
+
+    public void setPort(int port) {
+        endpoint.setPort(port);
+    }
 }

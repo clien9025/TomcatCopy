@@ -74,6 +74,22 @@ public class Connector extends LifecycleMBeanBase {
      */
     protected final String protocolHandlerClassName;
 
+    // ------------------------------------------------------------- Properties
+
+    /**
+     * Return a property from the protocol handler.
+     *
+     * @param name the property name
+     *
+     * @return the property value
+     */
+    public Object getProperty(String name) {
+        if (protocolHandler == null) {
+            return null;
+        }
+        return IntrospectionUtils.getProperty(protocolHandler, name);
+    }
+
     /**
      * The URI encoding in use.
      */
@@ -105,19 +121,18 @@ public class Connector extends LifecycleMBeanBase {
      *             means select a random free port when the socket is bound.
      */
     public int getPort() {
-//        // Try shortcut that should work for nearly all uses first as it does
-//        // not use reflection and is therefore faster.
-//        if (protocolHandler instanceof AbstractProtocol<?>) {
-//            return ((AbstractProtocol<?>) protocolHandler).getPort();
-//        }
-//        // Fall back for custom protocol handlers not based on AbstractProtocol
-//        Object port = getProperty("port");
-//        if (port instanceof Integer) {
-//            return ((Integer) port).intValue();
-//        }
-//        // Usually means an invalid protocol has been configured
-//        return -1;
-        throw new UnsupportedOperationException();
+        // Try shortcut that should work for nearly all uses first as it does
+        // not use reflection and is therefore faster.
+        if (protocolHandler instanceof AbstractProtocol<?>) {
+            return ((AbstractProtocol<?>) protocolHandler).getPort();
+        }
+        // Fall back for custom protocol handlers not based on AbstractProtocol
+        Object port = getProperty("port");
+        if (port instanceof Integer) {
+            return ((Integer) port).intValue();
+        }
+        // Usually means an invalid protocol has been configured
+        return -1;
     }
 
     /**
