@@ -82,7 +82,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * web-fragment.xml files.
      */
     private JarScanner jarScanner = null;
-
+    private boolean mapperContextRootRedirectEnabled = true;
 
     /**
      * The Loader implementation with which this Container is associated.
@@ -106,6 +106,13 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private String publicId = null;
 
+    /**
+     * The session timeout (in minutes) for this web application.
+     */
+    private int sessionTimeout = 30;
+
+    private boolean useRelativeRedirects = !Globals.STRICT_SERVLET_COMPLIANCE;
+
 
     // ----------------------------------------------------- Context Properties
 
@@ -114,6 +121,52 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         this.createUploadTargets = createUploadTargets;
     }
 
+    public void setUseRelativeRedirects(boolean useRelativeRedirects) {
+        this.useRelativeRedirects = useRelativeRedirects;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default value for this implementation is {@code true}.
+     */
+    @Override
+    public boolean getUseRelativeRedirects() {
+        return useRelativeRedirects;
+    }
+
+    /**
+     * @return the default session timeout (in minutes) for this web application.
+     */
+    @Override
+    public int getSessionTimeout() {
+        return this.sessionTimeout;
+    }
+
+
+    /**
+     * Set the default session timeout (in minutes) for this web application.
+     *
+     * @param timeout The new default session timeout
+     */
+    @Override
+    public void setSessionTimeout(int timeout) {
+
+        int oldSessionTimeout = this.sessionTimeout;
+        /*
+         * SRV.13.4 ("Deployment Descriptor"): If the timeout is 0 or less, the container ensures the default behaviour
+         * of sessions is never to time out.
+         */
+        this.sessionTimeout = (timeout == 0) ? -1 : timeout;
+        support.firePropertyChange("sessionTimeout", oldSessionTimeout, this.sessionTimeout);
+
+    }
+
+    @Override
+    public void setMapperContextRootRedirectEnabled(boolean mapperContextRootRedirectEnabled) {
+        this.mapperContextRootRedirectEnabled = mapperContextRootRedirectEnabled;
+    }
 
     /**
      * Set the display name of this web application.
