@@ -19,7 +19,7 @@ public abstract class LifecycleBase implements Lifecycle {
     /**
      * The list of registered LifecycleListeners for event notifications.
      * 这行代码声明了一个lifecycleListeners列表，用于存储LifecycleListener对象。这些监听器对象是用来接收生命周期事件通知的。
-     *
+     * <p>
      * 使用 CopyOnWriteArrayList 表示这个列表，这是一种线程安全的List实现。
      * 当列表被修改时（如添加或移除监听器），它会复制其内部数组，确保在迭代过程中不会发生
      * 并发修改异常（ConcurrentModificationException）。这对于那些其监听器列表可能在多线程环境中被修改的对象来说是非常有用的。
@@ -41,7 +41,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * the caller to handle or will it be logged instead?
      *
      * @return {@code true} if the exception will be re-thrown, otherwise
-     *         {@code false}
+     * {@code false}
      */
     public boolean getThrowOnFailure() {
         return throwOnFailure;
@@ -63,10 +63,11 @@ public abstract class LifecycleBase implements Lifecycle {
 
     /**
      * 这段代码是实现了一个监听器注册机制，特别是用于生命周期事件的监听。
-     * @param listener The listener to add
      *
-     * 这个方法提供了一种机制，允许外部代码注册LifecycleListener对象。当调用此方法时，它将传入的listener添加到lifecycleListeners列表中。
-     * 这使得其他对象可以注册监听器，以便在当前对象的生命周期发生变化时接收通知。比如，当对象启动或停止时，这些注册的监听器可能会被通知。
+     * @param listener The listener to add
+     *                 <p>
+     *                 这个方法提供了一种机制，允许外部代码注册LifecycleListener对象。当调用此方法时，它将传入的listener添加到lifecycleListeners列表中。
+     *                 这使得其他对象可以注册监听器，以便在当前对象的生命周期发生变化时接收通知。比如，当对象启动或停止时，这些注册的监听器可能会被通知。
      */
     @Override
     public void addLifecycleListener(LifecycleListener listener) {
@@ -76,15 +77,14 @@ public abstract class LifecycleBase implements Lifecycle {
     /**
      * Allow sub classes to fire {@link Lifecycle} events.
      *
-     * @param type  Event type
-     * @param data  Data associated with event.
+     * @param type Event type
+     * @param data Data associated with event.
      */
     protected void fireLifecycleEvent(String type, Object data) {
-//        LifecycleEvent event = new LifecycleEvent(this, type, data);
-//        for (LifecycleListener listener : lifecycleListeners) {
-//            listener.lifecycleEvent(event);
-//        }
-        throw new UnsupportedOperationException();
+        LifecycleEvent event = new LifecycleEvent(this, type, data);
+        for (LifecycleListener listener : lifecycleListeners) {
+            listener.lifecycleEvent(event);
+        }
     }
 
 
@@ -139,7 +139,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * Sub-classes must ensure that the state is changed to
      * {@link LifecycleState#STARTING} during the execution of this method.
      * Changing state will trigger the {@link Lifecycle#START_EVENT} event.
-     *
+     * <p>
      * If a component fails to start it may either throw a
      * {@link LifecycleException} which will cause it's parent to fail to start
      * or it can place itself in the error state in which case {@link #stop()}
@@ -306,66 +306,105 @@ public abstract class LifecycleBase implements Lifecycle {
         return state;
     }
 
+    /**
+     * 这段代码定义了一个名为 setStateInternal 的私有同步方法，它用于管理一个对象的生命周期状态。
+     * 这个方法是一个典型的状态管理机制，在像Web服务器这样的复杂系统中常见
+     * <p>
+     * 这个方法是生命周期管理的关键部分，确保对象的状态转换是有序和合规的。它通过一系列检查来防止非法的状态转换，
+     * 并在状态发生变化时触发相应的事件，这对于维护系统的稳定性和预测性非常重要。通过同步机制，该方法还确保了状态变化的线程安全。
+     *
+     * @param state
+     * @param data
+     * @param check
+     * @throws LifecycleException
+     */
     private synchronized void setStateInternal(LifecycleState state, Object data, boolean check)
             throws LifecycleException {
+        /* 1. 日志记录 */
+        // 如果启用了调试日志，该方法会记录当前对象和欲设置的状态
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("lifecycleBase.setState", this, state));
+        }
+        /* 2. 状态检查 */
+        // 如果 check 参数为 true，该方法会执行一系列检查以确保状态转换是合法的
+        if (check) {
+            // Must have been triggered by one of the abstract methods (assume
+            // code in this class is correct)
+            // null is never a valid state
+            // 首先，确认 state 不是 null，因为 null 不是一个有效的状态
+            if (state == null) {
+                invalidTransition("null");
+                // Unreachable code - here to stop eclipse complaining about
+                // a possible NPE further down the method
+                return;
+            }
+            // 然后，检查状态转换是否符合预定的规则。例如，允许从 STARTING_PREP 状态转换到 STARTING，
+            // 从 STOPPING_PREP 状态转换到 STOPPING，以及在任何时候都可以转换到 FAILED 状态。
+            // 如果尝试进行不允许的状态转换，则调用 invalidTransition 方法处理
 
-//        if (log.isDebugEnabled()) {
-//            log.debug(sm.getString("lifecycleBase.setState", this, state));
-//        }
-//
-//        if (check) {
-//            // Must have been triggered by one of the abstract methods (assume
-//            // code in this class is correct)
-//            // null is never a valid state
-//            if (state == null) {
-//                invalidTransition("null");
-//                // Unreachable code - here to stop eclipse complaining about
-//                // a possible NPE further down the method
-//                return;
-//            }
-//
-//            // Any method can transition to failed
-//            // startInternal() permits STARTING_PREP to STARTING
-//            // stopInternal() permits STOPPING_PREP to STOPPING and FAILED to
-//            // STOPPING
-//            if (!(state == LifecycleState.FAILED ||
-//                    (this.state == LifecycleState.STARTING_PREP &&
-//                            state == LifecycleState.STARTING) ||
-//                    (this.state == LifecycleState.STOPPING_PREP &&
-//                            state == LifecycleState.STOPPING) ||
-//                    (this.state == LifecycleState.FAILED &&
-//                            state == LifecycleState.STOPPING))) {
-//                // No other transition permitted
-//                invalidTransition(state.name());
-//            }
-//        }
-//
-//        this.state = state;
-//        String lifecycleEvent = state.getLifecycleEvent();
-//        if (lifecycleEvent != null) {
-//            fireLifecycleEvent(lifecycleEvent, data);
-//        }
-        throw new UnsupportedOperationException();
+            // Any method can transition to failed
+            // startInternal() permits STARTING_PREP to STARTING
+            // stopInternal() permits STOPPING_PREP to STOPPING and FAILED to
+            // STOPPING
+            /*这里的条件是在确认允许的状态转换。条件前面的 ! 取反操作符意味着，如果状态转换不符合上述任一规则，即进入 if 语句内部。
+           因此，如果尝试进行不允许的状态转换，代码将执行 if 语句内部的逻辑，这通常是调用 invalidTransition 方法来处理非法的状态转换*/
+            if (!(state == LifecycleState.FAILED ||
+                    (this.state == LifecycleState.STARTING_PREP &&
+                            state == LifecycleState.STARTING) ||
+                    (this.state == LifecycleState.STOPPING_PREP &&
+                            state == LifecycleState.STOPPING) ||
+                    (this.state == LifecycleState.FAILED &&
+                            state == LifecycleState.STOPPING))) {
+                // No other transition permitted
+                invalidTransition(state.name());
+            }
+        }
+        /* 3. 设置状态 */
+        // 将对象的状态设置为提供的新状态
+        this.state = state;
+        /* 4. 触发生命周期事件 */
+        // 如果新状态对应一个生命周期事件（通过 state.getLifecycleEvent() 获取），
+        // 则调用 fireLifecycleEvent 方法来触发该事件，并传递相关数据
+        String lifecycleEvent = state.getLifecycleEvent();
+        if (lifecycleEvent != null) {
+            fireLifecycleEvent(lifecycleEvent, data);
+        }
     }
 
+    /**
+     * 无效转换（情况如下）：
+     * invalidTransition("null");
+     *
+     * @param type
+     * @throws LifecycleException
+     */
     private void invalidTransition(String type) throws LifecycleException {
-//        String msg = sm.getString("lifecycleBase.invalidTransition", type, toString(), state);
-//        throw new LifecycleException(msg);
-        throw new UnsupportedOperationException();
+        String msg = sm.getString("lifecycleBase.invalidTransition", type, toString(), state);
+        throw new LifecycleException(msg);
     }
 
     private void handleSubClassException(Throwable t, String key, Object... args) throws LifecycleException {
-//        setStateInternal(LifecycleState.FAILED, null, false);
-//        ExceptionUtils.handleThrowable(t);
-//        String msg = sm.getString(key, args);
-//        if (getThrowOnFailure()) {
-//            if (!(t instanceof LifecycleException)) {
-//                t = new LifecycleException(msg, t);
-//            }
-//            throw (LifecycleException) t;
-//        } else {
-//            log.error(msg, t);
-//        }
-        throw new UnsupportedOperationException();
+        /* 1. 设置状态为 FAILED */
+        // 这表示当处理一个子类抛出的异常时，生命周期管理器将内部状态设置为 FAILED
+        setStateInternal(LifecycleState.FAILED, null, false);
+        /* 2. 处理传入的异常 */
+        // 这个步骤处理传入的 Throwable 对象。如果 Throwable 是 Error 的实例，它将被抛出
+        ExceptionUtils.handleThrowable(t);
+        /* 3. 构造和记录错误消息 */
+        // 这里使用提供的键 (key) 和参数 (args) 来构造一个错误消息
+        String msg = sm.getString(key, args);
+        /* 4. 根据配置抛出或记录异常 */
+        // 如果 getThrowOnFailure() 返回 true，则抛出一个 LifecycleException（如果 Throwable 不是 LifecycleException 的实例，
+        // 会创建一个新的 LifecycleException）
+        if (getThrowOnFailure()) {
+            if (!(t instanceof LifecycleException)) {
+                t = new LifecycleException(msg, t);
+            }
+            throw (LifecycleException) t;
+        } else {
+            // 如果 getThrowOnFailure() 返回 false，则记录错误信息，但不抛出异常
+            // getThrowOnFailure 意思是失败时抛出
+            log.error(msg, t);
+        }
     }
 }

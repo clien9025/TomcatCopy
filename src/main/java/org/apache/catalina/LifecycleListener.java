@@ -33,7 +33,9 @@ public interface LifecycleListener {
      *
      * @param event LifecycleEvent that has occurred
      */
-    void lifecycleEvent(LifecycleEvent event);
+    default void lifecycleEvent(LifecycleEvent event) {
+        throw new UnsupportedOperationException();
+    }
 
 
 }

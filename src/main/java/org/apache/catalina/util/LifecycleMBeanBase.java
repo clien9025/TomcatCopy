@@ -3,17 +3,13 @@ package org.apache.catalina.util;
 import org.apache.catalina.Globals;
 import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.LifecycleException;
+import org.apache.tomcat.util.modeler.Registry;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 public abstract class LifecycleMBeanBase extends LifecycleBase
         implements JmxEnabled {
-
-
-    /* Cache components of the MBean registration. */
-    private String domain = null;
-//    private ObjectName oname = null;
 
 
     /**
@@ -132,6 +128,40 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      */
     protected String getObjectNameKeyProperties() {
         throw new UnsupportedOperationException();
+    }
+
+    /* Cache components of the MBean registration. */
+    private String domain = null;
+    private ObjectName oname = null;
+
+    /**
+     * Sub-classes wishing to perform additional clean-up should override this
+     * method, ensuring that super.destroyInternal() is the last call in the
+     * overriding method.
+     * <p>
+     * 这个方法通常用于生命周期管理，特别是在需要销毁对象和清理资源的时候
+     * 总之，destroyInternal 方法是一个生命周期管理方法，专门用于在对象生命周期的销毁阶段执行清理工作。
+     * 该方法的设计允许在不改变基本销毁逻辑的情况下，通过子类扩展来增加额外的清理操作
+     */
+    @Override
+    protected void destroyInternal() throws LifecycleException {
+        // 在此实现中，它调用 unregister(oname) 方法，其中 oname 是一个 ObjectName 类型的变量，代表需要注销的 JMX 组件。
+        unregister(oname);
+    }
+
+    /**
+     * Utility method to enable sub-classes to easily unregister additional
+     * components that don't implement {@link JmxEnabled} with an MBean server.
+     * <br>
+     * Note: This method should only be used once {@link #initInternal()} has
+     * been called and before {@link #destroyInternal()} has been called.
+     * <p>
+     * 这是一个辅助方法，用于帮助子类轻松地从 MBean 服务器注销不实现 JmxEnabled 接口的组件。
+     *
+     * @param on The name of the component to unregister
+     */
+    protected final void unregister(ObjectName on) {
+        Registry.getRegistry(null, null).unregisterComponent(on);
     }
 
 
