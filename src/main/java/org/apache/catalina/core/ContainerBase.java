@@ -163,6 +163,14 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     // ------------------------------------------------------------- Properties
 
+    /**
+     * Return the Pipeline object that manages the Valves associated with this Container.
+     */
+    @Override
+    public Pipeline getPipeline() {
+        return this.pipeline;
+    }
+
 
     /**
      * Set a name string (suitable for use by humans) that describes this Container. Within the set of child containers

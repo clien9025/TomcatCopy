@@ -61,8 +61,25 @@ public abstract class ValveBase extends LifecycleMBeanBase implements Contained,
 //     */
 //    protected Valve next = null;
 
+
+    /**
+     * The next Valve in the pipeline this Valve is a component of.
+     */
+    protected Valve next = null;
+
     @Override
     public void setContainer(Container container) {
         this.container = container;
+    }
+
+    @Override
+    public Valve getNext() {
+        return next;
+    }
+
+
+    @Override
+    public void setNext(Valve valve) {
+        this.next = valve;
     }
 }

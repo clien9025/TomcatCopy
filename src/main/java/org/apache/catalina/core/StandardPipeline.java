@@ -7,6 +7,10 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
+import javax.management.ObjectName;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Standard implementation of a processing <b>Pipeline</b> that will invoke a series of Valves that have been configured
  * to be called in order. This implementation can be used for any type of Container. <b>IMPLEMENTATION WARNING</b> -
@@ -83,13 +87,13 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      * <code>IllegalArgumentException</code> if this Valve chooses not to be associated with this Container, or
      * <code>IllegalStateException</code> if it is already associated with a different Container.
      * </p>
-     *
+     * <p>
      * 通过这个方法，可以确保 Pipeline 中的基本 Valve 始终是最新的，并且在更换过程中旧的 Valve 会被正确地停止和解除关联，
      * 新的 Valve 被配置并启动。这是一个典型的在复杂组件中更换子组件的操作，需要保证整个过程的线程安全和状态一致性。
-     *
+     * <p>
      * setBasic 方法是 StandardPipeline 类的一个部分，它用于设置或替换基本Valve。这个方法确保新的基本Valve在添加到 Pipeline 之前
      * 和之后都处于正确的状态。它会停止旧的基本Valve（如果存在），启动新的Valve，并确保Pipeline的Valve链反映了这种更改。
-     *
+     * <p>
      * 在使用 setBasic 方法时，StandardPipeline 会先检查Valve是否已经与另一个 Container关联，
      * 如果是，可能会抛出 IllegalStateException。如果Valve选择不与当前的 Container 关联，
      * 则可能会抛出 IllegalArgumentException。这些检查是为了确保 Valve 与 Container 的关系是一致和正确的，避免配置错误导致的潜在问题。
@@ -160,6 +164,112 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         }
         /* 5. 更新基本Valve引用*/
         this.basic = valve;// 将类的basic成员变量更新为新的基本Valve
+
+    }
+
+
+    // ------------------------------------------------------- Pipeline Methods
+
+
+    /**
+     * <p>
+     * Add a new Valve to the end of the pipeline associated with this Container. Prior to adding the Valve, the Valve's
+     * <code>setContainer()</code> method will be called, if it implements <code>Contained</code>, with the owning
+     * Container as an argument. The method may throw an <code>IllegalArgumentException</code> if this Valve chooses not
+     * to be associated with this Container, or <code>IllegalStateException</code> if it is already associated with a
+     * different Container.
+     * </p>
+     * <p>
+     * 这个方法的设计目的是为了使系统能够灵活地处理进入的请求，通过向管道中添加不同的 Valve，可以实现各种处理逻辑。
+     * 例如，可以有一个 Valve 负责身份验证，另一个 Valve 负责日志记录等等。
+     * 这种设计提供了高度的可扩展性和灵活性，是许多中间件和服务容器常用的模式
+     *
+     * @param valve Valve to be added
+     * @throws IllegalArgumentException if this Container refused to accept the specified Valve
+     * @throws IllegalArgumentException if the specified Valve refuses to be associated with this Container
+     * @throws IllegalStateException    if the specified Valve is already associated with a different Container
+     */
+    @Override
+    public void addValve(Valve valve) {
+        /* 1. 设置容器 */
+        // Validate that we can add this Valve（检查我们能添加这个 valve）
+        if (valve instanceof Contained) {
+            ((Contained) valve).setContainer(this.container);
+        }
+        /* 2. 启动阀（如果必要） */
+        // 如果当前管道的状态是可用的（通过 getState().isAvailable() 检查），并且 Valve 实现了 Lifecycle 接口，则尝试启动该 Valve。如果启动失败，则记录错误。
+        // Start the new component if necessary
+        if (getState().isAvailable()) {
+            if (valve instanceof Lifecycle) {
+                try {
+                    ((Lifecycle) valve).start();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("standardPipeline.valve.start"), e);
+                }
+            }
+        }
+        /* 3. 添加 Valve 到管道 */
+        // Add this Valve to the set associated with this Pipeline
+        // 如果这是管道中的第一个 Valve（first == null），则将其设置为第一个 Valve 并连接到基本 Valve（basic
+        if (first == null) {
+            first = valve;
+            valve.setNext(basic);
+        } else {
+            // 如果不是第一个 Valve，则遍历管道中的 Valve，将新 Valve 添加到链表的末尾，紧接在基本 Valve 之前
+//            Valve current = first;
+//            while (current != null) {
+//                if (current.getNext() == basic) {
+//                    current.setNext(valve);
+//                    valve.setNext(basic);
+//                    break;
+//                }
+//                current = current.getNext();
+//            }
+            throw new UnsupportedOperationException();
+        }
+        /* 4. 触发容器事件 */
+        // 方法结束时，触发一个与添加新 Valve 相关的容器事件
+        container.fireContainerEvent(Container.ADD_VALVE_EVENT, valve);
+    }
+
+
+    /**
+     * Return the set of Valves in the pipeline associated with this Container, including the basic Valve (if any). If
+     * there are no such Valves, a zero-length array is returned.
+     */
+    @Override
+    public Valve[] getValves() {
+
+//        List<Valve> valveList = new ArrayList<>();
+//        Valve current = first;
+//        if (current == null) {
+//            current = basic;
+//        }
+//        while (current != null) {
+//            valveList.add(current);
+//            current = current.getNext();
+//        }
+//
+//        return valveList.toArray(new Valve[0]);
+//
+//    }
+//
+//    public ObjectName[] getValveObjectNames() {
+//
+//        List<ObjectName> valveList = new ArrayList<>();
+//        Valve current = first;
+//        if (current == null) {
+//            current = basic;
+//        }
+//        while (current != null) {
+//            if (current instanceof JmxEnabled) {
+//                valveList.add(((JmxEnabled) current).getObjectName());
+//            }
+//            current = current.getNext();
+//        }
+//
+//        return valveList.toArray(new ObjectName[0]);
+        throw new UnsupportedOperationException();
 
     }
 }
