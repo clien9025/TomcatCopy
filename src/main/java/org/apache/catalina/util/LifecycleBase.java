@@ -154,58 +154,68 @@ public abstract class LifecycleBase implements Lifecycle {
 
     @Override
     public final synchronized void stop() throws LifecycleException {
+        /* 1. 检查当前状态 */
+        // 如果当前状态 (state) 是 STOPPING_PREP、STOPPING 或 STOPPED，则表示组件已经在停止过程中或已停止。
+        // 此时，根据日志级别，记录相应的调试或信息日志，并直接返回
+        if (LifecycleState.STOPPING_PREP.equals(state) || LifecycleState.STOPPING.equals(state) ||
+                LifecycleState.STOPPED.equals(state)) {
 
-//        if (LifecycleState.STOPPING_PREP.equals(state) || LifecycleState.STOPPING.equals(state) ||
-//                LifecycleState.STOPPED.equals(state)) {
-//
-//            if (log.isDebugEnabled()) {
-//                Exception e = new LifecycleException();
-//                log.debug(sm.getString("lifecycleBase.alreadyStopped", toString()), e);
-//            } else if (log.isInfoEnabled()) {
-//                log.info(sm.getString("lifecycleBase.alreadyStopped", toString()));
-//            }
-//
-//            return;
-//        }
-//
-//        if (state.equals(LifecycleState.NEW)) {
-//            state = LifecycleState.STOPPED;
-//            return;
-//        }
-//
-//        if (!state.equals(LifecycleState.STARTED) && !state.equals(LifecycleState.FAILED)) {
-//            invalidTransition(BEFORE_STOP_EVENT);
-//        }
-//
-//        try {
-//            if (state.equals(LifecycleState.FAILED)) {
-//                // Don't transition to STOPPING_PREP as that would briefly mark the
-//                // component as available but do ensure the BEFORE_STOP_EVENT is
-//                // fired
-//                fireLifecycleEvent(BEFORE_STOP_EVENT, null);
-//            } else {
-//                setStateInternal(LifecycleState.STOPPING_PREP, null, false);
-//            }
-//
-//            stopInternal();
-//
-//            // Shouldn't be necessary but acts as a check that sub-classes are
-//            // doing what they are supposed to.
-//            if (!state.equals(LifecycleState.STOPPING) && !state.equals(LifecycleState.FAILED)) {
-//                invalidTransition(AFTER_STOP_EVENT);
-//            }
-//
-//            setStateInternal(LifecycleState.STOPPED, null, false);
-//        } catch (Throwable t) {
-//            handleSubClassException(t, "lifecycleBase.stopFail", toString());
-//        } finally {
-//            if (this instanceof Lifecycle.SingleUse) {
-//                // Complete stop process first
-//                setStateInternal(LifecycleState.STOPPED, null, false);
-//                destroy();
-//            }
-//        }
-        throw new UnsupportedOperationException();
+            if (log.isDebugEnabled()) {
+                Exception e = new LifecycleException();
+                log.debug(sm.getString("lifecycleBase.alreadyStopped", toString()), e);
+            } else if (log.isInfoEnabled()) {
+                log.info(sm.getString("lifecycleBase.alreadyStopped", toString()));
+            }
+
+            return;
+        }
+        /* 2. 处理 NEW 状态 */
+        // 如果状态是 NEW，则直接将状态设置为 STOPPED 并返回。这意味着如果组件尚未启动，它会被直接标记为已停止
+        if (state.equals(LifecycleState.NEW)) {
+            state = LifecycleState.STOPPED;
+            return;
+        }
+        /* 3. 检查状态合法性 */
+        // 如果当前状态既不是 STARTED 也不是 FAILED，则调用 invalidTransition 方法处理非法的状态转换。
+        if (!state.equals(LifecycleState.STARTED) && !state.equals(LifecycleState.FAILED)) {
+            invalidTransition(BEFORE_STOP_EVENT);
+        }
+        /* 4. 状态转换和停止处理 */
+        // 如果当前状态是 FAILED，则触发 BEFORE_STOP_EVENT 事件，但不改变状态到 STOPPING_PREP（通常用于标记开始停止过程）。
+        try {
+            if (state.equals(LifecycleState.FAILED)) {
+                // Don't transition to STOPPING_PREP as that would briefly mark the
+                // component as available but do ensure the BEFORE_STOP_EVENT is
+                // fired
+                fireLifecycleEvent(BEFORE_STOP_EVENT, null);
+            } else {
+                // 如果不是 FAILED 状态，将状态设置为 STOPPING_PREP。
+                setStateInternal(LifecycleState.STOPPING_PREP, null, false);
+            }
+            // 调用 stopInternal() 方法执行实际的停止逻辑。
+            stopInternal();
+
+            /* 5. 检查状态和状态转换 */
+            // 检查停止后的状态，确保它是 STOPPING 或 FAILED，否则处理非法状态转换。
+            // Shouldn't be necessary but acts as a check that sub-classes are
+            // doing what they are supposed to.
+            if (!state.equals(LifecycleState.STOPPING) && !state.equals(LifecycleState.FAILED)) {
+                invalidTransition(AFTER_STOP_EVENT);
+            }
+            // 将状态设置为 STOPPED
+            setStateInternal(LifecycleState.STOPPED, null, false);
+        } catch (Throwable t) {
+            /* 6. 异常处理 */
+            handleSubClassException(t, "lifecycleBase.stopFail", toString());
+        } finally {
+            /* 7. 处理单次使用组件的特殊情况 */
+            // 如果这个类实现了 Lifecycle.SingleUse 接口，则在停止逻辑完成后调用 destroy 方法
+            if (this instanceof Lifecycle.SingleUse) {
+                // Complete stop process first
+                setStateInternal(LifecycleState.STOPPED, null, false);
+                destroy();
+            }
+        }
     }
 
     /**

@@ -74,6 +74,11 @@ public class Connector extends LifecycleMBeanBase {
      */
     protected final String protocolHandlerClassName;
 
+    /**
+     * The request scheme that will be set on all requests received through this connector.
+     */
+    protected String scheme = "http";
+
     // ------------------------------------------------------------- Properties
 
     /**
@@ -183,8 +188,7 @@ public class Connector extends LifecycleMBeanBase {
      * @return the scheme that will be assigned to requests received through this connector. Default value is "http".
      */
     public String getScheme() {
-//        return this.scheme;
-        throw new UnsupportedOperationException();
+        return this.scheme;
     }
 
     /**
