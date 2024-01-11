@@ -229,6 +229,65 @@ public abstract class LifecycleBase implements Lifecycle {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public final synchronized void destroy() throws LifecycleException {
+        /* 1. 处理 FAILED 状态 */
+        // 如果对象的当前状态 (state) 是 FAILED，则首先尝试调用 stop() 方法来进行清理。
+        // 如果 stop() 方法抛出异常，该异常将被捕获并记录，但不会阻止销毁流程的继续
+        if (LifecycleState.FAILED.equals(state)) {
+            try {
+                // Triggers clean-up
+                stop();
+            } catch (LifecycleException e) {
+                // Just log. Still want to destroy.
+                log.error(sm.getString("lifecycleBase.destroyStopFail", toString()), e);
+            }
+        }
+        /* 2. 检查是否已经在销毁或已销毁 */
+        // 如果当前状态是 DESTROYING 或 DESTROYED，则根据日志级别记录相应的消息，并直接返回。这防止了重复销毁的尝试
+        if (LifecycleState.DESTROYING.equals(state) || LifecycleState.DESTROYED.equals(state)) {
+            if (log.isDebugEnabled()) {
+                Exception e = new LifecycleException();
+                log.debug(sm.getString("lifecycleBase.alreadyDestroyed", toString()), e);
+            } else if (log.isInfoEnabled() && !(this instanceof Lifecycle.SingleUse)) {
+                // Rather than have every component that might need to call
+                // destroy() check for SingleUse, don't log an info message if
+                // multiple calls are made to destroy()
+                log.info(sm.getString("lifecycleBase.alreadyDestroyed", toString()));
+            }
+
+            return;
+        }
+        /* 3. 状态检查 */
+        // 检查当前状态是否为 STOPPED、FAILED、NEW 或 INITIALIZED 之一。如果不是，表示状态转换非法，并通过调用 invalidTransition 方法处理。
+        if (!state.equals(LifecycleState.STOPPED) && !state.equals(LifecycleState.FAILED) &&
+                !state.equals(LifecycleState.NEW) && !state.equals(LifecycleState.INITIALIZED)) {
+            invalidTransition(BEFORE_DESTROY_EVENT);
+        }
+        /* 4. 设置状态并调用 destroyInternal */
+        // 将状态设置为 DESTROYING。
+        // 调用 destroyInternal() 方法，这是一个抽象方法，由子类具体实现，用于执行实际的销毁逻辑。
+        // 完成销毁后，将状态设置为 DESTROYED
+        try {
+            setStateInternal(LifecycleState.DESTROYING, null, false);
+            destroyInternal();
+            setStateInternal(LifecycleState.DESTROYED, null, false);
+        } catch (Throwable t) {
+            handleSubClassException(t, "lifecycleBase.destroyFail", toString());
+        }
+    }
+
+
+    /**
+     * Sub-classes implement this method to perform any instance destruction
+     * required.
+     *
+     * @throws LifecycleException If the destruction fails
+     */
+    protected void destroyInternal() throws LifecycleException {
+        throw new UnsupportedOperationException();
+    }
+
 
     /**
      * Sub-classes implement this method to perform any instance initialisation
