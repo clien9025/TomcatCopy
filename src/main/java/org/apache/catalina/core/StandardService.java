@@ -251,4 +251,25 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         }
     }
 
+
+    @Override
+    protected String getDomainInternal() {
+        String domain = null;
+        Container engine = getContainer();
+
+        // Use the engine name first
+        if (engine != null) {
+            domain = engine.getName();
+        }
+
+        // No engine or no engine name, use the service name
+        if (domain == null) {
+            domain = getName();
+        }
+
+        // No service name, return null which will trigger the use of the
+        // default
+        return domain;
+    }
+
 }

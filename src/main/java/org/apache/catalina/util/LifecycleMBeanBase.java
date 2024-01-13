@@ -3,13 +3,22 @@ package org.apache.catalina.util;
 import org.apache.catalina.Globals;
 import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.LifecycleException;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.modeler.Registry;
+import org.apache.tomcat.util.res.StringManager;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 public abstract class LifecycleMBeanBase extends LifecycleBase
         implements JmxEnabled {
+
+
+    private static final Log log = LogFactory.getLog(LifecycleMBeanBase.class);
+
+    private static final StringManager sm =
+            StringManager.getManager("org.apache.catalina.util");
 
 
     /**
@@ -62,6 +71,39 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         this.domain = domain;
     }
 
+    /**
+     * Utility method to enable sub-classes to easily register additional
+     * components that don't implement {@link JmxEnabled} with an MBean server.
+     * <br>
+     * Note: This method should only be used once {@link #initInternal()} has
+     * been called and before {@link #destroyInternal()} has been called.
+     *
+     * @param obj                     The object the register
+     * @param objectNameKeyProperties The key properties component of the
+     *                                object name to use to register the
+     *                                object
+     * @return The name used to register the object
+     */
+    protected final ObjectName register(Object obj,
+                                        String objectNameKeyProperties) {
+
+        // Construct an object name with the right domain
+        StringBuilder name = new StringBuilder(getDomain());
+        name.append(':');
+        name.append(objectNameKeyProperties);
+
+        ObjectName on = null;
+
+        try {
+            on = new ObjectName(name.toString());
+            Registry.getRegistry(null, null).registerComponent(obj, on, null);
+        } catch (Exception e) {
+            log.warn(sm.getString("lifecycleMBeanBase.registerFail", obj, name), e);
+        }
+
+        return on;
+    }
+
 
     /**
      * Allows the object to be registered with an alternative
@@ -82,15 +124,18 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      * Sub-classes wishing to perform additional initialization should override
      * this method, ensuring that super.initInternal() is the first call in the
      * overriding method.
+     * <p>
+     * 如果子类需要进行附加的初始化工作，应该重写 initInternal 方法。
+     * 重要的是，在子类的重写方法中，必须首先调用父类的 initInternal 方法（即 super.initInternal()），
+     * 这是为了保证父类的初始化逻辑得到正确执行，从而确保整个对象的初始化过程是完整和正确的。
      */
     @Override
     protected void initInternal() throws LifecycleException {
-//        // If oname is not null then registration has already happened via
-//        // preRegister().
-//        if (oname == null) {
-//            oname = register(this, getObjectNameKeyProperties());
-//        }
-        throw new UnsupportedOperationException();
+        // If oname is not null then registration has already happened via
+        // preRegister().
+        if (oname == null) {
+            oname = register(this, getObjectNameKeyProperties());
+        }
     }
 
     /**
@@ -147,6 +192,25 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
     protected void destroyInternal() throws LifecycleException {
         // 在此实现中，它调用 unregister(oname) 方法，其中 oname 是一个 ObjectName 类型的变量，代表需要注销的 JMX 组件。
         unregister(oname);
+    }
+
+    /**
+     * Utility method to enable sub-classes to easily unregister additional
+     * components that don't implement {@link JmxEnabled} with an MBean server.
+     * <br>
+     * Note: This method should only be used once {@link #initInternal()} has
+     * been called and before {@link #destroyInternal()} has been called.
+     *
+     * @param objectNameKeyProperties The key properties component of the
+     *                                object name to use to unregister the
+     *                                object
+     */
+    protected final void unregister(String objectNameKeyProperties) {
+        // Construct an object name with the right domain
+        StringBuilder name = new StringBuilder(getDomain());
+        name.append(':');
+        name.append(objectNameKeyProperties);
+        Registry.getRegistry(null, null).unregisterComponent(name.toString());
     }
 
     /**

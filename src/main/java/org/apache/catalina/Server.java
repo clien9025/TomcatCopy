@@ -48,7 +48,9 @@ public interface Server extends Lifecycle {
     /**
      * @return the global naming resources.
      */
-    NamingResourcesImpl getGlobalNamingResources();
+    default NamingResourcesImpl getGlobalNamingResources() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -56,33 +58,39 @@ public interface Server extends Lifecycle {
      *
      * @param globalNamingResources The new global naming resources
      */
-    void setGlobalNamingResources
-    (NamingResourcesImpl globalNamingResources);
+    default void setGlobalNamingResources
+    (NamingResourcesImpl globalNamingResources) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the global naming resources context.
      */
-    javax.naming.Context getGlobalNamingContext();
+    default javax.naming.Context getGlobalNamingContext() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the port number we listen to for shutdown commands.
-     *
      * @see #getPortOffset()
      * @see #getPortWithOffset()
      */
-    int getPort();
+    default int getPort() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Set the port number we listen to for shutdown commands.
      *
      * @param port The new port number
-     *
      * @see #setPortOffset(int)
      */
-    void setPort(int port);
+    default void setPort(int port) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the number that offsets the port used for shutdown commands.
@@ -91,7 +99,9 @@ public interface Server extends Lifecycle {
      *
      * @return the port offset
      */
-    int getPortOffset();
+    default int getPortOffset() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the number that offsets the server port used for shutdown commands.
@@ -100,7 +110,9 @@ public interface Server extends Lifecycle {
      *
      * @param portOffset sets the port offset
      */
-    void setPortOffset(int portOffset);
+    default void setPortOffset(int portOffset) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the actual port on which server is listening for the shutdown commands.
@@ -109,12 +121,16 @@ public interface Server extends Lifecycle {
      *
      * @return the port with offset
      */
-    int getPortWithOffset();
+    default int getPortWithOffset() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the address on which we listen to for shutdown commands.
      */
-    String getAddress();
+    default String getAddress() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -122,13 +138,17 @@ public interface Server extends Lifecycle {
      *
      * @param address The new address
      */
-    void setAddress(String address);
+    default void setAddress(String address) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the shutdown command string we are waiting for.
      */
-    String getShutdown();
+    default String getShutdown() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -136,7 +156,9 @@ public interface Server extends Lifecycle {
      *
      * @param shutdown The new shutdown command
      */
-    void setShutdown(String shutdown);
+    default void setShutdown(String shutdown) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -144,7 +166,9 @@ public interface Server extends Lifecycle {
      * {@link #getCatalina()} {@link Catalina#getParentClassLoader()}. If
      * catalina has not been set, return the system class loader.
      */
-    ClassLoader getParentClassLoader();
+    default ClassLoader getParentClassLoader() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -152,20 +176,26 @@ public interface Server extends Lifecycle {
      *
      * @param parent The new parent class loader
      */
-    void setParentClassLoader(ClassLoader parent);
+    default void setParentClassLoader(ClassLoader parent) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the outer Catalina startup/shutdown component if present.
      */
-    Catalina getCatalina();
+    default Catalina getCatalina() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the outer Catalina startup/shutdown component if present.
      *
      * @param catalina the outer Catalina component
      */
-    void setCatalina(Catalina catalina);
+    default void setCatalina(Catalina catalina) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -173,7 +203,9 @@ public interface Server extends Lifecycle {
      * may be the same (and are by default). If this is not set the value
      * returned by {@link #getCatalinaHome()} will be used.
      */
-    File getCatalinaBase();
+    default File getCatalinaBase() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the configured base (instance) directory. Note that home and base
@@ -181,14 +213,18 @@ public interface Server extends Lifecycle {
      *
      * @param catalinaBase the configured base directory
      */
-    void setCatalinaBase(File catalinaBase);
+    default void setCatalinaBase(File catalinaBase) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the configured home (binary) directory. Note that home and base
      * may be the same (and are by default).
      */
-    File getCatalinaHome();
+    default File getCatalinaHome() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the configured home (binary) directory. Note that home and base
@@ -196,21 +232,29 @@ public interface Server extends Lifecycle {
      *
      * @param catalinaHome the configured home directory
      */
-    void setCatalinaHome(File catalinaHome);
+    default void setCatalinaHome(File catalinaHome) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Get the utility thread count.
+     *
      * @return the thread count
      */
-    int getUtilityThreads();
+    default int getUtilityThreads() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Set the utility thread count.
+     *
      * @param utilityThreads the new thread count
      */
-    void setUtilityThreads(int utilityThreads);
+    default void setUtilityThreads(int utilityThreads) {
+        throw new UnsupportedOperationException();
+    }
 
 
     // --------------------------------------------------------- Public Methods
@@ -221,13 +265,17 @@ public interface Server extends Lifecycle {
      *
      * @param service The Service to be added
      */
-    void addService(Service service);
+    default void addService(Service service) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Wait until a proper shutdown command is received, then return.
      */
-    void await();
+    default void await() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -236,13 +284,17 @@ public interface Server extends Lifecycle {
      * @param name Name of the Service to be returned
      * @return the specified Service, or <code>null</code> if none exists.
      */
-    Service findService(String name);
+    default Service findService(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the set of Services defined within this Server.
      */
-    Service[] findServices();
+    default Service[] findServices() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -251,18 +303,24 @@ public interface Server extends Lifecycle {
      *
      * @param service The Service to be removed
      */
-    void removeService(Service service);
+    default void removeService(Service service) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the token necessary for operations on the associated JNDI naming
      * context.
      */
-    Object getNamingToken();
+    default Object getNamingToken() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the utility executor managed by the Service.
      */
-    ScheduledExecutorService getUtilityExecutor();
+    default ScheduledExecutorService getUtilityExecutor() {
+        throw new UnsupportedOperationException();
+    }
 
 }
