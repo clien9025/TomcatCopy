@@ -202,39 +202,49 @@ public class Registry implements RegistryMBean, MBeanRegistration {
 
     /**
      * Register a component
+     * <p>
+     * 这段代码定义了一个名为 registerComponent 的方法，用于在 Java Management Extensions (JMX)
+     * 系统中注册一个组件（称为 "bean"）。
+     * <p>
+     * 总体来说，registerComponent 方法的作用是将 Java 对象（bean）作为 MBean 注册到 JMX 服务器。
+     * 这允许该对象通过 JMX 进行管理和监控，是在创建可监控和可管理的 Java 应用程序中的一个重要步骤，尤其是在企业级应用或大型系统中
      *
-     * @param bean The bean
+     * @param bean  The bean
      * @param oname The object name
-     * @param type The registry type
+     * @param type  The registry type
      * @throws Exception Error registering component
      */
     public void registerComponent(Object bean, ObjectName oname, String type) throws Exception {
+        /* 1. 记录日志 */
+        // 如果启用了调试模式，将会记录一个日志信息，指出正在注册的组件的名称（oname）。
         if (log.isDebugEnabled()) {
             log.debug("Managed= " + oname);
         }
-
+        /* 2. 检查传入的 bean 是否为空 */
+        // 如果传入的 bean 是 null，则记录一个错误日志，并终止方法执行。
         if (bean == null) {
             log.error(sm.getString("registry.nullBean", oname));
             return;
         }
-
+        /* 3. 注册逻辑 */
         try {
+            // 如果 type 参数为 null，则使用 bean 的类名作为其类型
             if (type == null) {
                 type = bean.getClass().getName();
             }
-
+            // 调用 findManagedBean 方法来查找或创建一个 ManagedBean，这是一个对 bean 进行封装和管理的对象。
             ManagedBean managed = findManagedBean(null, bean.getClass(), type);
-
+            // 使用 ManagedBean 的 createMBean 方法创建一个 DynamicMBean 实例，这是一个可以在 JMX 中注册的动态 MBean。
             // The real mbean is created and registered
             DynamicMBean mbean = managed.createMBean(bean);
-
+            // 检查通过 oname 指定的 MBean 是否已在 MBean 服务器上注册。如果已注册，则先注销该 MBean
             if (getMBeanServer().isRegistered(oname)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Unregistering existing component " + oname);
                 }
                 getMBeanServer().unregisterMBean(oname);
             }
-
+            // 注册新的 DynamicMBean 实例到 MBean 服务器
             getMBeanServer().registerMBean(mbean, oname);
         } catch (Exception ex) {
             log.error(sm.getString("registry.registerError", oname), ex);
@@ -284,8 +294,6 @@ public class Registry implements RegistryMBean, MBeanRegistration {
     }
 
 
-
-
     // -------------------- Helpers --------------------
 
     /**
@@ -324,37 +332,40 @@ public class Registry implements RegistryMBean, MBeanRegistration {
     /**
      * Find or load metadata.
      *
-     * @param bean The bean
+     * @param bean      The bean
      * @param beanClass The bean class
-     * @param type The registry type
+     * @param type      The registry type
      * @return the managed bean
      * @throws Exception An error occurred
      */
     public ManagedBean findManagedBean(Object bean, Class<?> beanClass, String type)
             throws Exception {
-
+        /* 1. 参数处理 */
+        // 如果 bean 不为空且 beanClass 为空，则使用 bean.getClass() 来获取对象的类。
         if (bean != null && beanClass == null) {
             beanClass = bean.getClass();
         }
-
+        // 如果 type 为空，则将 beanClass 的全名作为 type。
         if (type == null) {
             type = beanClass.getName();
         }
-
+        /* 2. 查找现有的描述符 */
+        // 首先尝试查找已经存在的与该 type 相关的 ManagedBean。
         // first look for existing descriptor
         ManagedBean managed = findManagedBean(type);
-
+        /* 3. 在包中搜索描述符 */
         // Search for a descriptor in the same package
         if (managed == null) {
             // check package and parent packages
             if (log.isDebugEnabled()) {
                 log.debug("Looking for descriptor ");
             }
+            // 如果没有找到现有的 ManagedBean，则调用 findDescriptor 方法在 beanClass 所在的包以及其父包中搜索描述符。
             findDescriptor(beanClass, type);
-
+            // 搜索完成后，再次尝试找到与该 type 相关的 ManagedBean
             managed = findManagedBean(type);
         }
-
+        /* 4. 使用内省作为后备机制 */
         // Still not found - use introspection
         if (managed == null) {
             if (log.isDebugEnabled()) {
@@ -362,16 +373,24 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             }
 
             // introspection
+            // 如果仍然没有找到 ManagedBean，则使用内省（introspection）作为后备方法。这通常涉及到分析类的结构，
+            // 如其字段和方法，以动态地生成管理信息。
             load("MbeansDescriptorsIntrospectionSource", beanClass, type);
-
+            // 内省完成后，再次尝试找到与该 type 相关的 ManagedBean
             managed = findManagedBean(type);
+            /* 5. 处理找不到的情况 */
+            // 如果即使在内省之后仍未找到 ManagedBean，则记录一条警告日志，并返回 null。
             if (managed == null) {
                 log.warn(sm.getString("registry.noTypeMetadata", type));
                 return null;
             }
+            /* 6. 添加新的 ManagedBean */
+            // 如果通过内省找到了 ManagedBean，则设置其名称并将其添加到某个管理容器中。
             managed.setName(type);
             addManagedBean(managed);
         }
+        /* 7. 返回 ManagedBean */
+        // 返回找到或创建的 ManagedBean
         return managed;
     }
 
@@ -380,7 +399,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
      * if any; otherwise return <code>null</code>.
      *
      * @param name Name of the managed bean to be returned. Since 1.1, both
-     *            short names or the full name of the class can be used.
+     *             short names or the full name of the class can be used.
      * @return the managed bean
      * @since 1.0
      */
@@ -400,6 +419,9 @@ public class Registry implements RegistryMBean, MBeanRegistration {
      * packages.
      */
     private void findDescriptor(Class<?> beanClass, String type) {
+        /* 确定类型和类加载器 */
+        // 如果没有提供 type，则使用 beanClass 的全名。然后，尝试获取 beanClass 的类加载器，
+        // 如果失败，则使用当前线程的上下文类加载器或者当前类的类加载器。
         if (type == null) {
             type = beanClass.getName();
         }
@@ -413,7 +435,8 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         if (classLoader == null) {
             classLoader = this.getClass().getClassLoader();
         }
-
+        /* 遍历包结构 */
+        // 从完整类名开始，逐级向上遍历父包（通过删除最后一个点号后的部分），直到不再有点号（.），表示已到达顶级包
         String className = type;
         String pkg = className;
         while (pkg.indexOf('.') > 0) {
@@ -425,32 +448,46 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             if (searchedPaths.get(pkg) != null) {
                 return;
             }
+            /* 调用加载描述符的方法 */
+            // 对于每个包，如果该包还没有被搜索过（检查 searchedPaths），则调用 loadDescriptors 方法尝试加载该包中的描述符。
             loadDescriptors(pkg, classLoader);
         }
     }
 
     /**
      * Load descriptors.
+     * <p>
+     * 这段代码定义了一个名为 load 的方法，其目的是从不同类型的源（如 URL、文件、输入流或类）加载描述符并返回一个 ObjectName 对象的列表。
+     * 这些描述符通常与 Java Management Extensions (JMX) 中的 MBean（管理 Bean）相关。
      *
      * @param sourceType The source type
-     * @param source The bean
-     * @param param A type to load
+     * @param source     The bean
+     * @param param      A type to load
      * @return List of descriptors
      * @throws Exception Error loading descriptors
      */
     public List<ObjectName> load(String sourceType, Object source, String param) throws Exception {
+        /* 1. 日志记录 */
+        // 如果启用了追踪日志，记录正在加载的源对象。
         if (log.isTraceEnabled()) {
             log.trace("load " + source);
         }
         String location = null;
         String type = null;
         Object inputsource = null;
-
+        /* 2. 处理不同类型的源 */
+        // 根据 source 对象的类型执行不同的操作
+        // URL: 如果 source 是 URL 类型，解析 URL 并打开一个输入流。
+        // File: 如果 source 是 File 类型，获取文件的绝对路径并打开一个文件输入流。
+        // InputStream: 如果 source 是 InputStream 类型，直接使用该流。
+        // Class<?>: 如果 `source` 是 `Class<?>` 类型，获取类的全名。
         if (source instanceof URL) {
             URL url = (URL) source;
             location = url.toString();
             type = param;
             inputsource = url.openStream();
+            // 在处理 URL 类型的源时，如果 sourceType 未指定且源位置以 .xml 结尾，
+            // 则将 sourceType 设置为 "MbeansDescriptorsDigesterSource"。
             if (sourceType == null && location.endsWith(".xml")) {
                 sourceType = "MbeansDescriptorsDigesterSource";
             }
@@ -458,6 +495,8 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             location = ((File) source).getAbsolutePath();
             inputsource = new FileInputStream((File) source);
             type = param;
+            // 在处理 File 类型的源时，如果 sourceType 未指定且源位置以 .xml 结尾，
+            // 则将 sourceType 设置为 "MbeansDescriptorsDigesterSource"。
             if (sourceType == null && location.endsWith(".xml")) {
                 sourceType = "MbeansDescriptorsDigesterSource";
             }
@@ -468,17 +507,23 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             location = ((Class<?>) source).getName();
             type = param;
             inputsource = source;
+            // 如果 sourceType 未指定，则设置为 "MbeansDescriptorsIntrospectionSource"
             if (sourceType == null) {
                 sourceType = "MbeansDescriptorsIntrospectionSource";
             }
         } else {
             throw new IllegalArgumentException(sm.getString("registry.invalidSource"));
         }
-
+        /* 3. 默认源类型 */
+        // 如果在上述步骤中 sourceType 仍未确定，则默认设置为 "MbeansDescriptorsDigesterSource"。
         if (sourceType == null) {
             sourceType = "MbeansDescriptorsDigesterSource";
         }
+        /* 4. 获取模型源 */
+        // 调用 getModelerSource 方法根据 sourceType 获取相应的 ModelerSource 实例。
         ModelerSource ds = getModelerSource(sourceType);
+        /* 5. 加载和解析描述符 */
+        // 使用 ModelerSource 实例的 loadDescriptors 方法加载和解析描述符，传入当前对象（this）、type 和处理后的输入源 inputsource。
         List<ObjectName> mbeans = ds.loadDescriptors(this, type, inputsource);
 
         return mbeans;
@@ -487,47 +532,60 @@ public class Registry implements RegistryMBean, MBeanRegistration {
     /**
      * Lookup the component descriptor in the package and in the parent
      * packages.
+     * <p>
+     * 在包和父包中查找组件描述符
      *
      * @param packageName The package name
      * @param classLoader The class loader
      */
     public void loadDescriptors(String packageName, ClassLoader classLoader) {
+        /* 资源路径转换和日志记录 */
+        // 将包名转换为资源路径（用斜线替换点号），并记录正在查找的描述符。
         String res = packageName.replace('.', '/');
 
         if (log.isTraceEnabled()) {
             log.trace("Finding descriptor " + res);
         }
-
+        /* 检查是否已搜索 */
+        // 如果已经搜索过该包，则直接返回
         if (searchedPaths.get(packageName) != null) {
             return;
         }
-
+        /* 查找描述符文件 */
+        // 构造描述符文件的路径，并使用类加载器查找该路径的资源（即描述符文件）。
         String descriptors = res + "/mbeans-descriptors.xml";
         URL dURL = classLoader.getResource(descriptors);
-
+        /* 处理找到的描述符文件 */
         if (dURL == null) {
             return;
         }
 
-//        log.debug("Found " + dURL);
-//        searchedPaths.put(packageName, dURL);
-//        try {
-//            load("MbeansDescriptorsDigesterSource", dURL, null);
-//        } catch (Exception ex) {
-//            log.error(sm.getString("registry.loadError", dURL));
-//        }
-        throw new UnsupportedOperationException();
+        log.debug("Found " + dURL);
+        // 如果找到描述符文件，则记录其 URL，将其添加到 searchedPaths 中，然后调用 load 方法加载并解析描述符文件。
+        searchedPaths.put(packageName, dURL);
+        try {
+            load("MbeansDescriptorsDigesterSource", dURL, null);// todo 这里没被调用到
+        } catch (Exception ex) {
+            log.error(sm.getString("registry.loadError", dURL));
+        }
     }
 
-
+    /**
+     * 根据指定的类型名称动态创建特定的 模型源(ModelerSource) 实例。
+     *
+     * @param type
+     * @return
+     * @throws Exception
+     */
     private ModelerSource getModelerSource(String type) throws Exception {
         if (type == null) {
             type = "MbeansDescriptorsDigesterSource";
         }
-        if (!type.contains(".")) {// 完整类名的构建
+        // 完整类名的构建
+        if (!type.contains(".")) {
             type = "org.apache.tomcat.util.modeler.modules." + type;// 如果 type 中不包含点号（.），表示它不是一个完整的类名。此时，将其前缀设置为 "org.apache.tomcat.util.modeler.modules."，以构造一个完整的类名。这是基于假设 type 是一个简短的类名，且属于 Apache Tomcat 工具包中的模型模块
         }
-
+        // 这里的 type 的值是:org.apache.tomcat.util.modeler.modules.MbeansDescriptorsIntrospectionSource
         Class<?> c = Class.forName(type);
         ModelerSource ds = (ModelerSource) c.getConstructor().newInstance();
         return ds;

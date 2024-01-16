@@ -37,26 +37,24 @@ public final class StringUtils {
 
 
     public static <T> void join(T[] array, char separator, Function<T,String> function, StringBuilder sb) {
-//        if (array == null) {
-//            return;
-//        }
-//        join(Arrays.asList(array), separator, function, sb);
-        throw new UnsupportedOperationException();
+        if (array == null) {
+            return;
+        }
+        join(Arrays.asList(array), separator, function, sb);
     }
 
     public static <T> void join(Iterable<T> iterable, char separator, Function<T,String> function, StringBuilder sb) {
-//        if (iterable == null) {
-//            return;
-//        }
-//        boolean first = true;
-//        for (T value : iterable) {
-//            if (first) {
-//                first = false;
-//            } else {
-//                sb.append(separator);
-//            }
-//            sb.append(function.apply(value));
-//        }
-        throw new UnsupportedOperationException();
+        if (iterable == null) {
+            return;
+        }
+        boolean first = true;
+        for (T value : iterable) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(separator);
+            }
+            sb.append(function.apply(value));
+        }
     }
 }

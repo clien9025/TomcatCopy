@@ -123,18 +123,17 @@ public class OperationInfo extends FeatureInfo {
      */
     public void addParameter(ParameterInfo parameter) {
 
-//        Lock writeLock = parametersLock.writeLock();
-//        writeLock.lock();
-//        try {
-//            ParameterInfo results[] = new ParameterInfo[parameters.length + 1];
-//            System.arraycopy(parameters, 0, results, 0, parameters.length);
-//            results[parameters.length] = parameter;
-//            parameters = results;
-//            this.info = null;
-//        } finally {
-//            writeLock.unlock();
-//        }
-        throw new UnsupportedOperationException();
+        Lock writeLock = parametersLock.writeLock();
+        writeLock.lock();
+        try {
+            ParameterInfo results[] = new ParameterInfo[parameters.length + 1];
+            System.arraycopy(parameters, 0, results, 0, parameters.length);
+            results[parameters.length] = parameter;
+            parameters = results;
+            this.info = null;
+        } finally {
+            writeLock.unlock();
+        }
     }
 
 

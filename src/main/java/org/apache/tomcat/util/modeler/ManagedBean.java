@@ -154,59 +154,58 @@ public class ManagedBean implements java.io.Serializable {
             throws InstanceNotFoundException,
             MBeanException, RuntimeOperationsException {
 
-//        BaseModelMBean mbean = null;
-//
-//        // Load the ModelMBean implementation class
-//        if(getClassName().equals(BASE_MBEAN)) {
-//            // Skip introspection
-//            mbean = new BaseModelMBean();
-//        } else {
-//            Class<?> clazz = null;
-//            Exception ex = null;
-//            try {
-//                clazz = Class.forName(getClassName());
-//            } catch (Exception e) {
-//            }
-//
-//            if( clazz==null ) {
-//                try {
-//                    ClassLoader cl= Thread.currentThread().getContextClassLoader();
-//                    if ( cl != null) {
-//                        clazz= cl.loadClass(getClassName());
-//                    }
-//                } catch (Exception e) {
-//                    ex=e;
-//                }
-//            }
-//
-//            if( clazz==null) {
-//                throw new MBeanException
-//                        (ex, sm.getString("managedMBean.cannotLoadClass", getClassName()));
-//            }
-//            try {
-//                // Stupid - this will set the default minfo first....
-//                mbean = (BaseModelMBean) clazz.getConstructor().newInstance();
-//            } catch (RuntimeOperationsException e) {
-//                throw e;
-//            } catch (Exception e) {
-//                throw new MBeanException
-//                        (e, sm.getString("managedMBean.cannotInstantiateClass", getClassName()));
-//            }
-//        }
-//
-//        mbean.setManagedBean(this);
-//
-//        // Set the managed resource (if any)
-//        try {
-//            if (instance != null) {
-//                mbean.setManagedResource(instance, "ObjectReference");
-//            }
-//        } catch (InstanceNotFoundException e) {
-//            throw e;
-//        }
-//
-//        return mbean;
-        throw new UnsupportedOperationException();
+        BaseModelMBean mbean = null;
+
+        // Load the ModelMBean implementation class
+        if(getClassName().equals(BASE_MBEAN)) {
+            // Skip introspection
+            mbean = new BaseModelMBean();
+        } else {
+            Class<?> clazz = null;
+            Exception ex = null;
+            try {
+                clazz = Class.forName(getClassName());
+            } catch (Exception e) {
+            }
+
+            if( clazz==null ) {
+                try {
+                    ClassLoader cl= Thread.currentThread().getContextClassLoader();
+                    if ( cl != null) {
+                        clazz= cl.loadClass(getClassName());
+                    }
+                } catch (Exception e) {
+                    ex=e;
+                }
+            }
+
+            if( clazz==null) {
+                throw new MBeanException
+                        (ex, sm.getString("managedMBean.cannotLoadClass", getClassName()));
+            }
+            try {
+                // Stupid - this will set the default minfo first....
+                mbean = (BaseModelMBean) clazz.getConstructor().newInstance();
+            } catch (RuntimeOperationsException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new MBeanException
+                        (e, sm.getString("managedMBean.cannotInstantiateClass", getClassName()));
+            }
+        }
+
+        mbean.setManagedBean(this);
+
+        // Set the managed resource (if any)
+        try {
+            if (instance != null) {
+                mbean.setManagedResource(instance, "ObjectReference");
+            }
+        } catch (InstanceNotFoundException e) {
+            throw e;
+        }
+
+        return mbean;
     }
 
 

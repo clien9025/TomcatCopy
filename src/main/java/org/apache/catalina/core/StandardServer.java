@@ -783,23 +783,35 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void initInternal() throws LifecycleException {
-
+        /* 1. 调用父类的初始化方法 */
+        // 通过 super.initInternal(); 调用其父类的 initInternal 方法，这是常见的做法，以确保所有父类逻辑被正确执行。
         super.initInternal();
-
+        /* 2. 注册全局字符串缓存 */
+        // 创建一个新的 StringCache 实例，并使用 register 方法将其注册到 JMX 或类似系统中。这个缓存虽然是全局的，
+        // 但如果在 JVM 中存在多个服务器实例（在嵌入式环境中可能发生），同一个缓存可能会被注册多次，每次都使用不同的名称。
         // Register global String cache
         // Note although the cache is global, if there are multiple Servers
         // present in the JVM (may happen when embedding) then the same cache
         // will be registered under multiple names
+        // 翻译：
+        // 注册全局字符串缓存注意虽然缓存是全局的，但是如果JVM中存在多个Server（嵌入时可能会发生）那么同一个缓存将被注册在多个名称下
         onameStringCache = register(new StringCache(), "type=StringCache");
-
+        /* 3. 注册 MBeanFactory */
         // Register the MBeanFactory
+        // 创建一个新的 MBeanFactory 实例，并设置其容器为当前对象（this）
         MBeanFactory factory = new MBeanFactory();
         factory.setContainer(this);
+        // 使用 register 方法将 MBeanFactory 注册到系统中。这个工厂用于管理 MBeans，
+        // 是 JMX（Java Management Extensions）管理功能的一部分。
         onameMBeanFactory = register(factory, "type=MBeanFactory");
-
+        /* 4. 初始化全局命名资源 */
+        // 调用 globalNamingResources.init(); 来初始化全局命名资源。这可能涉及到设置和准备
+        // JNDI (Java Naming and Directory Interface) 资源，用于在整个应用中提供命名和目录服务。
         // Register the naming resources
         globalNamingResources.init();
-
+        /* 5. 初始化定义的服务 */
+        // 遍历 services 数组，该数组包含了组件内定义的所有服务。对于每个服务，调用其 init() 方法来进行初始化。
+        // 这可能涉及到启动服务相关的进程或任务，准备它们以供后续使用。
         // Initialize our defined Services
         for (Service service : services) {
             service.init();

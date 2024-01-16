@@ -65,6 +65,16 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      * Specify the domain under which this component should be registered. Used
      * with components that cannot (easily) navigate the component hierarchy to
      * determine the correct domain to use.
+     * <p>
+     * domain ：域，领域；
+     * 指定应该在其下注册此组件的域。用于那些不能（轻易地）通过组件层次结构来确定使用哪个正确域的组件。
+     * <p>
+     * 解释：
+     * 这个注释说明了该方法（或属性）的作用是为了指定一个组件在 JMX（Java Management Extensions）中应该注册的域名。
+     * 这通常用于那些不能简单地通过它们的组件层次结构来确定自己应该注册到哪个域的情况。在 JMX 中，每个被管理的资源（MBean）都需要在
+     * 一个特定的域下进行注册，这样可以组织和区分不同的资源。对于一些复杂的组件，可能不容易直接确定它们应该属于哪个域，因为它们可能嵌套
+     * 在多层的组件结构中。这个注释所描述的功能允许开发者显式地为这些组件指定一个域名，而不是依赖于组件结构来自动确定。这样做有助于确保组件
+     * 被正确地注册到适当的域中，这对于管理和监控应用程序中的各种组件非常重要。
      */
     @Override
     public final void setDomain(String domain) {
@@ -77,6 +87,9 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      * <br>
      * Note: This method should only be used once {@link #initInternal()} has
      * been called and before {@link #destroyInternal()} has been called.
+     * <p>
+     * 这段代码定义了一个名为 register 的方法，它的主要功能是帮助子类轻松地将额外的组件注册到 MBean 服务器，
+     * 即使这些组件没有实现 JmxEnabled 接口。
      *
      * @param obj                     The object the register
      * @param objectNameKeyProperties The key properties component of the
@@ -86,21 +99,30 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      */
     protected final ObjectName register(Object obj,
                                         String objectNameKeyProperties) {
+        /* 参数说明
+        Object obj：需要注册的对象。
+        String objectNameKeyProperties：用于构造对象名称的关键属性。这些属性将被用来在 MBean 服务器上唯一标识该对象。
+        * */
 
+        /* 1. 构造对象名称 */
         // Construct an object name with the right domain
+        // 使用当前组件的域名（通过 getDomain() 获取）作为基础，然后添加传入的 objectNameKeyProperties，构造出一个完整的对象名称。
         StringBuilder name = new StringBuilder(getDomain());
         name.append(':');
         name.append(objectNameKeyProperties);
 
         ObjectName on = null;
-
+        /* 2. 注册对象到 MBean 服务器 */
+        // 创建一个 ObjectName 实例，它代表了注册到 MBean 服务器的唯一标识符。调用
+        // Registry.getRegistry(null, null).registerComponent(obj, on, null) 将对象 obj 与其 ObjectName 注册到
+        // MBean 服务器上。这允许该对象通过 JMX 进行管理。
         try {
             on = new ObjectName(name.toString());
             Registry.getRegistry(null, null).registerComponent(obj, on, null);
         } catch (Exception e) {
             log.warn(sm.getString("lifecycleMBeanBase.registerFail", obj, name), e);
         }
-
+        /* 3. 返回创建的 ObjectName 实例，这是对象在 MBean 服务器上的注册名称 */
         return on;
     }
 
@@ -128,12 +150,27 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      * 如果子类需要进行附加的初始化工作，应该重写 initInternal 方法。
      * 重要的是，在子类的重写方法中，必须首先调用父类的 initInternal 方法（即 super.initInternal()），
      * 这是为了保证父类的初始化逻辑得到正确执行，从而确保整个对象的初始化过程是完整和正确的。
+     * <p>
+     * 这段代码定义了一个 initInternal 方法，通常用于组件或服务的初始化过程。它的主要作用是在初始化时注册该组件
+     * 或服务到一个管理系统（如 JMX - Java Management Extensions）。
+     * <p>
+     * 总体而言，这个 initInternal 方法的主要职责是在组件的初始化阶段确保其被注册到相应的管理系统中，如 JMX。
+     * 这样做允许该组件之后可以被管理系统监控和管理，这在许多企业级应用和服务中是非常重要的功能。
      */
     @Override
     protected void initInternal() throws LifecycleException {
+        /* 1. 检查是否已注册 */
+        // 首先检查 oname（表示此组件或服务的唯一标识符）是否为 null。如果 oname 不为 null，
+        // 这意味着该组件已经通过 preRegister() 方法在之前被注册过，因此不需要再次注册。
         // If oname is not null then registration has already happened via
         // preRegister().
         if (oname == null) {
+            /* 2. 执行注册 */
+            // 如果 oname 是 null，则说明该组件尚未注册。这时，调用 register 方法来进行注册。
+            // register 方法的第一个参数是 this，表示当前对象（即该组件或服务本身），第二个参数是 getObjectNameKeyProperties()
+            // 的返回值，这通常是一个字符串，用于构建该组件的唯一标识符
+            /* 3. 保存注册结果 */
+            // register 方法的返回值被赋给 oname，这样 oname 将包含此组件在管理系统中的唯一标识符。
             oname = register(this, getObjectNameKeyProperties());
         }
     }

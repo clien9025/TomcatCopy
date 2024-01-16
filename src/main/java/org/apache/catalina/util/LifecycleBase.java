@@ -87,26 +87,47 @@ public abstract class LifecycleBase implements Lifecycle {
         }
     }
 
-
+    /**
+     * 这段代码定义了一个 init 方法，该方法是一个生命周期管理函数，通常用于初始化组件或服务。
+     * 这个方法是同步的（synchronized），以确保在多线程环境中的线程安全。
+     *
+     * @throws LifecycleException
+     */
     @Override
     public final synchronized void init() throws LifecycleException {
+        /* 1. 检查当前状态 */
+        // 如果组件的当前状态不是 LifecycleState.NEW（即新创建状态），这意味着它不处于可初始化的状态。
+        // 在这种情况下，方法会调用 invalidTransition 抛出一个非法状态转换的异常。
         if (!state.equals(LifecycleState.NEW)) {
             invalidTransition(BEFORE_INIT_EVENT);
         }
-
+        /* 2. 状态设置和初始化 */
         try {
+            // 方法首先尝试将组件的状态设置为 INITIALIZING，表示初始化正在进行。
             setStateInternal(LifecycleState.INITIALIZING, null, false);
+            // 然后调用 initInternal()，这是一个抽象或由子类实现的方法，用于执行实际的初始化逻辑。
             initInternal();
+            // 初始化完成后，将组件的状态设置为 INITIALIZED，表示初始化已经完成。
             setStateInternal(LifecycleState.INITIALIZED, null, false);
         } catch (Throwable t) {
             handleSubClassException(t, "lifecycleBase.initFail", toString());
         }
     }
 
-
+    /**
+     * 这段代码是一个重写的 start 方法，用于控制和管理组件（如服务、模块等）的生命周期状态。它是同步方法（synchronized），确保线程安全。
+     * <p>
+     * 这个 start 方法是一个典型的生命周期管理方法，用于确保组件按照预期的流程安全地启动。它首先检查当前状态以防重复启动，
+     * 然后根据当前状态决定是否需要初始化或恢复。随后，它执行实际的启动流程，并在过程中进行状态检查和异常处理，
+     * 确保组件的状态始终保持一致和可预测。
+     *
+     * @throws LifecycleException
+     */
     @Override
     public final synchronized void start() throws LifecycleException {
-
+        /* 1. 防止重复启动 */
+        // 检查当前的生命周期状态（state），如果组件已经处于 STARTING_PREP、STARTING 或 STARTED 状态，
+        // 则记录日志并直接返回，以避免重复启动。
         if (LifecycleState.STARTING_PREP.equals(state) || LifecycleState.STARTING.equals(state) ||
                 LifecycleState.STARTED.equals(state)) {
 
@@ -119,30 +140,43 @@ public abstract class LifecycleBase implements Lifecycle {
 
             return;
         }
-
+        /* 2. 初始化 */
+        // 如果组件的状态是 NEW，调用 init() 方法进行初始化。
         if (state.equals(LifecycleState.NEW)) {
             init();
+            /* 3. 从失败状态恢复 */
         } else if (state.equals(LifecycleState.FAILED)) {
+            // 如果组件的状态是 FAILED，调用 stop() 方法尝试停止并清理组件，可能是为了后续重启。
             stop();
+            /* 4. 检查状态合法性 */
+            // 如果当前状态既不是 INITIALIZED 也不是 STOPPED，抛出一个状态转换异常（invalidTransition），
+            // 因为这些状态不允许 开始(start方法) 启动流程。
         } else if (!state.equals(LifecycleState.INITIALIZED) &&
                 !state.equals(LifecycleState.STOPPED)) {
             invalidTransition(BEFORE_START_EVENT);
         }
-
+        /* 5. 启动流程 */
         try {
+            // 设置状态为 STARTING_PREP，表示准备开始启动。
             setStateInternal(LifecycleState.STARTING_PREP, null, false);
+            // 调用 startInternal() 方法，该方法应由子类实现，以执行具体的启动逻辑。
             startInternal();
+            /* 6. 处理启动后的状态 */
+            // 如果启动后的状态是 FAILED，调用 stop() 方法进行清理。
             if (state.equals(LifecycleState.FAILED)) {
                 // This is a 'controlled' failure. The component put itself into the
                 // FAILED state so call stop() to complete the clean-up.
                 stop();
+                // 如果启动后状态不是 STARTING，抛出状态转换异常。
             } else if (!state.equals(LifecycleState.STARTING)) {
                 // Shouldn't be necessary but acts as a check that sub-classes are
                 // doing what they are supposed to.
                 invalidTransition(AFTER_START_EVENT);
             } else {
+                // 如果一切正常，设置状态为 STARTED，表示启动完成。
                 setStateInternal(LifecycleState.STARTED, null, false);
             }
+            /* 7. 异常处理 */
         } catch (Throwable t) {
             // This is an 'uncontrolled' failure so put the component into the
             // FAILED state and throw an exception.
