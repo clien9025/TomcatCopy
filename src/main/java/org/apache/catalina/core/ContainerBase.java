@@ -177,6 +177,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     protected Log logger = null;
 
     /**
+     * Associated logger name.
+     */
+    protected String logName = null;
+
+    /**
      * The cluster with which this Container is associated.
      */
     protected Cluster cluster = null;
@@ -189,7 +194,56 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     protected ScheduledFuture<?> backgroundProcessorFuture;
     protected ScheduledFuture<?> monitorFuture;
 
+
     // ------------------------------------------------------------- Properties
+
+    /**
+     * Return the Logger for this Container.
+     */
+    @Override
+    public Log getLogger() {
+        if (logger != null) {
+            return logger;
+        }
+        logger = LogFactory.getLog(getLogName());
+        return logger;
+    }
+
+    /**
+     * @return the abbreviated name of this container for logging messages
+     * <p>
+     * 用于生成并返回当前容器的日志名称。该方法适用于日志记录，在日志消息中提供关于容器的标识信息。
+     */
+    @Override
+    public String getLogName() {
+
+        if (logName != null) {
+            return logName;
+        }
+        String loggerName = null;
+        Container current = this;
+        while (current != null) {
+            String name = current.getName();
+            if ((name == null) || (name.equals(""))) {
+                name = "/";
+            } else if (name.startsWith("##")) {
+                name = "/" + name;
+            }
+            // 将当前层的容器名称添加到 loggerName 字符串中，格式为 "[name]"。如果 loggerName 已经包含名称，则在前面添加 "."
+            loggerName = "[" + name + "]" + ((loggerName != null) ? ("." + loggerName) : "");
+            current = current.getParent();
+        }
+        /* 最终日志名称 */
+        // 完成遍历后，将 loggerName 拼接到 ContainerBase.class.getName() 的结果之后，得到最终的 logName
+        logName = ContainerBase.class.getName() + "." + loggerName;
+        return logName;
+
+    }
+
+    @Override
+    public int getStartStopThreads() {
+        return startStopThreads;
+    }
 
     /**
      * Return the Pipeline object that manages the Valves associated with this Container.

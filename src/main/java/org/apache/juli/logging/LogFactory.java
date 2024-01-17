@@ -68,6 +68,24 @@ public class LogFactory {
 //        throw new UnsupportedOperationException();
     }
 
+    /**
+     * Convenience method to return a named logger, without the application
+     * having to care about factories.
+     *
+     * @param name Logical name of the <code>Log</code> instance to be
+     *  returned (the meaning of this name is only known to the underlying
+     *  logging implementation that is being wrapped)
+     *
+     * @return A log instance with the requested name
+     *
+     * @exception LogConfigurationException if a suitable <code>Log</code>
+     *  instance cannot be returned
+     */
+    public static Log getLog(String name)
+            throws LogConfigurationException {
+        return getFactory().getInstance(name);
+    }
+
 
     /**
      * <p>Construct (if necessary) and return a <code>LogFactory</code>
