@@ -9,9 +9,12 @@ import org.apache.tomcat.util.res.StringManager;
 import java.beans.PropertyChangeSupport;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -402,6 +405,72 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             这种方式是一种常见的集合到数组的转换方法，在Java中广泛使用。*/
             return children.values().toArray(new Container[0]);
         }
+    }
+
+
+    /**
+     * Start this component and implement the requirements of
+     * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void startInternal() throws LifecycleException {
+
+//        reconfigureStartStopExecutor(getStartStopThreads());
+//
+//        // Start our subordinate components, if any
+//        logger = null;
+//        getLogger();
+//        Cluster cluster = getClusterInternal();
+//        if (cluster instanceof Lifecycle) {
+//            ((Lifecycle) cluster).start();
+//        }
+//        Realm realm = getRealmInternal();
+//        if (realm instanceof Lifecycle) {
+//            ((Lifecycle) realm).start();
+//        }
+//
+//        // Start our child containers, if any
+//        Container[] children = findChildren();
+//        List<Future<Void>> results = new ArrayList<>(children.length);
+//        for (Container child : children) {
+//            results.add(startStopExecutor.submit(new StartChild(child)));
+//        }
+//
+//        MultiThrowable multiThrowable = null;
+//
+//        for (Future<Void> result : results) {
+//            try {
+//                result.get();
+//            } catch (Throwable e) {
+//                log.error(sm.getString("containerBase.threadedStartFailed"), e);
+//                if (multiThrowable == null) {
+//                    multiThrowable = new MultiThrowable();
+//                }
+//                multiThrowable.add(e);
+//            }
+//
+//        }
+//        if (multiThrowable != null) {
+//            throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
+//                    multiThrowable.getThrowable());
+//        }
+//
+//        // Start the Valves in our pipeline (including the basic), if any
+//        if (pipeline instanceof Lifecycle) {
+//            ((Lifecycle) pipeline).start();
+//        }
+//
+//        setState(LifecycleState.STARTING);
+//
+//        // Start our thread
+//        if (backgroundProcessorDelay > 0) {
+//            monitorFuture = Container.getService(ContainerBase.this).getServer().getUtilityExecutor()
+//                    .scheduleWithFixedDelay(new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
+//        }
+        throw new UnsupportedOperationException();
     }
 
 

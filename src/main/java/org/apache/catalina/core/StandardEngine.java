@@ -1,6 +1,9 @@
 package org.apache.catalina.core;
 
 import org.apache.catalina.*;
+import org.apache.catalina.util.ServerInfo;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -12,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Craig R. McClanahan
  */
 public class StandardEngine extends ContainerBase implements Engine {
+
+    private static final Log log = LogFactory.getLog(StandardEngine.class);
 
     // ----------------------------------------------------------- Constructors
 
@@ -82,6 +87,19 @@ public class StandardEngine extends ContainerBase implements Engine {
     }
 
 
+    // -------------------- JMX registration --------------------
+
+    @Override
+    protected String getObjectNameKeyProperties() {
+        return "type=Engine";
+    }
+
+    @Override
+    protected String getDomainInternal() {
+        return getName();
+    }
+
+
     // --------------------------------------------------------- Public Methods
 
 
@@ -98,6 +116,25 @@ public class StandardEngine extends ContainerBase implements Engine {
         }
         super.addChild(child);
 
+    }
+
+    /**
+     * Start this component and implement the requirements of
+     * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void startInternal() throws LifecycleException {
+
+        // Log our server identification information
+        if (log.isInfoEnabled()) {
+            log.info(sm.getString("standardEngine.start", ServerInfo.getServerInfo()));
+        }
+
+        // Standard container startup
+        super.startInternal();
     }
 
 

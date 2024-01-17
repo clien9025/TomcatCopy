@@ -182,9 +182,9 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
 
     @Override
     protected void startInternal() throws LifecycleException {
-//        fireLifecycleEvent(CONFIGURE_START_EVENT, null);
-//        setState(LifecycleState.STARTING);
-        throw new UnsupportedOperationException();
+        // String CONFIGURE_START_EVENT = "configure_start";
+        fireLifecycleEvent(CONFIGURE_START_EVENT, null);
+        setState(LifecycleState.STARTING);
     }
 
 

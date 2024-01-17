@@ -50,10 +50,8 @@ import org.apache.tomcat.util.res.StringManager;
 public class StandardService extends LifecycleMBeanBase implements Service {
 
 
-
     private static final Log log = LogFactory.getLog(StandardService.class);
     private static final StringManager sm = StringManager.getManager(StandardService.class);
-
 
 
     // ----------------------------------------------------- Instance Variables
@@ -102,6 +100,11 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      */
     protected final MapperListener mapperListener = new MapperListener(this);
 
+    /**
+     * The list of executors held by the service.
+     */
+    protected final ArrayList<Executor> executors = new ArrayList<>();
+
 
     // ------------------------------------------------------------- Properties
 
@@ -130,6 +133,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     /**
      * 负责设置与服务（StandardService）关联的引擎（Engine）。在 Tomcat 中，Engine 是处理所有请求的最高级别容器。
      * 每个 Service 只能有一个 Engine，这个方法用于确保这种关系被正确管理。主要负责设置服务的容器引擎，并管理旧引擎和新引擎之间的过渡。
+     *
      * @param engine The new Engine
      */
     @Override
@@ -206,7 +210,6 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     }
 
 
-
     // --------------------------------------------------------- Public Methods
 
     /**
@@ -240,7 +243,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
     /**
      * Find and return the set of Connectors associated with this Service.
-     *
+     * <p>
      * 查找并返回与此服务关联的连接器集（数组）
      */
     @Override
@@ -248,6 +251,51 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         synchronized (connectorsLock) {
             // shallow copy
             return connectors.clone();// 返回复制的那一份 connectors（数组）
+        }
+    }
+
+    /**
+     * Start nested components ({@link Executor}s, {@link Connector}s and {@link Container}s) and implement the
+     * requirements of {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
+     * <p>
+     * 用于启动服务器的关键组件，确保服务器能够处理请求和执行其它任务。这通常是服务器生命周期管理的一部分，确保各组件按正确的顺序启动
+     *
+     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
+     *                            used
+     */
+    @Override
+    protected void startInternal() throws LifecycleException {
+
+        if (log.isInfoEnabled()) {
+            log.info(sm.getString("standardService.start.name", this.name));
+        }
+        /* 设置状态 */
+        // 方法通过调用 setState(LifecycleState.STARTING) 来更新服务的生命周期状态为“正在启动”。
+        setState(LifecycleState.STARTING);
+        /* 启动容器 */
+        // Start our defined Container first
+        if (engine != null) {
+            synchronized (engine) {
+                engine.start();
+            }
+        }
+        /* 启动执行器 */
+        synchronized (executors) {
+            for (Executor executor : executors) {
+                executor.start();
+            }
+        }
+        /* 启动映射监听器 */
+        mapperListener.start();
+        /* 启动连接器 */
+        // Start our defined Connectors second
+        synchronized (connectorsLock) {
+            for (Connector connector : connectors) {
+                // If it has already failed, don't try and start it
+                if (connector.getState() != LifecycleState.FAILED) {
+                    connector.start();
+                }
+            }
         }
     }
 
