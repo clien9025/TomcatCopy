@@ -374,17 +374,23 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     /**
      * Handles the special values.
+     * <p>
+     * 为了确保在并发或多线程编程环境中，有一个合理的线程数量用于处理任务。当方法的输入参数 utilityThreads 为正数时，它直接返回这个值。
+     * 当 utilityThreads 为零或负数时，它根据系统的可用处理器数量进行调整，但保证至少返回2，这可能是出于性能考虑，
+     * 确保即使在处理器较少的系统上也能保持一定的并发处理能力。
      */
     private static int getUtilityThreadsInternal(int utilityThreads) {
-//        int result = utilityThreads;
-//        if (result <= 0) {
-//            result = Runtime.getRuntime().availableProcessors() + result;
-//            if (result < 2) {
-//                result = 2;
-//            }
-//        }
-//        return result;
-        throw new UnsupportedOperationException();
+        int result = utilityThreads;
+        if (result <= 0) {
+            // 调用 Runtime.getRuntime().availableProcessors() 获取当前系统的可用处理器（核心）数量。
+            // 将此数量与 result 的值相加。这意味着如果 utilityThreads 是负数或零，它将基于系统的处理器数量进行调整。
+            result = Runtime.getRuntime().availableProcessors() + result;
+            if (result < 2) {
+                // 如果经过调整后的 result 值仍然小于 2，则将 result 设置为 2。这是为了确保至少有两个线
+                result = 2;
+            }
+        }
+        return result;
     }
 
 
@@ -405,23 +411,33 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     }
 
 
-    /*
+    /**
      * Callers must be holding utilityExecutorLock
+     * <p>
+     * 用于配置或重新配置一个 ScheduledThreadPoolExecutor 实例。该方法接受一个整数参数 threads，表示线程池的大小。
      */
     private void reconfigureUtilityExecutor(int threads) {
-//        // The ScheduledThreadPoolExecutor doesn't use MaximumPoolSize, only CorePoolSize is available
-//        if (utilityExecutor != null) {
-//            utilityExecutor.setCorePoolSize(threads);
-//        } else {
-//            ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(threads,
-//                    new TaskThreadFactory("Catalina-utility-", utilityThreadsAsDaemon, Thread.MIN_PRIORITY));
-//            scheduledThreadPoolExecutor.setKeepAliveTime(10, TimeUnit.SECONDS);
-//            scheduledThreadPoolExecutor.setRemoveOnCancelPolicy(true);
-//            scheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-//            utilityExecutor = scheduledThreadPoolExecutor;
-//            utilityExecutorWrapper = new org.apache.tomcat.util.threads.ScheduledThreadPoolExecutor(utilityExecutor);
-//        }
-        throw new UnsupportedOperationException();
+        // The ScheduledThreadPoolExecutor doesn't use MaximumPoolSize, only CorePoolSize is available
+        /* 检查现有执行器 */
+        // 首先，方法检查 utilityExecutor（一个 ScheduledThreadPoolExecutor 实例）是否已经存在
+        // 如果 utilityExecutor 已经存在，它将使用 setCorePoolSize(threads) 方法来设置核心线程池的大小为 threads
+        if (utilityExecutor != null) {
+            utilityExecutor.setCorePoolSize(threads);
+        } else {
+            // 如果 utilityExecutor 不存在，则创建一个新的 ScheduledThreadPoolExecutor 实例。
+            // 这个新的实例使用提供的 threads 值作为其核心线程池大小，并配置了一些额外的属性
+            // 1. 一个自定义的线程工厂 TaskThreadFactory，用于创建新线程
+            // 2. 设置线程保持活跃的时间为10秒
+            // 3. 设置移除取消任务的策略为 true
+            // 4. 设置在执行器关闭后不执行已延迟的任务的策略为 false
+            ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(threads,
+                    new TaskThreadFactory("Catalina-utility-", utilityThreadsAsDaemon, Thread.MIN_PRIORITY));
+            scheduledThreadPoolExecutor.setKeepAliveTime(10, TimeUnit.SECONDS);
+            scheduledThreadPoolExecutor.setRemoveOnCancelPolicy(true);
+            scheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            utilityExecutor = scheduledThreadPoolExecutor;
+            utilityExecutorWrapper = new org.apache.tomcat.util.threads.ScheduledThreadPoolExecutor(utilityExecutor);
+        }
     }
 
 
@@ -467,8 +483,9 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     /**
      * Add a new Service to the set of defined Services.
-     *
+     * <p>
      * 将新的服务器添加到已经定义的服务器集
+     *
      * @param service The Service to be added
      */
     @Override
@@ -503,7 +520,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             support.firePropertyChange("service", null, service);
         }
     }
-
 
 
     public void stopAwait() {
@@ -618,10 +634,10 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     /**
      * Write the configuration information for this entire <code>Server</code> out to the server.xml configuration file.
      *
-     * @exception InstanceNotFoundException                   if the managed resource object cannot be found
-     * @exception MBeanException                              if the initializer of the object throws an exception, or
-     *                                                            persistence is not supported
-     * @exception javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
+     * @throws InstanceNotFoundException                   if the managed resource object cannot be found
+     * @throws MBeanException                              if the initializer of the object throws an exception, or
+     *                                                     persistence is not supported
+     * @throws javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
      */
     public synchronized void storeConfig() throws InstanceNotFoundException, MBeanException {
 //        try {
@@ -645,11 +661,10 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Write the configuration information for <code>Context</code> out to the specified configuration file.
      *
      * @param context the context which should save its configuration
-     *
-     * @exception InstanceNotFoundException                   if the managed resource object cannot be found
-     * @exception MBeanException                              if the initializer of the object throws an exception or
-     *                                                            persistence is not supported
-     * @exception javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
+     * @throws InstanceNotFoundException                   if the managed resource object cannot be found
+     * @throws MBeanException                              if the initializer of the object throws an exception or
+     *                                                     persistence is not supported
+     * @throws javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
      */
     public synchronized void storeContext(org.apache.catalina.Context context) throws InstanceNotFoundException, MBeanException {
 //        try {
@@ -687,8 +702,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Start nested components ({@link Service}s) and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
-     *                                   used
+     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
+     *                            used
      */
     @Override
     protected void startInternal() throws LifecycleException {
@@ -740,7 +755,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Stop nested components ({@link Service}s) and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error that needs to be reported
+     * @throws LifecycleException if this component detects a fatal error that needs to be reported
      */
     @Override
     protected void stopInternal() throws LifecycleException {

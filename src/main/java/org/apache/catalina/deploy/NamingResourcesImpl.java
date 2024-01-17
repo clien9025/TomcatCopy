@@ -1,9 +1,6 @@
 package org.apache.catalina.deploy;
 
-import org.apache.catalina.JmxEnabled;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.LifecycleState;
+import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -163,15 +160,24 @@ public class NamingResourcesImpl extends LifecycleMBeanBase implements Serializa
 
     @Override
     protected String getDomainInternal() {
-//        // Use the same domain as our associated container if we have one
-//        Object c = getContainer();
-//
-//        if (c instanceof JmxEnabled) {
-//            return ((JmxEnabled) c).getDomain();
-//        }
-//
-//        return null;
-        throw new UnsupportedOperationException();
+        // Use the same domain as our associated container if we have one
+        Object c = getContainer();
+
+        if (c instanceof JmxEnabled) {
+            return ((JmxEnabled) c).getDomain();
+        }
+
+        return null;
+    }
+
+    @Override
+    protected String getObjectNameKeyProperties() {
+        Object c = getContainer();
+        if (c instanceof Container) {
+            return "type=NamingResources" + ((Container) c).getMBeanKeyProperties();
+        }
+        // Server or just unknown
+        return "type=NamingResources";
     }
 
     @Override

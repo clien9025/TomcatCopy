@@ -272,4 +272,10 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         return domain;
     }
 
+
+    @Override
+    public final String getObjectNameKeyProperties() {
+        return "type=Service";
+    }
+
 }
