@@ -1,6 +1,7 @@
 package org.apache.catalina.core;
 
 import org.apache.catalina.*;
+import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -9,6 +10,7 @@ import org.apache.tomcat.util.MultiThrowable;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.InlineExecutorService;
 
+import javax.management.ObjectName;
 import java.beans.PropertyChangeSupport;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -669,6 +671,74 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             // 这个方法是ContainerListener接口的一部分，任何实现了这个接口的类都必须提供这个方法的具体实现。
             listener.containerEvent(event);
         }
+    }
+
+    // -------------------- JMX and Registration --------------------
+
+    @Override
+    protected String getDomainInternal() {
+
+//        Container p = this.getParent();
+//        if (p == null) {
+//            return null;
+//        } else {
+//            return p.getDomain();
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public String getMBeanKeyProperties() {
+//        Container c = this;
+//        StringBuilder keyProperties = new StringBuilder();
+//        int containerCount = 0;
+//
+//        // Work up container hierarchy, add a component to the name for
+//        // each container
+//        while (!(c instanceof Engine)) {
+//            if (c instanceof Wrapper) {
+//                keyProperties.insert(0, ",servlet=");
+//                keyProperties.insert(9, c.getName());
+//            } else if (c instanceof Context) {
+//                keyProperties.insert(0, ",context=");
+//                ContextName cn = new ContextName(c.getName(), false);
+//                keyProperties.insert(9, cn.getDisplayName());
+//            } else if (c instanceof Host) {
+//                keyProperties.insert(0, ",host=");
+//                keyProperties.insert(6, c.getName());
+//            } else if (c == null) {
+//                // May happen in unit testing and/or some embedding scenarios
+//                keyProperties.append(",container");
+//                keyProperties.append(containerCount++);
+//                keyProperties.append("=null");
+//                break;
+//            } else {
+//                // Should never happen...
+//                keyProperties.append(",container");
+//                keyProperties.append(containerCount++);
+//                keyProperties.append('=');
+//                keyProperties.append(c.getName());
+//            }
+//            c = c.getParent();
+//        }
+//        return keyProperties.toString();
+        throw new UnsupportedOperationException();// todo 1.17.23.26
+    }
+
+
+    public ObjectName[] getChildren() {
+//        List<ObjectName> names;
+//        synchronized (children) {
+//            names = new ArrayList<>(children.size());
+//            for (Container next : children.values()) {
+//                if (next instanceof ContainerBase) {
+//                    names.add(next.getObjectName());
+//                }
+//            }
+//        }
+//        return names.toArray(new ObjectName[0]);
+        throw new UnsupportedOperationException();
     }
 
     // -------------------- Background Thread --------------------

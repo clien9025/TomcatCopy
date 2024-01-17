@@ -1062,15 +1062,14 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     @Override
     protected void initInternal() throws LifecycleException {
 
-//        super.initInternal();
-//
-//        // We want logger as soon as possible
-//        if (container != null) {
-//            this.containerLog = container.getLogger();
-//        }
-//
-//        x509UsernameRetriever = createUsernameRetriever(x509UsernameRetrieverClassName);
-        throw new UnsupportedOperationException();
+        super.initInternal();
+
+        // We want logger as soon as possible
+        if (container != null) {
+            this.containerLog = container.getLogger();
+        }
+
+        x509UsernameRetriever = createUsernameRetriever(x509UsernameRetrieverClassName);
     }
 
 
@@ -1452,12 +1451,11 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     @Override
     public String getObjectNameKeyProperties() {
 
-//        StringBuilder keyProperties = new StringBuilder("type=Realm");
-//        keyProperties.append(getRealmSuffix());
-//        keyProperties.append(container.getMBeanKeyProperties());
-//
-//        return keyProperties.toString();
-        throw new UnsupportedOperationException();
+        StringBuilder keyProperties = new StringBuilder("type=Realm");
+        keyProperties.append(getRealmSuffix());
+        keyProperties.append(container.getMBeanKeyProperties());
+
+        return keyProperties.toString();
     }
 
     @Override
