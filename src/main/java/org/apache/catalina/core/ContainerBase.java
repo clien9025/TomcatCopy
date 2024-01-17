@@ -4,7 +4,10 @@ import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.MultiThrowable;
 import org.apache.tomcat.util.res.StringManager;
+import org.apache.tomcat.util.threads.InlineExecutorService;
 
 import java.beans.PropertyChangeSupport;
 import java.security.AccessController;
@@ -12,9 +15,7 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -164,6 +165,30 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     protected ClassLoader parentClassLoader = null;
 
+    /**
+     * The number of threads available to process start and stop events for any children associated with this container.
+     */
+    private int startStopThreads = 1;
+    protected ExecutorService startStopExecutor;
+
+    /**
+     * The Logger implementation with which this Container is associated.
+     */
+    protected Log logger = null;
+
+    /**
+     * The cluster with which this Container is associated.
+     */
+    protected Cluster cluster = null;
+    private final ReadWriteLock clusterLock = new ReentrantReadWriteLock();
+
+
+    /**
+     * The future allowing control of the background processor.
+     */
+    protected ScheduledFuture<?> backgroundProcessorFuture;
+    protected ScheduledFuture<?> monitorFuture;
+
     // ------------------------------------------------------------- Properties
 
     /**
@@ -249,6 +274,53 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public void setBackgroundProcessorDelay(int delay) {
         backgroundProcessorDelay = delay;
+    }
+
+    /*
+     * Provide access to just the cluster component attached to this container.
+     */
+    protected Cluster getClusterInternal() {
+        Lock readLock = clusterLock.readLock();
+        readLock.lock();
+        try {
+            return cluster;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+
+    /**
+     * Return the Realm with which this Container is associated. If there is no associated Realm, return the Realm
+     * associated with our parent Container (if any); otherwise return <code>null</code>.
+     */
+    @Override
+    public Realm getRealm() {
+
+        Lock l = realmLock.readLock();
+        l.lock();
+        try {
+            if (realm != null) {
+                return realm;
+            }
+            if (parent != null) {
+                return parent.getRealm();
+            }
+            return null;
+        } finally {
+            l.unlock();
+        }
+    }
+
+
+    protected Realm getRealmInternal() {
+        Lock l = realmLock.readLock();
+        l.lock();
+        try {
+            return realm;
+        } finally {
+            l.unlock();
+        }
     }
 
     /**
@@ -345,6 +417,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     /**
      * 这段代码负责将一个新的子容器安全、有效地添加到一个父容器中。它涵盖了安全检查、唯一性验证、设置父子关系、容器事件通知以及
      * 条件性地启动子容器等一系列步骤。在整个过程中，它还通过异常处理来管理错误情况，确保操作的健壮性。
+     *
      * @param child
      */
     private void addChildInternal(Container child) {
@@ -407,70 +480,104 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
+    /**
+     * 根据提供的线程数 threads 来配置 startStopExecutor。这个执行器用于在容器（Tomcat中的容器）中启动和停止各种组件。
+     *
+     * @param threads
+     */
+    private void reconfigureStartStopExecutor(int threads) {
+        /* 1. 单线程情况 */
+        // 如果提供的 threads 参数等于 1，表示只需要单线程执行
+        if (threads == 1) {
+            // Use a fake executor
+            if (!(startStopExecutor instanceof InlineExecutorService)) {
+                startStopExecutor = new InlineExecutorService();
+            }
+        } else {
+            /* 2. 多线程情况 */
+            // Delegate utility execution to the Service
+            // 首先通过 Container.getService(this).getServer() 获取服务器实例。
+            Server server = Container.getService(this).getServer();
+            // 然后调用 server.setUtilityThreads(threads)，设置服务器的实用工具线程数量。
+            server.setUtilityThreads(threads);
+            // 最后，通过 server.getUtilityExecutor() 获取服务器的实用工具执行器，并将其赋值给 startStopExecutor。
+            startStopExecutor = server.getUtilityExecutor();
+        }
+    }
+
 
     /**
      * Start this component and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
-     *                                   used
+     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
+     *                            used
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
+        /* 1. 配置启动/停止执行器 */
+        reconfigureStartStopExecutor(getStartStopThreads());
+        /* 2. 初始化日志 */
+        // Start our subordinate components, if any
+        logger = null;
+        getLogger();
+        /* 3. 启动集群组件 */
+        Cluster cluster = getClusterInternal();
+        if (cluster instanceof Lifecycle) {
+            ((Lifecycle) cluster).start();
+        }
+        /* 4. 启动领域（Realm）组件 */
+        Realm realm = getRealmInternal();
+        if (realm instanceof Lifecycle) {
+            ((Lifecycle) realm).start();
+        }
+        /* 5. 启动子容器 */
+        // Start our child containers, if any
+        // 获取所有子容器
+        Container[] children = findChildren();
+        List<Future<Void>> results = new ArrayList<>(children.length);
+        for (Container child : children) {
+            // 使用 startStopExecutor（一个执行器）异步地为每个子容器调用 StartChild 任务，
+            // 并将每个任务的 Future 对象添加到 results 列表中。这允许并行启动所有子容器
+            results.add(startStopExecutor.submit(new StartChild(child)));
+        }
+        /* 6. 处理启动异常 */
+        MultiThrowable multiThrowable = null;
+        // 遍历 results 中的每个 Future 对象，通过调用 result.get() 等待每个子容器的启动过程完成。
+        for (Future<Void> result : results) {
+            try {
+                result.get();
+            } catch (Throwable e) {
+                log.error(sm.getString("containerBase.threadedStartFailed"), e);
+                if (multiThrowable == null) {
+                    multiThrowable = new MultiThrowable();
+                }
+                multiThrowable.add(e);
+            }
 
-//        reconfigureStartStopExecutor(getStartStopThreads());
-//
-//        // Start our subordinate components, if any
-//        logger = null;
-//        getLogger();
-//        Cluster cluster = getClusterInternal();
-//        if (cluster instanceof Lifecycle) {
-//            ((Lifecycle) cluster).start();
-//        }
-//        Realm realm = getRealmInternal();
-//        if (realm instanceof Lifecycle) {
-//            ((Lifecycle) realm).start();
-//        }
-//
-//        // Start our child containers, if any
-//        Container[] children = findChildren();
-//        List<Future<Void>> results = new ArrayList<>(children.length);
-//        for (Container child : children) {
-//            results.add(startStopExecutor.submit(new StartChild(child)));
-//        }
-//
-//        MultiThrowable multiThrowable = null;
-//
-//        for (Future<Void> result : results) {
-//            try {
-//                result.get();
-//            } catch (Throwable e) {
-//                log.error(sm.getString("containerBase.threadedStartFailed"), e);
-//                if (multiThrowable == null) {
-//                    multiThrowable = new MultiThrowable();
-//                }
-//                multiThrowable.add(e);
-//            }
-//
-//        }
-//        if (multiThrowable != null) {
-//            throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
-//                    multiThrowable.getThrowable());
-//        }
-//
-//        // Start the Valves in our pipeline (including the basic), if any
-//        if (pipeline instanceof Lifecycle) {
-//            ((Lifecycle) pipeline).start();
-//        }
-//
-//        setState(LifecycleState.STARTING);
-//
-//        // Start our thread
-//        if (backgroundProcessorDelay > 0) {
-//            monitorFuture = Container.getService(ContainerBase.this).getServer().getUtilityExecutor()
-//                    .scheduleWithFixedDelay(new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
-//        }
-        throw new UnsupportedOperationException();
+        }
+        // 捕获并处理任何异常，将它们添加到 multiThrowable 对象中。如果有异常发生，则最终会抛出一个 LifecycleException。
+        if (multiThrowable != null) {
+            throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
+                    multiThrowable.getThrowable());
+        }
+        /* 7. 启动管道中的阀门 */
+        // 如果 pipeline 是 Lifecycle 实例，则调用其 start 方法。管道和阀门是Tomcat中用于处理请求和响应的组件
+        // Start the Valves in our pipeline (including the basic), if any
+        if (pipeline instanceof Lifecycle) {
+            ((Lifecycle) pipeline).start();
+        }
+        /* 8. 设置容器状态 */
+        // 将容器的状态设置为 LifecycleState.STARTING
+        setState(LifecycleState.STARTING);
+        /* 9. 启动后台处理器监控线程 */
+        // Start our thread
+        // 如果 backgroundProcessorDelay 大于 0，使用 scheduleWithFixedDelay 方法安排一个
+        // ContainerBackgroundProcessorMonitor 任务定期执行。这个监控任务用于监控容器的健康状况或执行定期维护。
+        if (backgroundProcessorDelay > 0) {
+            monitorFuture = Container.getService(ContainerBase.this).getServer().getUtilityExecutor()
+                    .scheduleWithFixedDelay(new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
+        }
     }
 
 
@@ -507,6 +614,176 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         for (ContainerListener listener : listeners) {
             // 这个方法是ContainerListener接口的一部分，任何实现了这个接口的类都必须提供这个方法的具体实现。
             listener.containerEvent(event);
+        }
+    }
+
+    // -------------------- Background Thread --------------------
+
+    /**
+     * Start the background thread that will periodically check for session timeouts.
+     * <p>
+     * 启动后台线程，定期检查会话超时
+     */
+    protected void threadStart() {
+        if (backgroundProcessorDelay > 0 &&
+                (getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState())) &&
+                // 这确保了不会重复启动正在运行的后台处理器
+                (backgroundProcessorFuture == null || backgroundProcessorFuture.isDone())) {
+            /* 处理以前的后台处理器任务 */
+            // 如果 backgroundProcessorFuture 不为 null 且已经完成，这可能意味着之前的后台处理任务执行过程中发生了错误。
+            if (backgroundProcessorFuture != null && backgroundProcessorFuture.isDone()) {
+                // There was an error executing the scheduled task, get it and log it
+                // 在这种情况下，尝试通过 backgroundProcessorFuture.get() 获取任务的结果或异常，并记录任何异常。
+                try {
+                    backgroundProcessorFuture.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error(sm.getString("containerBase.backgroundProcess.error"), e);
+                }
+            }
+            // 通过调用 Container.getService(this).getServer().getUtilityExecutor() 获取一个执行器（Executor）。
+            // 使用这个执行器，调度一个新的 ContainerBackgroundProcessor 任务，使用 scheduleWithFixedDelay 方法。
+            // 这个任务将在初始延迟（backgroundProcessorDelay）之后开始执行，
+            // 然后以固定的延迟（也是 backgroundProcessorDelay）重复执行。
+            // 执行周期和延迟单位设置为秒（TimeUnit.SECONDS）。
+            backgroundProcessorFuture = Container.getService(this).getServer().getUtilityExecutor()
+                    .scheduleWithFixedDelay(new ContainerBackgroundProcessor(), backgroundProcessorDelay,
+                            backgroundProcessorDelay, TimeUnit.SECONDS);
+        }
+    }
+
+
+    /**
+     * Stop the background thread that is periodically checking for session timeouts.
+     * <p>
+     * 停止一个定期检查会话超时的后台线程。
+     */
+    protected void threadStop() {
+        // 如果 backgroundProcessorFuture 不为 null，这意味着存在一个正在运行或等待运行的后台处理任务。
+        if (backgroundProcessorFuture != null) {
+            /* 取消后台处理任务 */
+            // 如果存在后台处理任务，尝试取消任务的执行
+            // 传递给 cancel 方法的 true 参数意味着如果任务正在运行，应该尝试中断它（即使任务正在执行，也要尝试停止它）
+            backgroundProcessorFuture.cancel(true);
+            // 重置后台处理器引用
+            // 将 backgroundProcessorFuture 设置为 null，表示当前没有关联的后台处理任务
+            backgroundProcessorFuture = null;
+        }
+    }
+
+
+    @Override
+    public final String toString() {
+        StringBuilder sb = new StringBuilder();
+        Container parent = getParent();
+        if (parent != null) {
+            sb.append(parent.toString());
+            sb.append('.');
+        }
+        sb.append(this.getClass().getSimpleName());
+        sb.append('[');
+        sb.append(getName());
+        sb.append(']');
+        return sb.toString();
+    }
+    // ------------------------------- ContainerBackgroundProcessor Inner Class
+
+    protected class ContainerBackgroundProcessorMonitor implements Runnable {
+        @Override
+        public void run() {
+            if (getState().isAvailable()) {
+                threadStart();
+            }
+        }
+    }
+
+    /**
+     * Private runnable class to invoke the backgroundProcess method of this container and its children after a fixed
+     * delay.
+     */
+    protected class ContainerBackgroundProcessor implements Runnable {
+
+        @Override
+        public void run() {
+            processChildren(ContainerBase.this);
+        }
+
+        protected void processChildren(Container container) {
+            ClassLoader originalClassLoader = null;
+
+            try {
+                if (container instanceof Context) {
+                    Loader loader = ((Context) container).getLoader();
+                    // Loader will be null for FailedContext instances
+                    if (loader == null) {
+                        return;
+                    }
+
+                    /*下面这行代码的关键作用是确保后台进程任务（如定时任务、资源清理等）在与Web应用相关联的类加载器环境中执行。
+                    这是必要的，因为Web应用可能会使用一些特定的类和资源，这些只能通过它自己的类加载器访问。
+                    在多Web应用运行环境（如Tomcat服务器）中，这种做法可以避免类加载冲突和资源访问问题。*/
+
+                    // Ensure background processing for Contexts and Wrappers
+                    // is performed under the web app's class loader
+                    /* 类加载器切换 */
+                    // bind 方法在这里被用来切换当前线程使用的类加载器。它将当前线程的类加载器设置为Web应用的类加载器。
+                    // 这意味着在执行背景处理任务时，任何类或资源的加载都将使用这个Web应用的类加载器，而不是系统默认的类加载器
+                    /* 存储原始类加载器 */
+                    // bind 方法返回原始的类加载器，这允许方法在完成背景处理任务后，能够将类加载器切换回原来的状态。这个返回值被
+                    // 存储在 originalClassLoader 变量中。
+                    originalClassLoader = ((Context) container).bind(false, null);
+                }
+                //  执行容器的 后台进程 任务
+                container.backgroundProcess();
+                /* 处理子容器 */
+                Container[] children = container.findChildren();
+                for (Container child : children) {
+                    if (child.getBackgroundProcessorDelay() <= 0) {
+                        processChildren(child);
+                    }
+                }
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(sm.getString("containerBase.backgroundProcess.error"), t);
+            } finally {
+                if (container instanceof Context) {
+                    // 将当前线程的类加载器重置为原始的类加载器
+                    ((Context) container).unbind(false, originalClassLoader);
+                }
+            }
+        }
+    }
+
+    // ---------------------------- Inner classes used with start/stop Executor
+
+    private static class StartChild implements Callable<Void> {
+
+        private Container child;
+
+        StartChild(Container child) {
+            this.child = child;
+        }
+
+        @Override
+        public Void call() throws LifecycleException {
+            child.start();
+            return null;
+        }
+    }
+
+    private static class StopChild implements Callable<Void> {
+
+        private Container child;
+
+        StopChild(Container child) {
+            this.child = child;
+        }
+
+        @Override
+        public Void call() throws LifecycleException {
+            if (child.getState().isAvailable()) {
+                child.stop();
+            }
+            return null;
         }
     }
 
