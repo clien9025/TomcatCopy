@@ -78,17 +78,18 @@ public class WebAnnotationSet {
      * @param context The context which will have its annotations processed
      */
     protected static void loadApplicationListenerAnnotations(Context context) {
-        String[] applicationListeners = context.findApplicationListeners();
-        for (String className : applicationListeners) {
-            Class<?> clazz = Introspection.loadClass(context, className);
-            if (clazz == null) {
-                continue;
-            }
-
-            loadClassAnnotation(context, clazz);
-            loadFieldsAnnotation(context, clazz);
-            loadMethodsAnnotation(context, clazz);
-        }
+//        String[] applicationListeners = context.findApplicationListeners();
+//        for (String className : applicationListeners) {
+//            Class<?> clazz = Introspection.loadClass(context, className);
+//            if (clazz == null) {
+//                continue;
+//            }
+//
+//            loadClassAnnotation(context, clazz);
+//            loadFieldsAnnotation(context, clazz);
+//            loadMethodsAnnotation(context, clazz);
+//        }
+        throw new UnsupportedOperationException();
     }
 
 
@@ -98,17 +99,18 @@ public class WebAnnotationSet {
      * @param context The context which will have its annotations processed
      */
     protected static void loadApplicationFilterAnnotations(Context context) {
-        FilterDef[] filterDefs = context.findFilterDefs();
-        for (FilterDef filterDef : filterDefs) {
-            Class<?> clazz = Introspection.loadClass(context, filterDef.getFilterClass());
-            if (clazz == null) {
-                continue;
-            }
-
-            loadClassAnnotation(context, clazz);
-            loadFieldsAnnotation(context, clazz);
-            loadMethodsAnnotation(context, clazz);
-        }
+//        FilterDef[] filterDefs = context.findFilterDefs();
+//        for (FilterDef filterDef : filterDefs) {
+//            Class<?> clazz = Introspection.loadClass(context, filterDef.getFilterClass());
+//            if (clazz == null) {
+//                continue;
+//            }
+//
+//            loadClassAnnotation(context, clazz);
+//            loadFieldsAnnotation(context, clazz);
+//            loadMethodsAnnotation(context, clazz);
+//        }
+        throw new UnsupportedOperationException();
     }
 
 
@@ -119,42 +121,43 @@ public class WebAnnotationSet {
      */
     protected static void loadApplicationServletAnnotations(Context context) {
 
-        Container[] children = context.findChildren();
-        for (Container child : children) {
-            if (child instanceof Wrapper) {
-
-                Wrapper wrapper = (Wrapper) child;
-                if (wrapper.getServletClass() == null) {
-                    continue;
-                }
-
-                Class<?> clazz = Introspection.loadClass(context, wrapper.getServletClass());
-                if (clazz == null) {
-                    continue;
-                }
-
-                loadClassAnnotation(context, clazz);
-                loadFieldsAnnotation(context, clazz);
-                loadMethodsAnnotation(context, clazz);
-
-                /* Process RunAs annotation which can be only on servlets.
-                 * Ref JSR 250, equivalent to the run-as element in
-                 * the deployment descriptor
-                 */
-                RunAs runAs = clazz.getAnnotation(RunAs.class);
-                if (runAs != null) {
-                    wrapper.setRunAs(runAs.value());
-                }
-
-                // Process ServletSecurity annotation
-                ServletSecurity servletSecurity = clazz.getAnnotation(ServletSecurity.class);
-                if (servletSecurity != null) {
-                    context.addServletSecurity(
-                            new ApplicationServletRegistration(wrapper, context),
-                            new ServletSecurityElement(servletSecurity));
-                }
-            }
-        }
+//        Container[] children = context.findChildren();
+//        for (Container child : children) {
+//            if (child instanceof Wrapper) {
+//
+//                Wrapper wrapper = (Wrapper) child;
+//                if (wrapper.getServletClass() == null) {
+//                    continue;
+//                }
+//
+//                Class<?> clazz = Introspection.loadClass(context, wrapper.getServletClass());
+//                if (clazz == null) {
+//                    continue;
+//                }
+//
+//                loadClassAnnotation(context, clazz);
+//                loadFieldsAnnotation(context, clazz);
+//                loadMethodsAnnotation(context, clazz);
+//
+//                /* Process RunAs annotation which can be only on servlets.
+//                 * Ref JSR 250, equivalent to the run-as element in
+//                 * the deployment descriptor
+//                 */
+//                RunAs runAs = clazz.getAnnotation(RunAs.class);
+//                if (runAs != null) {
+//                    wrapper.setRunAs(runAs.value());
+//                }
+//
+//                // Process ServletSecurity annotation
+//                ServletSecurity servletSecurity = clazz.getAnnotation(ServletSecurity.class);
+//                if (servletSecurity != null) {
+//                    context.addServletSecurity(
+//                            new ApplicationServletRegistration(wrapper, context),
+//                            new ServletSecurityElement(servletSecurity));
+//                }
+//            }
+//        }
+        throw new UnsupportedOperationException();
     }
 
 

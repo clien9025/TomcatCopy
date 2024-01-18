@@ -561,12 +561,12 @@ public class Tomcat {
     /**
      * Set the specified connector in the service, if it is not already
      * present.
-     *
+     * <p>
      * 作用：
-     *      是将指定的连接器（Connector）实例添加到服务（Service）中，前提是这个连接器尚未被添加。
-     *      这个方法的主要作用是确保服务中不会重复添加相同的连接器实例。
-     *      它首先检查服务中是否已经存在指定的连接器，如果不存在，则将其添加到服务中。
-     *      这样做可以避免重复配置和潜在的资源浪费，确保每个连接器只被添加一次。
+     * 是将指定的连接器（Connector）实例添加到服务（Service）中，前提是这个连接器尚未被添加。
+     * 这个方法的主要作用是确保服务中不会重复添加相同的连接器实例。
+     * 它首先检查服务中是否已经存在指定的连接器，如果不存在，则将其添加到服务中。
+     * 这样做可以避免重复配置和潜在的资源浪费，确保每个连接器只被添加一次。
      *
      * @param connector The connector instance to add
      */
@@ -618,9 +618,10 @@ public class Tomcat {
 
     /**
      * 它的主要作用是获取与当前服务相关联的Host对象。在Tomcat中，Host代表一个虚拟主机，是容器（Container）的一种类型。
-     *
+     * <p>
      * 总的来说，这个getHost方法的作用是确保有一个与服务相关联的Host对象。如果服务的引擎已经有了Host子容器，它就返回第一个；
      * 如果没有，它就创建一个新的StandardHost，设置其名称，添加到引擎中，然后返回它。这样，无论如何调用者都能得到一个Host对象。
+     *
      * @return
      */
     public Host getHost() {
@@ -655,7 +656,7 @@ public class Tomcat {
             return service.getContainer();
         }
         Engine engine = new StandardEngine();
-        engine.setName( "Tomcat" );
+        engine.setName("Tomcat");
         engine.setDefaultHost(hostname);
         engine.setRealm(createDefaultRealm());
         service.setContainer(engine);
@@ -1206,24 +1207,46 @@ public class Tomcat {
      */
     public static class FixContextListener implements LifecycleListener {
 
+        /**
+         * 这个方法接收一个 LifecycleEvent 对象作为参数。
+         * 这个 LifecycleEvent 对象包含了与事件相关的信息，包括 事件类型(type) 和 事件源(source)。
+         *
+         * @param event LifecycleEvent that has occurred
+         */
         @Override
         public void lifecycleEvent(LifecycleEvent event) {
             try {
+                // event.getLifecycle() 方法调用是从传入的 LifecycleEvent 对象中获取事件源，这个源本质上是引发事件的对象
+                // 在这个场景下，预期的事件源是一个实现了 Lifecycle 接口的 Context 对象。
+                // 因此，代码尝试将这个事件源从 Lifecycle 类型强制转换为 Context 类型。
+
+                // 首先尝试将事件相关联的 Lifecycle 对象强制转换为 Context 类型。这表明该监听器主要关注与 Context 对象相关的事件。
                 Context context = (Context) event.getLifecycle();
                 if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
+                    /* 处理配置开始事件 */
+                    // 设置 Context 的 configured 属性为 true，标志着上下文已被配置。
                     context.setConfigured(true);
 
                     // Process annotations
+                    // 调用 WebAnnotationSet.loadApplicationAnnotations(context) 方法来处理应用中的注解。
                     WebAnnotationSet.loadApplicationAnnotations(context);
 
                     // LoginConfig is required to process @ServletSecurity
                     // annotations
+                    // 确保 Context 有一个 LoginConfig。如果没有，则创建一个新的 LoginConfig 实例，
+                    // 并添加一个 NonLoginAuthenticator 阀到 Context 的管道中。
                     if (context.getLoginConfig() == null) {
                         context.setLoginConfig(new LoginConfig("NONE", null, null, null));
                         context.getPipeline().addValve(new NonLoginAuthenticator());
                     }
                 }
             } catch (ClassCastException e) {
+                // 类转换异常
+                // Context context = (Context) event.getLifecycle(); 如果这个强制转换失败（意味着事件源不是 Context 类型的对象），
+                // 则会抛出 ClassCastException。这是异常处理部分提到的“传入的 Lifecycle 对象不是 Context 类型”的情况。
+
+                // 如果在处理过程中发生 ClassCastException，则代码中没有提供处理这个异常的逻辑。
+                // 这通常意味着传入的 Lifecycle 对象不是 Context 类型。
             }
         }
     }
