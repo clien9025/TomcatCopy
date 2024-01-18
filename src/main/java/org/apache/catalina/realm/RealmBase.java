@@ -1082,14 +1082,13 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      */
     @Override
     protected void startInternal() throws LifecycleException {
-//        if (credentialHandler == null) {
-//            credentialHandler = new MessageDigestCredentialHandler();
-//        }
-//        if (userAttributes != null) {
-//            userAttributesList = parseUserAttributes(userAttributes);
-//        }
-//        setState(LifecycleState.STARTING);
-        throw new UnsupportedOperationException();
+        if (credentialHandler == null) {
+            credentialHandler = new MessageDigestCredentialHandler();
+        }
+        if (userAttributes != null) {
+            userAttributesList = parseUserAttributes(userAttributes);
+        }
+        setState(LifecycleState.STARTING);
     }
 
 
@@ -1535,21 +1534,20 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     }
 
     private static X509UsernameRetriever createUsernameRetriever(String className) throws LifecycleException {
-//        if (null == className || className.trim().isEmpty()) {
-//            return new X509SubjectDnRetriever();
-//        }
-//
-//        try {
-//            @SuppressWarnings("unchecked")
-//            Class<? extends X509UsernameRetriever> clazz =
-//                    (Class<? extends X509UsernameRetriever>) Class.forName(className);
-//            return clazz.getConstructor().newInstance();
-//        } catch (ReflectiveOperationException e) {
-//            throw new LifecycleException(sm.getString("realmBase.createUsernameRetriever.newInstance", className), e);
-//        } catch (ClassCastException e) {
-//            throw new LifecycleException(
-//                    sm.getString("realmBase.createUsernameRetriever.ClassCastException", className), e);
-//        }
-        throw new UnsupportedOperationException();
+        if (null == className || className.trim().isEmpty()) {
+            return new X509SubjectDnRetriever();
+        }
+
+        try {
+            @SuppressWarnings("unchecked")
+            Class<? extends X509UsernameRetriever> clazz =
+                    (Class<? extends X509UsernameRetriever>) Class.forName(className);
+            return clazz.getConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new LifecycleException(sm.getString("realmBase.createUsernameRetriever.newInstance", className), e);
+        } catch (ClassCastException e) {
+            throw new LifecycleException(
+                    sm.getString("realmBase.createUsernameRetriever.ClassCastException", className), e);
+        }
     }
 }
