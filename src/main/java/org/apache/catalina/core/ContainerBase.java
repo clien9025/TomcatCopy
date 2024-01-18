@@ -687,43 +687,46 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         throw new UnsupportedOperationException();
     }
 
-
+    /**
+     * 用于生成管理Bean（MBean）的关键属性字符串。
+     * @return
+     */
     @Override
     public String getMBeanKeyProperties() {
-//        Container c = this;
-//        StringBuilder keyProperties = new StringBuilder();
-//        int containerCount = 0;
-//
-//        // Work up container hierarchy, add a component to the name for
-//        // each container
-//        while (!(c instanceof Engine)) {
-//            if (c instanceof Wrapper) {
-//                keyProperties.insert(0, ",servlet=");
-//                keyProperties.insert(9, c.getName());
-//            } else if (c instanceof Context) {
-//                keyProperties.insert(0, ",context=");
-//                ContextName cn = new ContextName(c.getName(), false);
-//                keyProperties.insert(9, cn.getDisplayName());
-//            } else if (c instanceof Host) {
-//                keyProperties.insert(0, ",host=");
-//                keyProperties.insert(6, c.getName());
-//            } else if (c == null) {
-//                // May happen in unit testing and/or some embedding scenarios
-//                keyProperties.append(",container");
-//                keyProperties.append(containerCount++);
-//                keyProperties.append("=null");
-//                break;
-//            } else {
-//                // Should never happen...
-//                keyProperties.append(",container");
-//                keyProperties.append(containerCount++);
-//                keyProperties.append('=');
-//                keyProperties.append(c.getName());
-//            }
-//            c = c.getParent();
-//        }
-//        return keyProperties.toString();
-        throw new UnsupportedOperationException();// todo 1.17.23.26
+        Container c = this;
+        StringBuilder keyProperties = new StringBuilder();
+        int containerCount = 0;
+
+        // Work up container hierarchy, add a component to the name for
+        // each container
+        while (!(c instanceof Engine)) {
+            if (c instanceof Wrapper) {
+                keyProperties.insert(0, ",servlet=");
+                keyProperties.insert(9, c.getName());
+            } else if (c instanceof Context) {
+                keyProperties.insert(0, ",context=");
+                ContextName cn = new ContextName(c.getName(), false);
+                keyProperties.insert(9, cn.getDisplayName());
+            } else if (c instanceof Host) {
+                keyProperties.insert(0, ",host=");
+                keyProperties.insert(6, c.getName());
+            } else if (c == null) {
+                // May happen in unit testing and/or some embedding scenarios
+                keyProperties.append(",container");
+                keyProperties.append(containerCount++);
+                keyProperties.append("=null");
+                break;
+            } else {
+                // Should never happen...
+                keyProperties.append(",container");
+                keyProperties.append(containerCount++);
+                keyProperties.append('=');
+                keyProperties.append(c.getName());
+            }
+            c = c.getParent();
+        }
+        // 循环结束后，keyProperties 包含了表示容器层次结构的完整关键属性字符串。
+        return keyProperties.toString();
     }
 
 
