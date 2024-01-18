@@ -678,13 +678,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     protected String getDomainInternal() {
 
-//        Container p = this.getParent();
-//        if (p == null) {
-//            return null;
-//        } else {
-//            return p.getDomain();
-//        }
-        throw new UnsupportedOperationException();
+        Container p = this.getParent();
+        if (p == null) {
+            return null;
+        } else {
+            return p.getDomain();
+        }
     }
 
     /**

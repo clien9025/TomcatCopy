@@ -90,4 +90,14 @@ public class StandardHost extends ContainerBase implements Host {
 
     }
 
+
+    @Override
+    protected String getObjectNameKeyProperties() {
+
+        StringBuilder keyProperties = new StringBuilder("type=Host");
+        keyProperties.append(getMBeanKeyProperties());
+
+        return keyProperties.toString();
+    }
+
 }

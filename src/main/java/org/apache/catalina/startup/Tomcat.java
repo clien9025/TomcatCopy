@@ -54,6 +54,7 @@ import org.apache.catalina.Realm;
 import org.apache.catalina.Server;
 import org.apache.catalina.Service;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.authenticator.NonLoginAuthenticator;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.*;
 import org.apache.catalina.realm.GenericPrincipal;
@@ -1207,24 +1208,23 @@ public class Tomcat {
 
         @Override
         public void lifecycleEvent(LifecycleEvent event) {
-//            try {
-//                Context context = (Context) event.getLifecycle();
-//                if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
-//                    context.setConfigured(true);
-//
-//                    // Process annotations
-//                    WebAnnotationSet.loadApplicationAnnotations(context);
-//
-//                    // LoginConfig is required to process @ServletSecurity
-//                    // annotations
-//                    if (context.getLoginConfig() == null) {
-//                        context.setLoginConfig(new LoginConfig("NONE", null, null, null));
-//                        context.getPipeline().addValve(new NonLoginAuthenticator());
-//                    }
-//                }
-//            } catch (ClassCastException e) {
-//            }
-            throw new UnsupportedOperationException();
+            try {
+                Context context = (Context) event.getLifecycle();
+                if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
+                    context.setConfigured(true);
+
+                    // Process annotations
+                    WebAnnotationSet.loadApplicationAnnotations(context);
+
+                    // LoginConfig is required to process @ServletSecurity
+                    // annotations
+                    if (context.getLoginConfig() == null) {
+                        context.setLoginConfig(new LoginConfig("NONE", null, null, null));
+                        context.getPipeline().addValve(new NonLoginAuthenticator());
+                    }
+                }
+            } catch (ClassCastException e) {
+            }
         }
     }
 
