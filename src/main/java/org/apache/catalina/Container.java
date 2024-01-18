@@ -148,7 +148,9 @@ public interface Container extends Lifecycle {
      * @return The JMX domain name
      */
     // 源码是这样写的
-    String getDomain();
+    default String getDomain() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**

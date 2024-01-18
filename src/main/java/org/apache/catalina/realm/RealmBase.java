@@ -1460,8 +1460,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
     @Override
     public String getDomainInternal() {
-//        return container.getDomain();
-        throw new UnsupportedOperationException();
+        return container.getDomain();
     }
 
     protected String realmPath = "/realm0";
