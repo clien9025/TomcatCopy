@@ -74,26 +74,27 @@ public final class NonLoginAuthenticator extends AuthenticatorBase {
     @Override
     protected boolean doAuthenticate(Request request, HttpServletResponse response) throws IOException {
 
-        // Don't try and use SSO to authenticate since there is no auth
-        // configured for this web application
-        if (checkForCachedAuthentication(request, response, true)) {
-            // Save the inherited Principal in this session so it can remain
-            // authenticated until it expires.
-            if (cache) {
-                request.getSessionInternal(true).setPrincipal(request.getPrincipal());
-            }
-            return true;
-        }
-
-        // No Principal means the user is not already authenticated
-        // and so will not be assigned any roles. It is safe to
-        // to say the user is now authenticated because access to
-        // protected resources will only be allowed with a matching role.
-        // i.e. SC_FORBIDDEN (403 status) will be generated later.
-        if (containerLog.isDebugEnabled()) {
-            containerLog.debug("User authenticated without any roles");
-        }
-        return true;
+//        // Don't try and use SSO to authenticate since there is no auth
+//        // configured for this web application
+//        if (checkForCachedAuthentication(request, response, true)) {
+//            // Save the inherited Principal in this session so it can remain
+//            // authenticated until it expires.
+//            if (cache) {
+//                request.getSessionInternal(true).setPrincipal(request.getPrincipal());
+//            }
+//            return true;
+//        }
+//
+//        // No Principal means the user is not already authenticated
+//        // and so will not be assigned any roles. It is safe to
+//        // to say the user is now authenticated because access to
+//        // protected resources will only be allowed with a matching role.
+//        // i.e. SC_FORBIDDEN (403 status) will be generated later.
+//        if (containerLog.isDebugEnabled()) {
+//            containerLog.debug("User authenticated without any roles");
+//        }
+//        return true;
+        throw new UnsupportedOperationException();
     }
 
 

@@ -105,4 +105,30 @@ public abstract class AuthenticatorBase extends ValveBase implements Authenticat
      * Default authentication realm name.
      */
     protected static final String REALM_NAME = "Authentication required";
+
+
+    // ------------------------------------------------------ Protected Methods
+
+    /**
+     * Provided for sub-classes to implement their specific authentication mechanism.
+     *
+     * @param request  The request that triggered the authentication
+     * @param response The response associated with the request
+     * @return {@code true} if the the user was authenticated, otherwise {@code
+     * false}, in which case an authentication challenge will have been written to the response
+     * @throws IOException If an I/O problem occurred during the authentication process
+     */
+    protected boolean doAuthenticate(Request request, HttpServletResponse response) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Return the authentication method, which is vendor-specific and not defined by HttpServletRequest.
+     *
+     * @return the authentication method, which is vendor-specific and not defined by HttpServletRequest.
+     */
+    protected String getAuthMethod(){
+        throw new UnsupportedOperationException();
+    }
 }
