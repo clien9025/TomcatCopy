@@ -1,10 +1,20 @@
 package org.apache.catalina.core;
 
+import org.apache.catalina.Container;
+import org.apache.catalina.Engine;
+import org.apache.catalina.Globals;
 import org.apache.catalina.Host;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 
 /**
  * Standard implementation of the <b>Host</b> interface. Each child container must be a Context implementation to
@@ -34,14 +44,462 @@ public class StandardHost extends ContainerBase implements Host {
 
     // ----------------------------------------------------- Instance Variables
 
+
+    /**
+     * The set of aliases for this Host.
+     */
+    private String[] aliases = new String[0];
+
+    private final Object aliasesLock = new Object();
+
+
+    /**
+     * The application root for this Host.
+     */
+    private String appBase = "webapps";
+    private volatile File appBaseFile = null;
+
+
+    /**
+     * The legacy (Java EE) application root for this Host.
+     */
+    private String legacyAppBase = "webapps-javaee";
+    private volatile File legacyAppBaseFile = null;
+
+
+    /**
+     * The XML root for this Host.
+     */
+    private String xmlBase = null;
+
+    /**
+     * host's default config path
+     */
+    private volatile File hostConfigBase = null;
+
     /**
      * The auto deploy flag for this Host.
      */
     private boolean autoDeploy = true;
 
 
+    /**
+     * The Java class name of the default context configuration class for deployed web applications.
+     */
+    private String configClass = "org.apache.catalina.startup.ContextConfig";
+
+
+    /**
+     * The Java class name of the default Context implementation class for deployed web applications.
+     */
+    private String contextClass = "org.apache.catalina.core.StandardContext";
+
+
+    /**
+     * The deploy on startup flag for this Host.
+     */
+    private boolean deployOnStartup = true;
+
+
+    /**
+     * deploy Context XML config files property.
+     */
+    private boolean deployXML = !Globals.IS_SECURITY_ENABLED;
+
+
+    /**
+     * Should XML files be copied to $CATALINA_BASE/conf/&lt;engine&gt;/&lt;host&gt; by default when a web application
+     * is deployed?
+     */
+    private boolean copyXML = false;
+
+
+    /**
+     * The Java class name of the default error reporter implementation class for deployed web applications.
+     */
+    private String errorReportValveClass = "org.apache.catalina.valves.ErrorReportValve";
+
+
+    /**
+     * Unpack WARs property.
+     */
+    private boolean unpackWARs = true;
+
+
+    /**
+     * Work Directory base for applications.
+     */
+    private String workDir = null;
+
+
+    /**
+     * Should we create directories upon startup for appBase and xmlBase
+     */
+    private boolean createDirs = true;
+
+
+    /**
+     * Track the class loaders for the child web applications so memory leaks can be detected.
+     */
+    private final Map<ClassLoader,String> childClassLoaders = new WeakHashMap<>();
+
+
+    /**
+     * Any file or directory in {@link #appBase} that this pattern matches will be ignored by the automatic deployment
+     * process (both {@link #deployOnStartup} and {@link #autoDeploy}).
+     */
+    private Pattern deployIgnore = null;
+
+
+    private boolean undeployOldVersions = false;
+
+    private boolean failCtxIfServletStartFails = false;
+
+
+
 
     // ------------------------------------------------------------- Properties
+
+    @Override
+    public boolean getUndeployOldVersions() {
+        return undeployOldVersions;
+    }
+
+
+    @Override
+    public void setUndeployOldVersions(boolean undeployOldVersions) {
+        this.undeployOldVersions = undeployOldVersions;
+    }
+
+
+    @Override
+    public ExecutorService getStartStopExecutor() {
+        return startStopExecutor;
+    }
+
+
+    @Override
+    public String getAppBase() {
+        return this.appBase;
+    }
+
+
+    @Override
+    public File getAppBaseFile() {
+
+        if (appBaseFile != null) {
+            return appBaseFile;
+        }
+
+        File file = new File(getAppBase());
+
+        // If not absolute, make it absolute
+        if (!file.isAbsolute()) {
+            file = new File(getCatalinaBase(), file.getPath());
+        }
+
+        // Make it canonical if possible
+        try {
+            file = file.getCanonicalFile();
+        } catch (IOException ioe) {
+            // Ignore
+        }
+
+        this.appBaseFile = file;
+        return file;
+    }
+
+
+    @Override
+    public void setAppBase(String appBase) {
+        if (appBase.trim().equals("")) {
+            log.warn(sm.getString("standardHost.problematicAppBase", getName()));
+        }
+        String oldAppBase = this.appBase;
+        this.appBase = appBase;
+        support.firePropertyChange("appBase", oldAppBase, this.appBase);
+        this.appBaseFile = null;
+    }
+
+
+    @Override
+    public String getLegacyAppBase() {
+        return this.legacyAppBase;
+    }
+
+
+    @Override
+    public File getLegacyAppBaseFile() {
+        if (legacyAppBaseFile != null) {
+            return legacyAppBaseFile;
+        }
+
+        File file = new File(getLegacyAppBase());
+
+        // If not absolute, make it absolute
+        if (!file.isAbsolute()) {
+            file = new File(getCatalinaBase(), file.getPath());
+        }
+
+        // Make it canonical if possible
+        try {
+            file = file.getCanonicalFile();
+        } catch (IOException ioe) {
+            // Ignore
+        }
+
+        this.legacyAppBaseFile = file;
+        return file;
+    }
+
+
+    @Override
+    public void setLegacyAppBase(String legacyAppBase) {
+        if (legacyAppBase.trim().equals("")) {
+            log.warn(sm.getString("standardHost.problematicLegacyAppBase", getName()));
+        }
+        String oldLegacyAppBase = this.legacyAppBase;
+        this.legacyAppBase = legacyAppBase;
+        support.firePropertyChange("legacyAppBase", oldLegacyAppBase, this.legacyAppBase);
+        this.legacyAppBaseFile = null;
+    }
+
+
+    /**
+     * ({@inheritDoc}
+     */
+    @Override
+    public String getXmlBase() {
+        return this.xmlBase;
+    }
+
+
+    /**
+     * ({@inheritDoc}
+     */
+    @Override
+    public void setXmlBase(String xmlBase) {
+        String oldXmlBase = this.xmlBase;
+        this.xmlBase = xmlBase;
+        support.firePropertyChange("xmlBase", oldXmlBase, this.xmlBase);
+    }
+
+
+    /**
+     * ({@inheritDoc}
+     */
+    @Override
+    public File getConfigBaseFile() {
+        if (hostConfigBase != null) {
+            return hostConfigBase;
+        }
+        String path = null;
+        if (getXmlBase() != null) {
+            path = getXmlBase();
+        } else {
+            StringBuilder xmlDir = new StringBuilder("conf");
+            Container parent = getParent();
+            if (parent instanceof Engine) {
+                xmlDir.append('/');
+                xmlDir.append(parent.getName());
+            }
+            xmlDir.append('/');
+            xmlDir.append(getName());
+            path = xmlDir.toString();
+        }
+        File file = new File(path);
+        if (!file.isAbsolute()) {
+            file = new File(getCatalinaBase(), path);
+        }
+        try {
+            file = file.getCanonicalFile();
+        } catch (IOException e) {// ignore
+        }
+        this.hostConfigBase = file;
+        return file;
+    }
+
+
+    /**
+     * @return <code>true</code> if the Host will attempt to create directories for appBase and xmlBase unless they
+     *             already exist.
+     */
+    @Override
+    public boolean getCreateDirs() {
+        return createDirs;
+    }
+
+    /**
+     * Set to <code>true</code> if the Host should attempt to create directories for xmlBase and appBase upon startup
+     *
+     * @param createDirs the new flag value
+     */
+    @Override
+    public void setCreateDirs(boolean createDirs) {
+        this.createDirs = createDirs;
+    }
+
+    /**
+     * @return the value of the auto deploy flag. If true, it indicates that this host's child webapps will be
+     *             dynamically deployed.
+     */
+    @Override
+    public boolean getAutoDeploy() {
+        return this.autoDeploy;
+    }
+
+
+    /**
+     * Set the auto deploy flag value for this host.
+     *
+     * @param autoDeploy The new auto deploy flag
+     */
+    @Override
+    public void setAutoDeploy(boolean autoDeploy) {
+
+        boolean oldAutoDeploy = this.autoDeploy;
+        this.autoDeploy = autoDeploy;
+        support.firePropertyChange("autoDeploy", oldAutoDeploy, this.autoDeploy);
+
+    }
+
+
+    /**
+     * @return the Java class name of the context configuration class for new web applications.
+     */
+    @Override
+    public String getConfigClass() {
+        return this.configClass;
+    }
+
+
+    /**
+     * Set the Java class name of the context configuration class for new web applications.
+     *
+     * @param configClass The new context configuration class
+     */
+    @Override
+    public void setConfigClass(String configClass) {
+
+        String oldConfigClass = this.configClass;
+        this.configClass = configClass;
+        support.firePropertyChange("configClass", oldConfigClass, this.configClass);
+
+    }
+
+
+    /**
+     * @return the Java class name of the Context implementation class for new web applications.
+     */
+    public String getContextClass() {
+        return this.contextClass;
+    }
+
+
+    /**
+     * Set the Java class name of the Context implementation class for new web applications.
+     *
+     * @param contextClass The new context implementation class
+     */
+    public void setContextClass(String contextClass) {
+
+        String oldContextClass = this.contextClass;
+        this.contextClass = contextClass;
+        support.firePropertyChange("contextClass", oldContextClass, this.contextClass);
+
+    }
+
+
+    /**
+     * @return the value of the deploy on startup flag. If <code>true</code>, it indicates that this host's child
+     *             webapps should be discovered and automatically deployed at startup time.
+     */
+    @Override
+    public boolean getDeployOnStartup() {
+        return this.deployOnStartup;
+    }
+
+
+    /**
+     * Set the deploy on startup flag value for this host.
+     *
+     * @param deployOnStartup The new deploy on startup flag
+     */
+    @Override
+    public void setDeployOnStartup(boolean deployOnStartup) {
+
+        boolean oldDeployOnStartup = this.deployOnStartup;
+        this.deployOnStartup = deployOnStartup;
+        support.firePropertyChange("deployOnStartup", oldDeployOnStartup, this.deployOnStartup);
+
+    }
+
+
+    /**
+     * @return <code>true</code> if XML context descriptors should be deployed.
+     */
+    public boolean isDeployXML() {
+        return deployXML;
+    }
+
+
+    /**
+     * Deploy XML Context config files flag mutator.
+     *
+     * @param deployXML <code>true</code> if context descriptors should be deployed
+     */
+    public void setDeployXML(boolean deployXML) {
+        this.deployXML = deployXML;
+    }
+
+
+    /**
+     * @return the copy XML config file flag for this component.
+     */
+    public boolean isCopyXML() {
+        return this.copyXML;
+    }
+
+
+    /**
+     * Set the copy XML config file flag for this component.
+     *
+     * @param copyXML The new copy XML flag
+     */
+    public void setCopyXML(boolean copyXML) {
+        this.copyXML = copyXML;
+    }
+
+
+    /**
+     * @return the Java class name of the error report valve class for new web applications.
+     */
+    public String getErrorReportValveClass() {
+        return this.errorReportValveClass;
+    }
+
+
+    /**
+     * Set the Java class name of the error report valve class for new web applications.
+     *
+     * @param errorReportValveClass The new error report valve class
+     */
+    public void setErrorReportValveClass(String errorReportValveClass) {
+
+        String oldErrorReportValveClassClass = this.errorReportValveClass;
+        this.errorReportValveClass = errorReportValveClass;
+        support.firePropertyChange("errorReportValveClass", oldErrorReportValveClassClass, this.errorReportValveClass);
+
+    }
+
+
+    /**
+     * @return the canonical, fully qualified, name of the virtual host this Container represents.
+     */
+    @Override
+    public String getName() {
+        return name;
+    }
 
 
     /**
@@ -67,26 +525,139 @@ public class StandardHost extends ContainerBase implements Host {
     }
 
 
-
     /**
-     * @return the canonical, fully qualified, name of the virtual host this Container represents.
+     * @return <code>true</code> if WARs should be unpacked on deployment.
      */
-    @Override
-    public String getName() {
-        return name;
+    public boolean isUnpackWARs() {
+        return unpackWARs;
     }
 
+
     /**
-     * Set the auto deploy flag value for this host.
+     * Unpack WARs flag mutator.
      *
-     * @param autoDeploy The new auto deploy flag
+     * @param unpackWARs <code>true</code> to unpack WARs on deployment
+     */
+    public void setUnpackWARs(boolean unpackWARs) {
+        this.unpackWARs = unpackWARs;
+    }
+
+
+    /**
+     * @return host work directory base.
+     */
+    public String getWorkDir() {
+        return workDir;
+    }
+
+
+    /**
+     * Set host work directory base.
+     *
+     * @param workDir the new base work folder for this host
+     */
+    public void setWorkDir(String workDir) {
+        this.workDir = workDir;
+    }
+
+
+    /**
+     * @return the regular expression that defines the files and directories in the host's {@link #getAppBase} that will
+     *             be ignored by the automatic deployment process.
      */
     @Override
-    public void setAutoDeploy(boolean autoDeploy) {
+    public String getDeployIgnore() {
+        if (deployIgnore == null) {
+            return null;
+        }
+        return this.deployIgnore.toString();
+    }
 
-        boolean oldAutoDeploy = this.autoDeploy;
-        this.autoDeploy = autoDeploy;
-        support.firePropertyChange("autoDeploy", oldAutoDeploy, this.autoDeploy);
+
+    /**
+     * @return the compiled regular expression that defines the files and directories in the host's {@link #getAppBase}
+     *             that will be ignored by the automatic deployment process.
+     */
+    @Override
+    public Pattern getDeployIgnorePattern() {
+        return this.deployIgnore;
+    }
+
+
+    /**
+     * Set the regular expression that defines the files and directories in the host's {@link #getAppBase} that will be
+     * ignored by the automatic deployment process.
+     *
+     * @param deployIgnore the regexp
+     */
+    @Override
+    public void setDeployIgnore(String deployIgnore) {
+        String oldDeployIgnore;
+        if (this.deployIgnore == null) {
+            oldDeployIgnore = null;
+        } else {
+            oldDeployIgnore = this.deployIgnore.toString();
+        }
+        if (deployIgnore == null) {
+            this.deployIgnore = null;
+        } else {
+            this.deployIgnore = Pattern.compile(deployIgnore);
+        }
+        support.firePropertyChange("deployIgnore", oldDeployIgnore, deployIgnore);
+    }
+
+
+    /**
+     * @return <code>true</code> if a webapp start should fail if a Servlet startup fails
+     */
+    public boolean isFailCtxIfServletStartFails() {
+        return failCtxIfServletStartFails;
+    }
+
+
+    /**
+     * Change the behavior of Servlet startup errors on web application starts.
+     *
+     * @param failCtxIfServletStartFails <code>false</code> to ignore errors on Servlets which are stated when the web
+     *                                       application starts
+     */
+    public void setFailCtxIfServletStartFails(boolean failCtxIfServletStartFails) {
+        boolean oldFailCtxIfServletStartFails = this.failCtxIfServletStartFails;
+        this.failCtxIfServletStartFails = failCtxIfServletStartFails;
+        support.firePropertyChange("failCtxIfServletStartFails", oldFailCtxIfServletStartFails,
+                failCtxIfServletStartFails);
+    }
+
+
+
+    // --------------------------------------------------------- Public Methods
+
+
+    /**
+     * Add an alias name that should be mapped to this same Host.
+     *
+     * @param alias The alias to be added
+     */
+    @Override
+    public void addAlias(String alias) {
+
+//        alias = alias.toLowerCase(Locale.ENGLISH);
+//
+//        synchronized (aliasesLock) {
+//            // Skip duplicate aliases
+//            for (String s : aliases) {
+//                if (s.equals(alias)) {
+//                    return;
+//                }
+//            }
+//            // Add this alias to the list
+//            String newAliases[] = Arrays.copyOf(aliases, aliases.length + 1);
+//            newAliases[aliases.length] = alias;
+//            aliases = newAliases;
+//        }
+//        // Inform interested listeners
+//        fireContainerEvent(ADD_ALIAS_EVENT, alias);
+        throw new UnsupportedOperationException();
 
     }
 

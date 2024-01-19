@@ -65,7 +65,9 @@ public interface Wrapper extends Container {
      * the servlet is currently available.  A value equal to Long.MAX_VALUE
      * is considered to mean that unavailability is permanent.
      */
-    long getAvailable();
+    default long getAvailable() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -76,14 +78,18 @@ public interface Wrapper extends Container {
      *
      * @param available The new available date/time
      */
-    void setAvailable(long available);
+    default void setAvailable(long available) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the load-on-startup order value (negative value means
      * load on first call).
      */
-    int getLoadOnStartup();
+    default int getLoadOnStartup() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -92,13 +98,17 @@ public interface Wrapper extends Container {
      *
      * @param value New load-on-startup value
      */
-    void setLoadOnStartup(int value);
+    default void setLoadOnStartup(int value) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the run-as identity for this servlet.
      */
-    String getRunAs();
+    default String getRunAs() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -106,13 +116,17 @@ public interface Wrapper extends Container {
      *
      * @param runAs New run-as identity value
      */
-    void setRunAs(String runAs);
+    default void setRunAs(String runAs) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the fully qualified servlet class name for this servlet.
      */
-    String getServletClass();
+    default String getServletClass() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -120,34 +134,41 @@ public interface Wrapper extends Container {
      *
      * @param servletClass Servlet class name
      */
-    void setServletClass(String servletClass);
+    default void setServletClass(String servletClass) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Gets the names of the methods supported by the underlying servlet.
-     *
+     * <p>
      * This is the same set of methods included in the Allow response header
      * in response to an OPTIONS request method processed by the underlying
      * servlet.
      *
      * @return Array of names of the methods supported by the underlying
-     *         servlet
-     *
+     * servlet
      * @throws ServletException If the target servlet cannot be loaded
      */
-    String[] getServletMethods() throws ServletException;
+    default String[] getServletMethods() throws ServletException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return <code>true</code> if this Servlet is currently unavailable.
      */
-    boolean isUnavailable();
+    default boolean isUnavailable() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the associated Servlet instance.
      */
-    Servlet getServlet();
+    default Servlet getServlet() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -155,7 +176,9 @@ public interface Wrapper extends Container {
      *
      * @param servlet The associated Servlet
      */
-    void setServlet(Servlet servlet);
+    default void setServlet(Servlet servlet) {
+        throw new UnsupportedOperationException();
+    }
 
     // --------------------------------------------------------- Public Methods
 
@@ -163,10 +186,12 @@ public interface Wrapper extends Container {
     /**
      * Add a new servlet initialization parameter for this servlet.
      *
-     * @param name Name of this initialization parameter to add
+     * @param name  Name of this initialization parameter to add
      * @param value Value of this initialization parameter to add
      */
-    void addInitParameter(String name, String value);
+    default void addInitParameter(String name, String value) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -174,7 +199,9 @@ public interface Wrapper extends Container {
      *
      * @param mapping The new wrapper mapping
      */
-    void addMapping(String mapping);
+    default void addMapping(String mapping) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -184,7 +211,9 @@ public interface Wrapper extends Container {
      * @param name Role name used within this servlet
      * @param link Role name used within the web application
      */
-    void addSecurityReference(String name, String link);
+    default void addSecurityReference(String name, String link) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -192,66 +221,79 @@ public interface Wrapper extends Container {
      * its <code>service()</code> method called.  The previously initialized
      * instance may be returned immediately.
      *
-     * @exception ServletException if the Servlet init() method threw
-     *  an exception
-     * @exception ServletException if a loading error occurs
      * @return a new Servlet instance
+     * @throws ServletException if the Servlet init() method threw
+     *                          an exception
+     * @throws ServletException if a loading error occurs
      */
-    Servlet allocate() throws ServletException;
+    default Servlet allocate() throws ServletException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Decrement the allocation count for the servlet instance.
      *
      * @param servlet The servlet to be returned
-     *
-     * @exception ServletException if a deallocation error occurs
+     * @throws ServletException if a deallocation error occurs
      */
-    void deallocate(Servlet servlet) throws ServletException;
+    default void deallocate(Servlet servlet) throws ServletException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
+     * @param name Name of the requested initialization parameter
      * @return the value for the specified initialization parameter name,
      * if any; otherwise return <code>null</code>.
-     *
-     * @param name Name of the requested initialization parameter
      */
-    String findInitParameter(String name);
+    default String findInitParameter(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the names of all defined initialization parameters for this
      * servlet.
      */
-    String[] findInitParameters();
+    default String[] findInitParameters() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the mappings associated with this wrapper.
      */
-    String[] findMappings();
+    default String[] findMappings() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
+     * @param name Security role reference used within this servlet
      * @return the security role link for the specified security role
      * reference name, if any; otherwise return <code>null</code>.
-     *
-     * @param name Security role reference used within this servlet
      */
-    String findSecurityReference(String name);
+    default String findSecurityReference(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * @return the set of security role reference names associated with
      * this servlet, if any; otherwise return a zero-length array.
      */
-    String[] findSecurityReferences();
+    default String[] findSecurityReferences() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Increment the error count value used when monitoring.
      */
-    void incrementErrorCount();
+    default void incrementErrorCount() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -260,10 +302,12 @@ public interface Wrapper extends Container {
      * load Servlets that are marked in the deployment descriptor to be loaded
      * at server startup time.
      *
-     * @exception ServletException if the Servlet init() method threw
-     *  an exception or if some other loading problem occurs
+     * @throws ServletException if the Servlet init() method threw
+     *                          an exception or if some other loading problem occurs
      */
-    void load() throws ServletException;
+    default void load() throws ServletException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -271,7 +315,9 @@ public interface Wrapper extends Container {
      *
      * @param name Name of the initialization parameter to remove
      */
-    void removeInitParameter(String name);
+    default void removeInitParameter(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -279,7 +325,9 @@ public interface Wrapper extends Container {
      *
      * @param mapping The pattern to remove
      */
-    void removeMapping(String mapping);
+    default void removeMapping(String mapping) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -287,7 +335,9 @@ public interface Wrapper extends Container {
      *
      * @param name Security role used within this servlet to be removed
      */
-    void removeSecurityReference(String name);
+    default void removeSecurityReference(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -295,9 +345,11 @@ public interface Wrapper extends Container {
      * for the specified amount of time.
      *
      * @param unavailable The exception that occurred, or <code>null</code>
-     *  to mark this Servlet as permanently unavailable
+     *                    to mark this Servlet as permanently unavailable
      */
-    void unavailable(UnavailableException unavailable);
+    default void unavailable(UnavailableException unavailable) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -307,9 +359,11 @@ public interface Wrapper extends Container {
      * prior to reloading all of the classes from the Loader associated with
      * our Loader's repository.
      *
-     * @exception ServletException if an unload error occurs
+     * @throws ServletException if an unload error occurs
      */
-    void unload() throws ServletException;
+    default void unload() throws ServletException {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -317,7 +371,9 @@ public interface Wrapper extends Container {
      * multi-part configuration has been defined, then <code>null</code> will be
      * returned.
      */
-    MultipartConfigElement getMultipartConfigElement();
+    default MultipartConfigElement getMultipartConfigElement() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -326,8 +382,10 @@ public interface Wrapper extends Container {
      *
      * @param multipartConfig The configuration associated with the Servlet
      */
-    void setMultipartConfigElement(
-            MultipartConfigElement multipartConfig);
+    default void setMultipartConfigElement(
+            MultipartConfigElement multipartConfig) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Does the associated Servlet support async processing? Defaults to
@@ -335,40 +393,52 @@ public interface Wrapper extends Container {
      *
      * @return <code>true</code> if the Servlet supports async
      */
-    boolean isAsyncSupported();
+    default boolean isAsyncSupported() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the async support for the associated Servlet.
      *
      * @param asyncSupport the new value
      */
-    void setAsyncSupported(boolean asyncSupport);
+    default void setAsyncSupported(boolean asyncSupport) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Is the associated Servlet enabled? Defaults to <code>true</code>.
      *
      * @return <code>true</code> if the Servlet is enabled
      */
-    boolean isEnabled();
+    default boolean isEnabled() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Sets the enabled attribute for the associated servlet.
      *
      * @param enabled the new value
      */
-    void setEnabled(boolean enabled);
+    default void setEnabled(boolean enabled) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Is the Servlet overridable by a ServletContainerInitializer?
      *
      * @return <code>true</code> if the Servlet can be overridden in a ServletContainerInitializer
      */
-    boolean isOverridable();
+    default boolean isOverridable() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Sets the overridable attribute for this Servlet.
      *
      * @param overridable the new value
      */
-    void setOverridable(boolean overridable);
+    default void setOverridable(boolean overridable) {
+        throw new UnsupportedOperationException();
+    }
 }
