@@ -137,20 +137,19 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-//        // Start the Valves in our pipeline (including the basic), if any
-//        Valve current = first;
-//        if (current == null) {
-//            current = basic;
-//        }
-//        while (current != null) {
-//            if (current instanceof Lifecycle) {
-//                ((Lifecycle) current).start();
-//            }
-//            current = current.getNext();
-//        }
-//
-//        setState(LifecycleState.STARTING);
-        throw new UnsupportedOperationException();
+        // Start the Valves in our pipeline (including the basic), if any
+        Valve current = first;
+        if (current == null) {
+            current = basic;
+        }
+        while (current != null) {
+            if (current instanceof Lifecycle) {
+                ((Lifecycle) current).start();
+            }
+            current = current.getNext();
+        }
+
+        setState(LifecycleState.STARTING);
     }
 
 
@@ -370,18 +369,17 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     @Override
     public Valve[] getValves() {
 
-//        List<Valve> valveList = new ArrayList<>();
-//        Valve current = first;
-//        if (current == null) {
-//            current = basic;
-//        }
-//        while (current != null) {
-//            valveList.add(current);
-//            current = current.getNext();
-//        }
-//
-//        return valveList.toArray(new Valve[0]);
-        throw new UnsupportedOperationException();
+        List<Valve> valveList = new ArrayList<>();
+        Valve current = first;
+        if (current == null) {
+            current = basic;
+        }
+        while (current != null) {
+            valveList.add(current);
+            current = current.getNext();
+        }
+
+        return valveList.toArray(new Valve[0]);
 
     }
 
