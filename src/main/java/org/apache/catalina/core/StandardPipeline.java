@@ -2,6 +2,7 @@ package org.apache.catalina.core;
 
 import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleBase;
+import org.apache.catalina.util.ToStringUtil;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -10,6 +11,7 @@ import org.apache.tomcat.util.res.StringManager;
 import javax.management.ObjectName;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Standard implementation of a processing <b>Pipeline</b> that will invoke a series of Valves that have been configured
@@ -69,6 +71,46 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
      */
     protected Valve first = null;
 
+
+    // --------------------------------------------------------- Public Methods
+
+    @Override
+    public boolean isAsyncSupported() {
+//        Valve valve = (first != null) ? first : basic;
+//        boolean supported = true;
+//        while (supported && valve != null) {
+//            supported = supported & valve.isAsyncSupported();
+//            valve = valve.getNext();
+//        }
+//        return supported;
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public void findNonAsyncValves(Set<String> result) {
+//        Valve valve = (first != null) ? first : basic;
+//        while (valve != null) {
+//            if (!valve.isAsyncSupported()) {
+//                result.add(valve.getClass().getName());
+//            }
+//            valve = valve.getNext();
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    // ------------------------------------------------------ Contained Methods
+
+    /**
+     * Return the Container with which this Pipeline is associated.
+     */
+    @Override
+    public Container getContainer() {
+        return this.container;
+    }
+
+
     /**
      * Set the Container with which this Pipeline is associated.
      *
@@ -78,6 +120,97 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     public void setContainer(Container container) {
         this.container = container;
     }
+
+
+    @Override
+    protected void initInternal() {
+        // NOOP
+    }
+
+
+    /**
+     * Start {@link Valve}s) in this pipeline and implement the requirements of {@link LifecycleBase#startInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void startInternal() throws LifecycleException {
+
+//        // Start the Valves in our pipeline (including the basic), if any
+//        Valve current = first;
+//        if (current == null) {
+//            current = basic;
+//        }
+//        while (current != null) {
+//            if (current instanceof Lifecycle) {
+//                ((Lifecycle) current).start();
+//            }
+//            current = current.getNext();
+//        }
+//
+//        setState(LifecycleState.STARTING);
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Stop {@link Valve}s) in this pipeline and implement the requirements of {@link LifecycleBase#stopInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void stopInternal() throws LifecycleException {
+
+//        setState(LifecycleState.STOPPING);
+//
+//        // Stop the Valves in our pipeline (including the basic), if any
+//        Valve current = first;
+//        if (current == null) {
+//            current = basic;
+//        }
+//        while (current != null) {
+//            if (current instanceof Lifecycle) {
+//                ((Lifecycle) current).stop();
+//            }
+//            current = current.getNext();
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    protected void destroyInternal() {
+//        Valve[] valves = getValves();
+//        for (Valve valve : valves) {
+//            removeValve(valve);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Return a String representation of this component.
+     */
+    @Override
+    public String toString() {
+        return ToStringUtil.toString(this);
+    }
+
+
+    // ------------------------------------------------------- Pipeline Methods
+
+
+    /**
+     * <p>
+     * Return the Valve instance that has been distinguished as the basic Valve for this Pipeline (if any).
+     */
+    @Override
+    public Valve getBasic() {
+        return this.basic;
+    }
+
 
     /**
      * <p>
@@ -168,9 +301,6 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     }
 
 
-    // ------------------------------------------------------- Pipeline Methods
-
-
     /**
      * <p>
      * Add a new Valve to the end of the pipeline associated with this Container. Prior to adding the Valve, the Valve's
@@ -251,11 +381,12 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
 //        }
 //
 //        return valveList.toArray(new Valve[0]);
-//
-//    }
-//
-//    public ObjectName[] getValveObjectNames() {
-//
+        throw new UnsupportedOperationException();
+
+    }
+
+    public ObjectName[] getValveObjectNames() {
+
 //        List<ObjectName> valveList = new ArrayList<>();
 //        Valve current = first;
 //        if (current == null) {
@@ -272,4 +403,67 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
         throw new UnsupportedOperationException();
 
     }
+
+    /**
+     * Remove the specified Valve from the pipeline associated with this Container, if it is found; otherwise, do
+     * nothing. If the Valve is found and removed, the Valve's <code>setContainer(null)</code> method will be called if
+     * it implements <code>Contained</code>.
+     *
+     * @param valve Valve to be removed
+     */
+    @Override
+    public void removeValve(Valve valve) {
+
+//        Valve current;
+//        if (first == valve) {
+//            first = first.getNext();
+//            current = null;
+//        } else {
+//            current = first;
+//        }
+//        while (current != null) {
+//            if (current.getNext() == valve) {
+//                current.setNext(valve.getNext());
+//                break;
+//            }
+//            current = current.getNext();
+//        }
+//
+//        if (first == basic) {
+//            first = null;
+//        }
+//
+//        if (valve instanceof Contained) {
+//            ((Contained) valve).setContainer(null);
+//        }
+//
+//        if (valve instanceof Lifecycle) {
+//            // Stop this valve if necessary
+//            if (getState().isAvailable()) {
+//                try {
+//                    ((Lifecycle) valve).stop();
+//                } catch (LifecycleException e) {
+//                    log.error(sm.getString("standardPipeline.valve.stop"), e);
+//                }
+//            }
+//            try {
+//                ((Lifecycle) valve).destroy();
+//            } catch (LifecycleException e) {
+//                log.error(sm.getString("standardPipeline.valve.destroy"), e);
+//            }
+//        }
+//
+//        container.fireContainerEvent(Container.REMOVE_VALVE_EVENT, valve);
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public Valve getFirst() {
+        if (first != null) {
+            return first;
+        }
+        return basic;
+    }
+
 }
