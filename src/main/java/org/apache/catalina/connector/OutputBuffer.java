@@ -438,6 +438,175 @@ public class OutputBuffer extends Writer {
     // ------------------------------------------------- Chars Handling Methods
 
 
+    /**
+     * Convert the chars to bytes, then send the data to the client.
+     *
+     * @param from Char buffer to be written to the response
+     *
+     * @throws IOException An underlying IOException occurred
+     */
+    public void realWriteChars(CharBuffer from) throws IOException {
+
+//        while (from.remaining() > 0) {
+//            conv.convert(from, bb);
+//            if (bb.remaining() == 0) {
+//                // Break out of the loop if more chars are needed to produce any output
+//                break;
+//            }
+//            if (from.remaining() > 0) {
+//                flushByteBuffer();
+//            } else if (conv.isUndeflow() && bb.limit() > bb.capacity() - 4) {
+//                // Handle an edge case. There are no more chars to write at the
+//                // moment but there is a leftover character in the converter
+//                // which must be part of a surrogate pair. The byte buffer does
+//                // not have enough space left to output the bytes for this pair
+//                // once it is complete )it will require 4 bytes) so flush now to
+//                // prevent the bytes for the leftover char and the rest of the
+//                // surrogate pair yet to be written from being lost.
+//                // See TestOutputBuffer#testUtf8SurrogateBody()
+//                flushByteBuffer();
+//            }
+//        }
+        throw new UnsupportedEncodingException();
+
+    }
+
+    @Override
+    public void write(int c) throws IOException {
+
+//        if (suspended) {
+//            return;
+//        }
+//
+//        if (isFull(cb)) {
+//            flushCharBuffer();
+//        }
+//
+//        transfer((char) c, cb);
+//        charsWritten++;
+        throw new UnsupportedEncodingException();
+
+    }
+
+
+    @Override
+    public void write(char c[]) throws IOException {
+
+//        if (suspended) {
+//            return;
+//        }
+//
+//        write(c, 0, c.length);
+        throw new UnsupportedEncodingException();
+
+    }
+
+
+    @Override
+    public void write(char c[], int off, int len) throws IOException {
+
+//        if (suspended) {
+//            return;
+//        }
+//
+//        append(c, off, len);
+//        charsWritten += len;
+        throw new UnsupportedEncodingException();
+    }
+
+
+    /**
+     * Append a string to the buffer
+     */
+    @Override
+    public void write(String s, int off, int len) throws IOException {
+
+//        if (suspended) {
+//            return;
+//        }
+//
+//        if (s == null) {
+//            throw new NullPointerException(sm.getString("outputBuffer.writeNull"));
+//        }
+//
+//        int sOff = off;
+//        int sEnd = off + len;
+//        while (sOff < sEnd) {
+//            int n = transfer(s, sOff, sEnd - sOff, cb);
+//            sOff += n;
+//            if (sOff < sEnd && isFull(cb)) {
+//                flushCharBuffer();
+//            }
+//        }
+//
+//        charsWritten += len;
+        throw new UnsupportedEncodingException();
+    }
+
+
+    @Override
+    public void write(String s) throws IOException {
+
+//        if (suspended) {
+//            return;
+//        }
+//
+//        if (s == null) {
+//            s = "null";
+//        }
+//        write(s, 0, s.length());
+        throw new UnsupportedEncodingException();
+    }
+
+
+    public void checkConverter() throws IOException {
+//        if (conv != null) {
+//            return;
+//        }
+//
+//        Charset charset = coyoteResponse.getCharset();
+//
+//        if (charset == null) {
+//            if (coyoteResponse.getCharacterEncoding() != null) {
+//                // setCharacterEncoding() was called with an invalid character set
+//                // Trigger an UnsupportedEncodingException
+//                charset = B2CConverter.getCharset(coyoteResponse.getCharacterEncoding());
+//            }
+//            charset = org.apache.coyote.Constants.DEFAULT_BODY_CHARSET;
+//        }
+//
+//        conv = encoders.get(charset);
+//
+//        if (conv == null) {
+//            conv = createConverter(charset);
+//            encoders.put(charset, conv);
+//        }
+        throw new UnsupportedEncodingException();
+    }
+
+
+    private static C2BConverter createConverter(final Charset charset) throws IOException {
+//        if (Globals.IS_SECURITY_ENABLED) {
+//            try {
+//                return AccessController.doPrivileged(new PrivilegedCreateConverter(charset));
+//            } catch (PrivilegedActionException ex) {
+//                Exception e = ex.getException();
+//                if (e instanceof IOException) {
+//                    throw (IOException) e;
+//                } else {
+//                    throw new IOException(ex);
+//                }
+//            }
+//        } else {
+//            return new C2BConverter(charset);
+//        }
+        throw new UnsupportedEncodingException();
+    }
+
+
+    // -------------------- BufferedOutputStream compatibility
+
+
 
     // todo 额外的
     private void clear(Buffer buffer) {
