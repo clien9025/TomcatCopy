@@ -172,6 +172,9 @@ public abstract class AbstractEndpoint<S,U> {
         return connectionLimitLatch;
     }
 
+    private int portOffset = 0;
+    public int getPortOffset() { return portOffset; }
+
     /**
      * Max keep alive requests
      */

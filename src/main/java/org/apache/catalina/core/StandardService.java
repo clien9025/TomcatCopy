@@ -106,7 +106,37 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     protected final ArrayList<Executor> executors = new ArrayList<>();
 
 
+
+    private ClassLoader parentClassLoader = null;
+
+
+
+    private long gracefulStopAwaitMillis = 0;
+
+    /*99999*/
+
+
     // ------------------------------------------------------------- Properties
+
+
+    /**
+     * Return the name of this Service.
+     */
+    @Override
+    public String getName() {
+        return name;
+    }
+
+
+
+    /**
+     * Return the <code>Server</code> with which we are associated (if any).
+     */
+    @Override
+    public Server getServer() {
+        return this.server;
+    }
+
 
     public long getGracefulStopAwaitMillis() {
 //        return gracefulStopAwaitMillis;
@@ -210,7 +240,335 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     }
 
 
+
+
+    /*99999999999999999*/
+
+
     // --------------------------------------------------------- Public Methods
+
+
+
+    public ObjectName[] getConnectorNames() {
+        synchronized (connectorsLock) {
+            ObjectName results[] = new ObjectName[connectors.length];
+            for (int i = 0; i < results.length; i++) {
+                results[i] = connectors[i].getObjectName();
+            }
+            return results;
+        }
+    }
+
+
+    /**
+     * Add a property change listener to this component.
+     *
+     * @param listener The listener to add
+     */
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        support.addPropertyChangeListener(listener);
+    }
+
+
+
+    /**
+     * Remove the specified Connector from the set associated from this Service. The removed Connector will also be
+     * disassociated from our Container.
+     *
+     * @param connector The Connector to be removed
+     */
+    @Override
+    public void removeConnector(Connector connector) {
+
+        synchronized (connectorsLock) {
+            int j = -1;
+            for (int i = 0; i < connectors.length; i++) {
+                if (connector == connectors[i]) {
+                    j = i;
+                    break;
+                }
+            }
+            if (j < 0) {
+                return;
+            }
+            if (connectors[j].getState().isAvailable()) {
+                try {
+                    connectors[j].stop();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("standardService.connector.stopFailed", connectors[j]), e);
+                }
+            }
+            connector.setService(null);
+            int k = 0;
+            Connector results[] = new Connector[connectors.length - 1];
+            for (int i = 0; i < connectors.length; i++) {
+                if (i != j) {
+                    results[k++] = connectors[i];
+                }
+            }
+            connectors = results;
+
+            // Report this property change to interested listeners
+            support.firePropertyChange("connector", connector, null);
+        }
+    }
+
+
+    /**
+     * Remove a property change listener from this component.
+     *
+     * @param listener The listener to remove
+     */
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        support.removePropertyChangeListener(listener);
+    }
+
+
+    /**
+     * Return a String representation of this component.
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("StandardService[");
+        sb.append(getName());
+        sb.append(']');
+        return sb.toString();
+    }
+
+
+    /**
+     * Adds a named executor to the service
+     *
+     * @param ex Executor
+     */
+    @Override
+    public void addExecutor(Executor ex) {
+        synchronized (executors) {
+            if (!executors.contains(ex)) {
+                executors.add(ex);
+                if (getState().isAvailable()) {
+                    try {
+                        ex.start();
+                    } catch (LifecycleException x) {
+                        log.error(sm.getString("standardService.executor.start"), x);
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Retrieves all executors
+     *
+     * @return Executor[]
+     */
+    @Override
+    public Executor[] findExecutors() {
+        synchronized (executors) {
+            return executors.toArray(new Executor[0]);
+        }
+    }
+
+
+    /**
+     * Retrieves executor by name, null if not found
+     *
+     * @param executorName String
+     *
+     * @return Executor
+     */
+    @Override
+    public Executor getExecutor(String executorName) {
+        synchronized (executors) {
+            for (Executor executor : executors) {
+                if (executorName.equals(executor.getName())) {
+                    return executor;
+                }
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Removes an executor from the service
+     *
+     * @param ex Executor
+     */
+    @Override
+    public void removeExecutor(Executor ex) {
+        synchronized (executors) {
+            if (executors.remove(ex) && getState().isAvailable()) {
+                try {
+                    ex.stop();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("standardService.executor.stop"), e);
+                }
+            }
+        }
+    }
+
+
+
+    /**
+     * Stop nested components ({@link Executor}s, {@link Connector}s and {@link Container}s) and implement the
+     * requirements of {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that needs to be reported
+     */
+    @Override
+    protected void stopInternal() throws LifecycleException {
+
+//        synchronized (connectorsLock) {
+//            // Initiate a graceful stop for each connector
+//            // This will only work if the bindOnInit==false which is not the
+//            // default.
+//            for (Connector connector : connectors) {
+//                connector.getProtocolHandler().closeServerSocketGraceful();
+//            }
+//
+//            // Wait for the graceful shutdown to complete
+//            long waitMillis = gracefulStopAwaitMillis;
+//            if (waitMillis > 0) {
+//                for (Connector connector : connectors) {
+//                    waitMillis = connector.getProtocolHandler().awaitConnectionsClose(waitMillis);
+//                }
+//            }
+//
+//            // Pause the connectors
+//            for (Connector connector : connectors) {
+//                connector.pause();
+//            }
+//        }
+//
+//        if (log.isInfoEnabled()) {
+//            log.info(sm.getString("standardService.stop.name", this.name));
+//        }
+//        setState(LifecycleState.STOPPING);
+//
+//        // Stop our defined Container once the Connectors are all paused
+//        if (engine != null) {
+//            synchronized (engine) {
+//                engine.stop();
+//            }
+//        }
+//
+//        // Now stop the connectors
+//        synchronized (connectorsLock) {
+//            for (Connector connector : connectors) {
+//                if (!LifecycleState.STARTED.equals(connector.getState())) {
+//                    // Connectors only need stopping if they are currently
+//                    // started. They may have failed to start or may have been
+//                    // stopped (e.g. via a JMX call)
+//                    continue;
+//                }
+//                connector.stop();
+//            }
+//        }
+//
+//        // If the Server failed to start, the mapperListener won't have been
+//        // started
+//        if (mapperListener.getState() != LifecycleState.INITIALIZED) {
+//            mapperListener.stop();
+//        }
+//
+//        synchronized (executors) {
+//            for (Executor executor : executors) {
+//                executor.stop();
+//            }
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Invoke a pre-startup initialization. This is used to allow connectors to bind to restricted ports under Unix
+     * operating environments.
+     */
+    @Override
+    protected void initInternal() throws LifecycleException {
+
+        super.initInternal();
+
+        if (engine != null) {
+            engine.init();
+        }
+
+        // Initialize any Executors
+        for (Executor executor : findExecutors()) {
+            if (executor instanceof JmxEnabled) {
+                ((JmxEnabled) executor).setDomain(getDomain());
+            }
+            executor.init();
+        }
+
+        // Initialize mapper listener
+        mapperListener.init();
+
+        // Initialize our defined Connectors
+        synchronized (connectorsLock) {
+            for (Connector connector : connectors) {
+                connector.init();
+            }
+        }
+    }
+
+
+    @Override
+    protected void destroyInternal() throws LifecycleException {
+//        mapperListener.destroy();
+//
+//        // Destroy our defined Connectors
+//        synchronized (connectorsLock) {
+//            for (Connector connector : connectors) {
+//                connector.destroy();
+//            }
+//        }
+//
+//        // Destroy any Executors
+//        for (Executor executor : findExecutors()) {
+//            executor.destroy();
+//        }
+//
+//        if (engine != null) {
+//            engine.destroy();
+//        }
+//
+//        super.destroyInternal();
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Return the parent class loader for this component.
+     */
+    @Override
+    public ClassLoader getParentClassLoader() {
+        if (parentClassLoader != null) {
+            return parentClassLoader;
+        }
+        if (server != null) {
+            return server.getParentClassLoader();
+        }
+        return ClassLoader.getSystemClassLoader();
+    }
+
+
+    /**
+     * Set the parent class loader for this server.
+     *
+     * @param parent The new parent class loader
+     */
+    @Override
+    public void setParentClassLoader(ClassLoader parent) {
+        ClassLoader oldParentClassLoader = this.parentClassLoader;
+        this.parentClassLoader = parent;
+        support.firePropertyChange("parentClassLoader", oldParentClassLoader, this.parentClassLoader);
+    }
+
+    /*99999999999999*/
+
 
     /**
      * Add a new Connector to the set of defined Connectors, and associate it with this Service's Container.

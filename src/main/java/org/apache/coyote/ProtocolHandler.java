@@ -38,7 +38,9 @@ public interface ProtocolHandler {
      *
      * @return the adapter
      */
-    Adapter getAdapter();
+    default Adapter getAdapter() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -46,7 +48,9 @@ public interface ProtocolHandler {
      *
      * @param adapter The adapter to associate
      */
-    void setAdapter(Adapter adapter);
+    default void setAdapter(Adapter adapter) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -54,7 +58,9 @@ public interface ProtocolHandler {
      *
      * @return The executor used to process requests
      */
-    Executor getExecutor();
+    default Executor getExecutor() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -62,7 +68,9 @@ public interface ProtocolHandler {
      *
      * @param executor the executor
      */
-    void setExecutor(Executor executor);
+    default void setExecutor(Executor executor) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -70,7 +78,9 @@ public interface ProtocolHandler {
      *
      * @return the executor
      */
-    ScheduledExecutorService getUtilityExecutor();
+    default ScheduledExecutorService getUtilityExecutor() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -78,7 +88,9 @@ public interface ProtocolHandler {
      *
      * @param utilityExecutor the executor
      */
-    void setUtilityExecutor(ScheduledExecutorService utilityExecutor);
+    default void setUtilityExecutor(ScheduledExecutorService utilityExecutor) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -86,7 +98,9 @@ public interface ProtocolHandler {
      *
      * @throws Exception If the protocol handler fails to initialise
      */
-    void init() throws Exception;
+    default void init() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -94,7 +108,9 @@ public interface ProtocolHandler {
      *
      * @throws Exception If the protocol handler fails to start
      */
-    void start() throws Exception;
+    default void start() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -102,7 +118,9 @@ public interface ProtocolHandler {
      *
      * @throws Exception If the protocol handler fails to pause
      */
-    void pause() throws Exception;
+    default void pause() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -110,7 +128,9 @@ public interface ProtocolHandler {
      *
      * @throws Exception If the protocol handler fails to resume
      */
-    void resume() throws Exception;
+    default void resume() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -118,7 +138,9 @@ public interface ProtocolHandler {
      *
      * @throws Exception If the protocol handler fails to stop
      */
-    void stop() throws Exception;
+    default void stop() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -126,14 +148,18 @@ public interface ProtocolHandler {
      *
      * @throws Exception If the protocol handler fails to destroy
      */
-    void destroy() throws Exception;
+    default void destroy() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Close the server socket (to prevent further connections) if the server socket was bound on {@link #start()}
      * (rather than on {@link #init()} but do not perform any further shutdown.
      */
-    void closeServerSocketGraceful();
+    default void closeServerSocketGraceful() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -143,7 +169,9 @@ public interface ProtocolHandler {
      * @param waitMillis The maximum time to wait in milliseconds for the client connections to close.
      * @return The wait time, if any remaining when the method returned
      */
-    long awaitConnectionsClose(long waitMillis);
+    default long awaitConnectionsClose(long waitMillis) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -151,7 +179,9 @@ public interface ProtocolHandler {
      *
      * @return <code>true</code> if this Protocol Handler supports sendfile, otherwise <code>false</code>
      */
-    boolean isSendfileSupported();
+    default boolean isSendfileSupported() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -159,7 +189,9 @@ public interface ProtocolHandler {
      *
      * @param sslHostConfig the configuration
      */
-    void addSslHostConfig(SSLHostConfig sslHostConfig);
+    default void addSslHostConfig(SSLHostConfig sslHostConfig) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -171,7 +203,9 @@ public interface ProtocolHandler {
      * @throws IllegalArgumentException If the host name is not valid or if a configuration has already been provided
      *                                  for that host and replacement is not allowed
      */
-    void addSslHostConfig(SSLHostConfig sslHostConfig, boolean replace);
+    default void addSslHostConfig(SSLHostConfig sslHostConfig, boolean replace) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -179,7 +213,9 @@ public interface ProtocolHandler {
      *
      * @return the configurations
      */
-    SSLHostConfig[] findSslHostConfigs();
+    default SSLHostConfig[] findSslHostConfigs() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -187,7 +223,9 @@ public interface ProtocolHandler {
      *
      * @param upgradeProtocol the protocol
      */
-    void addUpgradeProtocol(UpgradeProtocol upgradeProtocol);
+    default void addUpgradeProtocol(UpgradeProtocol upgradeProtocol) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -195,7 +233,9 @@ public interface ProtocolHandler {
      *
      * @return the protocols
      */
-    UpgradeProtocol[] findUpgradeProtocols();
+    default UpgradeProtocol[] findUpgradeProtocols() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**

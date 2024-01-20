@@ -69,4 +69,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
     public void setPort(int port) {
         endpoint.setPort(port);
     }
+
+
+    public int getPortOffset() {
+        return endpoint.getPortOffset();
+    }
 }
