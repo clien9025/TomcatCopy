@@ -32,18 +32,19 @@ public interface Adapter {
      *
      * @param req The request object
      * @param res The response object
-     *
-     * @exception Exception if an error happens during handling of the request. Common errors are:
-     *                          <ul>
-     *                          <li>IOException if an input/output error occurs and we are processing an included
-     *                          servlet (otherwise it is swallowed and handled by the top level error handler mechanism)
-     *                          <li>ServletException if a servlet throws an exception and we are processing an included
-     *                          servlet (otherwise it is swallowed and handled by the top level error handler mechanism)
-     *                          </ul>
-     *                          Tomcat should be able to handle and log any other exception ( including runtime
-     *                          exceptions )
+     * @throws Exception if an error happens during handling of the request. Common errors are:
+     *                   <ul>
+     *                   <li>IOException if an input/output error occurs and we are processing an included
+     *                   servlet (otherwise it is swallowed and handled by the top level error handler mechanism)
+     *                   <li>ServletException if a servlet throws an exception and we are processing an included
+     *                   servlet (otherwise it is swallowed and handled by the top level error handler mechanism)
+     *                   </ul>
+     *                   Tomcat should be able to handle and log any other exception ( including runtime
+     *                   exceptions )
      */
-    void service(Request req, Response res) throws Exception;
+    default void service(Request req, Response res) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Prepare the given request/response for processing. This method requires that the request object has been
@@ -51,17 +52,21 @@ public interface Adapter {
      *
      * @param req The request object
      * @param res The response object
-     *
      * @return <code>true</code> if processing can continue, otherwise <code>false</code> in which case an appropriate
-     *             error will have been set on the response
-     *
+     * error will have been set on the response
      * @throws Exception If the processing fails unexpectedly
      */
-    boolean prepare(Request req, Response res) throws Exception;
+    default boolean prepare(Request req, Response res) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
-    boolean asyncDispatch(Request req, Response res, SocketEvent status) throws Exception;
+    default boolean asyncDispatch(Request req, Response res, SocketEvent status) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
-    void log(Request req, Response res, long time);
+    default void log(Request req, Response res, long time) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Assert that request and response have been recycled. If they have not then log a warning and force a recycle.
@@ -71,12 +76,16 @@ public interface Adapter {
      * @param req Request
      * @param res Response
      */
-    void checkRecycled(Request req, Response res);
+    default void checkRecycled(Request req, Response res) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Provide the name of the domain to use to register MBeans for components associated with the connector.
      *
      * @return The MBean domain name
      */
-    String getDomain();
+    default String getDomain() {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -86,6 +86,8 @@ import org.apache.catalina.Wrapper;
 //import org.apache.catalina.util.ParameterMap;
 //import org.apache.catalina.util.RequestUtil;
 //import org.apache.catalina.util.TLSUtil;
+import org.apache.catalina.core.AsyncContextImpl;
+import org.apache.catalina.util.ParameterMap;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.UpgradeToken;
@@ -142,6 +144,276 @@ public class Request/* implements HttpServletRequest*/ {
     public Request(Connector connector) {
         this.connector = connector;
     }
+
+
+    // ------------------------------------------------------------- Properties
+
+
+    /**
+     * Coyote request.
+     */
+    protected org.apache.coyote.Request coyoteRequest;
+
+    /**
+     * Set the Coyote request.
+     *
+     * @param coyoteRequest The Coyote request
+     */
+    public void setCoyoteRequest(org.apache.coyote.Request coyoteRequest) {
+        this.coyoteRequest = coyoteRequest;
+        inputBuffer.setRequest(coyoteRequest);
+    }
+
+    /**
+     * Get the Coyote request.
+     *
+     * @return the Coyote request object
+     */
+    public org.apache.coyote.Request getCoyoteRequest() {
+        return this.coyoteRequest;
+    }
+
+
+    // ----------------------------------------------------- Variables
+
+    /**
+     * The string manager for this package.
+     */
+    protected static final StringManager sm = StringManager.getManager(Request.class);
+
+
+    /**
+     * The set of cookies associated with this Request.
+     */
+    protected Cookie[] cookies = null;
+
+
+    /**
+     * The default Locale if none are specified.
+     */
+    protected static final Locale defaultLocale = Locale.getDefault();
+
+
+    /**
+     * The attributes associated with this Request, keyed by attribute name.
+     */
+    private final Map<String,Object> attributes = new ConcurrentHashMap<>();
+
+
+    /**
+     * Flag that indicates if SSL attributes have been parsed to improve performance for applications (usually
+     * frameworks) that make multiple calls to {@link Request#getAttributeNames()}.
+     */
+    protected boolean sslAttributesParsed = false;
+
+
+    /**
+     * The preferred Locales associated with this Request.
+     */
+    protected final ArrayList<Locale> locales = new ArrayList<>();
+
+
+    /**
+     * Internal notes associated with this request by Catalina components and event listeners.
+     */
+    private final transient HashMap<String,Object> notes = new HashMap<>();
+
+
+    /**
+     * Authentication type.
+     */
+    protected String authType = null;
+
+
+    /**
+     * The current dispatcher type.
+     */
+    protected DispatcherType internalDispatcherType = null;
+
+
+    /**
+     * The associated input buffer.
+     */
+    protected final InputBuffer inputBuffer = new InputBuffer();
+
+
+    /**
+     * ServletInputStream.
+     */
+    protected CoyoteInputStream inputStream = new CoyoteInputStream(inputBuffer);
+
+
+    /**
+     * Reader.
+     */
+    protected CoyoteReader reader = new CoyoteReader(inputBuffer);
+
+
+    /**
+     * Using stream flag.
+     */
+    protected boolean usingInputStream = false;
+
+
+    /**
+     * Using reader flag.
+     */
+    protected boolean usingReader = false;
+
+
+    /**
+     * User principal.
+     */
+    protected Principal userPrincipal = null;
+
+
+    /**
+     * Request parameters parsed flag.
+     */
+    protected boolean parametersParsed = false;
+
+
+    /**
+     * Cookie headers parsed flag. Indicates that the cookie headers have been parsed into ServerCookies.
+     */
+    protected boolean cookiesParsed = false;
+
+
+    /**
+     * Cookie parsed flag. Indicates that the ServerCookies have been converted into user facing Cookie objects.
+     */
+    protected boolean cookiesConverted = false;
+
+
+    /**
+     * Secure flag.
+     */
+    protected boolean secure = false;
+
+
+    /**
+     * The Subject associated with the current AccessControlContext
+     */
+    protected transient Subject subject = null;
+
+
+    /**
+     * Post data buffer.
+     */
+    protected static final int CACHED_POST_LEN = 8192;
+    protected byte[] postData = null;
+
+
+    /**
+     * Hash map used in the getParametersMap method.
+     */
+    protected ParameterMap<String,String[]> parameterMap = new ParameterMap<>();
+
+
+    /**
+     * The parts, if any, uploaded with this request.
+     */
+    protected Collection<Part> parts = null;
+
+
+    /**
+     * The exception thrown, if any when parsing the parts.
+     */
+    protected Exception partsParseException = null;
+
+
+    /**
+     * The currently active session for this request.
+     */
+    protected Session session = null;
+
+
+    /**
+     * The current request dispatcher path.
+     */
+    protected Object requestDispatcherPath = null;
+
+
+    /**
+     * Was the requested session ID received in a cookie?
+     */
+    protected boolean requestedSessionCookie = false;
+
+
+    /**
+     * The requested session ID (if any) for this request.
+     */
+    protected String requestedSessionId = null;
+
+
+    /**
+     * Was the requested session ID received in a URL?
+     */
+    protected boolean requestedSessionURL = false;
+
+
+    /**
+     * Was the requested session ID obtained from the SSL session?
+     */
+    protected boolean requestedSessionSSL = false;
+
+
+    /**
+     * Parse locales.
+     */
+    protected boolean localesParsed = false;
+
+
+    /**
+     * Local port
+     */
+    protected int localPort = -1;
+
+    /**
+     * Remote address.
+     */
+    protected String remoteAddr = null;
+
+
+    /**
+     * Connection peer address.
+     */
+    protected String peerAddr = null;
+
+
+    /**
+     * Remote host.
+     */
+    protected String remoteHost = null;
+
+
+    /**
+     * Remote port
+     */
+    protected int remotePort = -1;
+
+    /**
+     * Local address
+     */
+    protected String localAddr = null;
+
+
+    /**
+     * Local address
+     */
+    protected String localName = null;
+
+    /**
+     * AsyncContext
+     */
+    private volatile AsyncContextImpl asyncContext = null;
+
+    protected Boolean asyncSupported = null;
+
+    private HttpServletRequest applicationRequest = null;
+
+
+    // --------------------------------------------------------- Public Methods
 
 
 

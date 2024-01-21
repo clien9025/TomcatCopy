@@ -14,37 +14,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.ajp;
+package org.apache.tomcat.util.net.openssl.ciphers;
 
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
-
-/**
- * This the NIO based protocol handler implementation for AJP.
- */
-public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
-
-    private static final Log log = LogFactory.getLog(AjpNioProtocol.class);
-
-    @Override
-    protected Log getLog() {
-        return log;
-    }
-
-
-    // ------------------------------------------------------------ Constructor
-
-    public AjpNioProtocol() {
-        super(new NioEndpoint());
-    }
-
-
-    // ----------------------------------------------------- JMX related methods
-
-    @Override
-    protected String getNamePrefix() {
-        return "ajp-nio";
-    }
+public enum Authentication {
+    RSA    /* RSA auth */,
+    DSS    /* DSS auth */,
+    aNULL  /* no auth (i.e. use ADH or AECDH) */,
+    DH     /* Fixed DH auth (kDHd or kDHr) */,
+    ECDH   /* Fixed ECDH auth (kECDHe or kECDHr) */,
+    KRB5   /* KRB5 auth */,
+    ECDSA  /* ECDSA auth*/,
+    PSK    /* PSK auth */,
+    GOST94 /* GOST R 34.10-94 signature auth */,
+    GOST01 /* GOST R 34.10-2001 */,
+    FZA    /* Fortezza */,
+    SRP    /* Secure Remote Password */,
+    ANY    /* TLS 1.3 */
 }

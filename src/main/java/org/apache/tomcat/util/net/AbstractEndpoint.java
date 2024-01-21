@@ -1,7 +1,13 @@
 package org.apache.tomcat.util.net;
 
+import org.apache.tomcat.util.collections.SynchronizedStack;
 import org.apache.tomcat.util.threads.LimitLatch;
 
+import javax.management.ObjectName;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -10,11 +16,10 @@ import java.util.concurrent.ThreadPoolExecutor;
  *            May be the same as U.
  * @param <U> The type of the underlying socket used by this endpoint. May be
  *            the same as S.
- *
  * @author Mladen Turk
  * @author Remy Maucherat
  */
-public abstract class AbstractEndpoint<S,U> {
+public abstract class AbstractEndpoint<S, U> {
 
     /**
      * External Executor based thread pool.
@@ -46,13 +51,69 @@ public abstract class AbstractEndpoint<S,U> {
     private int minSpareThreads = 10;
 
 
+    // ----------------------------------------------------------------- Fields
+
+    /**
+     * Running state of the endpoint.
+     */
+    protected volatile boolean running = false;
+
+
+    /**
+     * Will be set to true whenever the endpoint is paused.
+     */
+    protected volatile boolean paused = false;
+
+
+    /**
+     * Socket properties
+     */
+//    protected final SocketProperties socketProperties = new SocketProperties();
+//    public SocketProperties getSocketProperties() {
+//        return socketProperties;
+//    }
+
+    /**
+     * Thread used to accept new connections and pass them to worker threads.
+     */
+//    protected Acceptor<U> acceptor;
+
+    /**
+     * Cache for SocketProcessor objects
+     */
+//    protected SynchronizedStack<SocketProcessorBase<S>> processorCache;
+
+    private ObjectName oname = null;
+
+    /**
+     * Map holding all current connections keyed with the sockets.
+     */
+    protected Map<U, SocketWrapperBase<S>> connections = new ConcurrentHashMap<>();
+
+    /**
+     * Get a set with the current open connections.
+     *
+     * @return A set with the open socket wrappers
+     */
+    public Set<SocketWrapperBase<S>> getConnections() {
+        return new HashSet<>(connections.values());
+    }
+
+    // ----------------------------------------------------------------- Properties
+
 
     /**
      * Server socket port.
      */
     private int port = -1;
-    public int getPort() { return port; }
-    public void setPort(int port ) { this.port=port; }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 
 
     /**
@@ -62,12 +123,16 @@ public abstract class AbstractEndpoint<S,U> {
      * 允许服务器开发人员指定应用于服务器套接字的acceptCount（积压）。默认情况下，该值为 100。
      */
     private int acceptCount = 100;
-    public void setAcceptCount(int acceptCount) { if (acceptCount > 0) {
-        this.acceptCount = acceptCount;
-    } }
+
+    public void setAcceptCount(int acceptCount) {
+        if (acceptCount > 0) {
+            this.acceptCount = acceptCount;
+        }
+    }
 
     /**
      * 设置线程池的最大线程数
+     *
      * @param maxThreads
      */
     public void setMaxThreads(int maxThreads) {
@@ -86,6 +151,7 @@ public abstract class AbstractEndpoint<S,U> {
 
     /**
      * 目的是设置线程池的最小空闲线程数，并适当地调整内部的ThreadPoolExecutor的核心池大小。
+     *
      * @param minSpareThreads
      */
     public void setMinSpareThreads(int minSpareThreads) {
@@ -102,26 +168,27 @@ public abstract class AbstractEndpoint<S,U> {
         }
     }
 
-    private int maxConnections = 8*1024;
+    private int maxConnections = 8 * 1024;
     /**
      * counter for nr of connections handled by an endpoint
      * connectionLimitLatch 用于控制和限制服务器端点能够处理的最大并发连接数。
      * 通过这种方式，它有助于避免服务器过载并维持稳定高效的运行状态。
-     *
+     * <p>
      * LimitLatch 维护一个计数器来跟踪当前活跃的连接数。它被初始化为最大连接数（maxConnections）。
-     *
+     * <p>
      * 线程获取许可：当一个新的连接请求到来时，线程会尝试从 LimitLatch 获取许可。如果当前活跃的连接数未达到maxConnections限制，则
      * LimitLatch 会允许这个线程继续，并将计数器减一。
-     *
+     * <p>
      * 等待和释放：如果当前的连接数已经达到最大限制，则新的请求线程将等待，直到其他线程释放许可（即连接关闭），
      * LimitLatch 的计数器随之增加，新的线程可以获取许可继续执行。
      */
     private volatile LimitLatch connectionLimitLatch = null;
 
     /**
-     *      定义了一个 setMaxConnections 方法来更新最大连接数，并相应地更新或初始化一个 LimitLatch 对象用于实际执行这一限制。
-     *      这段代码的作用是控制端点能处理的最大并发连接数。（用来设置和管理服务器端点的最大连接数的）
-     *      当最大连接数被更新时，它相应地调整或初始化一个LimitLatch来实施这个限制。这有助于避免服务器过载，保持稳定和高效的运行。
+     * 定义了一个 setMaxConnections 方法来更新最大连接数，并相应地更新或初始化一个 LimitLatch 对象用于实际执行这一限制。
+     * 这段代码的作用是控制端点能处理的最大并发连接数。（用来设置和管理服务器端点的最大连接数的）
+     * 当最大连接数被更新时，它相应地调整或初始化一个LimitLatch来实施这个限制。这有助于避免服务器过载，保持稳定和高效的运行。
+     *
      * @param maxCon
      */
     public void setMaxConnections(int maxCon) {
@@ -136,7 +203,7 @@ public abstract class AbstractEndpoint<S,U> {
                 releaseConnectionLatch();
             } else {
                 /* 如果maxCon不等于-1，那么设置latch的限制为maxCon
-                *  如果maxCon不等于-1，代码将这个值 maxCon 视为新的有效的最大连接数，并更新LimitLatch以强制执行这个新限制。*/
+                 *  如果maxCon不等于-1，代码将这个值 maxCon 视为新的有效的最大连接数，并更新LimitLatch以强制执行这个新限制。*/
                 latch.setLimit(maxCon);
             }
         } else if (maxCon > 0) {
@@ -149,36 +216,43 @@ public abstract class AbstractEndpoint<S,U> {
             initializeConnectionLatch();
         }
     }
-    public int getMaxConnections() { return this.maxConnections; }
+
+    public int getMaxConnections() {
+        return this.maxConnections;
+    }
 
     /**
      * 释放（或关闭）计数器。
      */
     private void releaseConnectionLatch() {
         LimitLatch latch = connectionLimitLatch;
-        if (latch!=null) {
+        if (latch != null) {
             latch.releaseAll();
         }
         connectionLimitLatch = null;
     }
 
     protected LimitLatch initializeConnectionLatch() {
-        if (maxConnections==-1) {
+        if (maxConnections == -1) {
             return null;
         }
-        if (connectionLimitLatch==null) {
+        if (connectionLimitLatch == null) {
             connectionLimitLatch = new LimitLatch(getMaxConnections());
         }
         return connectionLimitLatch;
     }
 
     private int portOffset = 0;
-    public int getPortOffset() { return portOffset; }
+
+    public int getPortOffset() {
+        return portOffset;
+    }
 
     /**
      * Max keep alive requests
      */
-    private int maxKeepAliveRequests=100; // as in Apache HTTPD server
+    private int maxKeepAliveRequests = 100; // as in Apache HTTPD server
+
     public void setMaxKeepAliveRequests(int maxKeepAliveRequests) {
         this.maxKeepAliveRequests = maxKeepAliveRequests;
     }
@@ -200,7 +274,6 @@ public abstract class AbstractEndpoint<S,U> {
          *
          * @param socket The socket to process
          * @param status The current socket status
-         *
          * @return The state of the socket after processing
          */
         SocketState process(SocketWrapperBase<S> socket,
@@ -236,5 +309,33 @@ public abstract class AbstractEndpoint<S,U> {
          * Recycle resources associated with the handler.
          */
         void recycle();
+    }
+
+
+    /**
+     * SSL engine.
+     */
+    private boolean SSLEnabled = false;
+
+    public boolean isSSLEnabled() {
+        return SSLEnabled;
+    }
+
+
+    protected final SocketProperties socketProperties = new SocketProperties();
+
+    /**
+     * Socket timeout.
+     *
+     * @return The current socket timeout for sockets created by this endpoint
+     */
+    public int getConnectionTimeout() {
+//        return socketProperties.getSoTimeout();
+        throw new UnsupportedOperationException();
+    }
+
+    public void setConnectionTimeout(int soTimeout) {
+//        socketProperties.setSoTimeout(soTimeout);
+        throw new UnsupportedOperationException();
     }
 }

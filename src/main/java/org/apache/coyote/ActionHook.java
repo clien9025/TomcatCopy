@@ -14,37 +14,26 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.ajp;
+package org.apache.coyote;
 
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
 
 /**
- * This the NIO based protocol handler implementation for AJP.
+ * Action hook. Actions represent the callback mechanism used by coyote servlet containers to request operations on the
+ * coyote connectors. Some standard actions are defined in ActionCode, however custom actions are permitted. The param
+ * object can be used to pass and return information related with the action. This interface is typically implemented by
+ * ProtocolHandlers, and the param is usually a Request or Response object.
+ *
+ * @author Remy Maucherat
  */
-public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
+public interface ActionHook {
 
-    private static final Log log = LogFactory.getLog(AjpNioProtocol.class);
-
-    @Override
-    protected Log getLog() {
-        return log;
-    }
-
-
-    // ------------------------------------------------------------ Constructor
-
-    public AjpNioProtocol() {
-        super(new NioEndpoint());
-    }
-
-
-    // ----------------------------------------------------- JMX related methods
-
-    @Override
-    protected String getNamePrefix() {
-        return "ajp-nio";
+    /**
+     * Send an action to the connector.
+     *
+     * @param actionCode Type of the action
+     * @param param      Action parameter
+     */
+    default void action(ActionCode actionCode, Object param) {
+        throw new UnsupportedOperationException();
     }
 }

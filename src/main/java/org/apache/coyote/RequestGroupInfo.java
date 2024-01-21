@@ -14,37 +14,22 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.ajp;
+package org.apache.coyote;
 
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.tomcat.util.modeler.BaseModelMBean;
 
 /**
- * This the NIO based protocol handler implementation for AJP.
+ * Only as a JMX artifact, to aggregate the data collected from each RequestProcessor thread.
  */
-public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
-
-    private static final Log log = LogFactory.getLog(AjpNioProtocol.class);
-
-    @Override
-    protected Log getLog() {
-        return log;
-    }
-
-
-    // ------------------------------------------------------------ Constructor
-
-    public AjpNioProtocol() {
-        super(new NioEndpoint());
-    }
-
-
-    // ----------------------------------------------------- JMX related methods
-
-    @Override
-    protected String getNamePrefix() {
-        return "ajp-nio";
-    }
+public class RequestGroupInfo extends BaseModelMBean {
+    private final List<RequestInfo> processors = new ArrayList<>();
+    private long deadMaxTime = 0;
+    private long deadProcessingTime = 0;
+    private int deadRequestCount = 0;
+    private int deadErrorCount = 0;
+    private long deadBytesReceived = 0;
+    private long deadBytesSent = 0;
 }

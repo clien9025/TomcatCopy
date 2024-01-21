@@ -27,7 +27,6 @@ import java.util.function.Function;
  */
 public final class StringUtils {
 
-
     private static final String EMPTY_STRING = "";
 
     private StringUtils() {
@@ -35,15 +34,62 @@ public final class StringUtils {
     }
 
 
+    public static String join(String[] array) {
+        if (array == null) {
+            return EMPTY_STRING;
+        }
+        return join(Arrays.asList(array));
+    }
 
-    public static <T> void join(T[] array, char separator, Function<T,String> function, StringBuilder sb) {
+
+    public static void join(String[] array, char separator, StringBuilder sb) {
+        if (array == null) {
+            return;
+        }
+        join(Arrays.asList(array), separator, sb);
+    }
+
+
+    public static String join(Collection<String> collection) {
+        return join(collection, ',');
+    }
+
+
+    public static String join(Collection<String> collection, char separator) {
+        // Shortcut
+        if (collection == null || collection.isEmpty()) {
+            return EMPTY_STRING;
+        }
+
+        StringBuilder result = new StringBuilder();
+        join(collection, separator, result);
+        return result.toString();
+    }
+
+
+    public static void join(Iterable<String> iterable, char separator, StringBuilder sb) {
+        join(iterable, separator, (x) -> x, sb);
+    }
+
+
+    public static <T> void join(T[] array, char separator, Function<T, String> function, StringBuilder sb) {
         if (array == null) {
             return;
         }
         join(Arrays.asList(array), separator, function, sb);
     }
 
-    public static <T> void join(Iterable<T> iterable, char separator, Function<T,String> function, StringBuilder sb) {
+    /**
+     * 方法的目的是遍历 iterable 中的每个元素，使用 function 将每个元素转换为字符串，
+     * 然后将这些字符串用 separator 字符分隔，并将最终结果追加到 StringBuilder 上。
+     *
+     * @param iterable
+     * @param separator
+     * @param function
+     * @param sb
+     * @param <T>
+     */
+    public static <T> void join(Iterable<T> iterable, char separator, Function<T, String> function, StringBuilder sb) {
         if (iterable == null) {
             return;
         }
@@ -52,6 +98,7 @@ public final class StringUtils {
             if (first) {
                 first = false;
             } else {
+                // 在追加元素之前，方法会检查是否是迭代的第一个元素，以决定是否追加分隔符。第一个元素前不追加分隔符，之后的每个元素前都追加。
                 sb.append(separator);
             }
             sb.append(function.apply(value));

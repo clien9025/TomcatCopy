@@ -34,6 +34,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.CharsetUtil;
 import org.apache.tomcat.util.buf.EncodedSolidusHandling;
 import org.apache.tomcat.util.net.SSLHostConfig;
+import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
 import org.apache.tomcat.util.res.StringManager;
 
 import javax.management.ObjectName;
@@ -288,7 +289,6 @@ public class Connector extends LifecycleMBeanBase {
      * Return a property from the protocol handler.
      *
      * @param name the property name
-     *
      * @return the property value
      */
     public Object getProperty(String name) {
@@ -304,7 +304,6 @@ public class Connector extends LifecycleMBeanBase {
      *
      * @param name  the property name
      * @param value the property value
-     *
      * @return <code>true</code> if the property was successfully set
      */
     public boolean setProperty(String name, String value) {
@@ -389,7 +388,7 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * @return <code>true</code> if the object facades are discarded, either when the discardFacades value is
-     *             <code>true</code> or when the security manager is enabled.
+     * <code>true</code> or when the security manager is enabled.
      */
     public boolean getDiscardFacades() {
         return discardFacades || Globals.IS_SECURITY_ENABLED;
@@ -454,7 +453,7 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * @return the maximum number of parameters (GET plus POST) that will be automatically parsed by the container. A
-     *             value of less than 0 means no limit.
+     * value of less than 0 means no limit.
      */
     public int getMaxParameterCount() {
         return maxParameterCount;
@@ -489,8 +488,8 @@ public class Connector extends LifecycleMBeanBase {
      * Set the maximum size of a POST which will be automatically parsed by the container.
      * 设置 -----> 容器将自动解析的 POST 的最大大小(如下面一行注释)
      * 作用：
-     *      允许用户设置服务器容器（如Tomcat）将自动解析的POST请求体的最大大小。这是一个配置设置，
-     *      可以帮助控制接收大量数据的能力，防止由于处理过大的POST请求而导致的性能问题或安全风险。
+     * 允许用户设置服务器容器（如Tomcat）将自动解析的POST请求体的最大大小。这是一个配置设置，
+     * 可以帮助控制接收大量数据的能力，防止由于处理过大的POST请求而导致的性能问题或安全风险。
      *
      * @param maxPostSize The new maximum size in bytes of a POST which will be automatically parsed by the container
      *                    容器将自动解析的POST请求的新最大大小（以字节为单位）
@@ -498,7 +497,6 @@ public class Connector extends LifecycleMBeanBase {
     public void setMaxPostSize(int maxPostSize) {
         this.maxPostSize = maxPostSize;
     }
-
 
 
     /**
@@ -513,7 +511,7 @@ public class Connector extends LifecycleMBeanBase {
      * Set the maximum size of a POST which will be saved by the container during authentication.
      *
      * @param maxSavePostSize The new maximum size in bytes of a POST which will be saved by the container during
-     *                            authentication.
+     *                        authentication.
      */
     public void setMaxSavePostSize(int maxSavePostSize) {
         this.maxSavePostSize = maxSavePostSize;
@@ -559,22 +557,38 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * @return the port number on which this connector is configured to listen for requests. The special value of 0
-     *             means select a random free port when the socket is bound.
+     * means select a random free port when the socket is bound.
+     * <p>
+     * 翻译：
+     * 方法的注释指出，它返回连接器配置的端口号。如果返回值为0，表示当套接字绑定时，将选择一个随机的空闲端口。
+     * <p>
+     * 用于获取当前连接器（Connector）配置的端口号。
+     * <p>
+     * getPort 方法用于获取网络连接器配置的端口号。该方法首先尝试不使用反射的快速途径，如果失败，再尝试使用反射。如果这两种方法都失败，
+     * 可能是由于配置了无效的协议，此时方法返回 -1。
+     * 这种实现方式提供了灵活性，可以处理基于 AbstractProtocol 和非 AbstractProtocol 的自定义协议处理器。
      */
     public int getPort() {
-//        // Try shortcut that should work for nearly all uses first as it does
-//        // not use reflection and is therefore faster.
-//        if (protocolHandler instanceof AbstractProtocol<?>) {
-//            return ((AbstractProtocol<?>) protocolHandler).getPort();
-//        }
-//        // Fall back for custom protocol handlers not based on AbstractProtocol
-//        Object port = getProperty("port");
-//        if (port instanceof Integer) {
-//            return ((Integer) port).intValue();
-//        }
-//        // Usually means an invalid protocol has been configured
-//        return -1;
-        throw new UnsupportedOperationException();
+        /* 1. 快速检查常用协议处理器 */
+        // 首先，方法尝试一个快速途径来获取端口号，这适用于大多数情况，因为它不使用反射，因此更快。
+        // Try shortcut that should work for nearly all uses first as it does
+        // not use reflection and is therefore faster.
+        // 检查 protocolHandler（一种处理网络协议的对象）是否是 AbstractProtocol 类的一个实例。
+        // 如果是，直接从这个 AbstractProtocol 实例调用 getPort 方法来获取端口号。
+        if (protocolHandler instanceof AbstractProtocol<?>) {
+            return ((AbstractProtocol<?>) protocolHandler).getPort();
+        }
+        /* 2. 后备方案 */
+        // Fall back for custom protocol handlers not based on AbstractProtocol
+        // 如果 protocolHandler 不是基于 AbstractProtocol 的，方法转而使用反射（通过调用 getProperty("port")）来获取端口号。
+        Object port = getProperty("port");
+        if (port instanceof Integer) {
+            // 检查通过反射获取的 port 是否为 Integer 类型的实例。如果是，将其转换为 int 类型并返回。
+            return ((Integer) port).intValue();
+        }
+        // Usually means an invalid protocol has been configured
+        // 如果以上步骤都失败（通常意味着配置了无效的协议），方法返回 -1 作为错误指示。
+        return -1;
     }
 
 
@@ -587,21 +601,30 @@ public class Connector extends LifecycleMBeanBase {
         setProperty("port", String.valueOf(port));
     }
 
-
+    /**
+     * 获取与当前连接器（Connector）关联的协议处理器的端口偏移量
+     *
+     * @return
+     */
     public int getPortOffset() {
-//        // Try shortcut that should work for nearly all uses first as it does
-//        // not use reflection and is therefore faster.
-//        if (protocolHandler instanceof AbstractProtocol<?>) {
-//            return ((AbstractProtocol<?>) protocolHandler).getPortOffset();
-//        }
-//        // Fall back for custom protocol handlers not based on AbstractProtocol
-//        Object port = getProperty("portOffset");
-//        if (port instanceof Integer) {
-//            return ((Integer) port).intValue();
-//        }
-//        // Usually means an invalid protocol has been configured.
-//        return 0;
-        throw new UnsupportedOperationException();
+        /* 1. 快速路径（不使用反射） */
+        // 如果 protocolHandler 是 AbstractProtocol 的实例，那么直接从这个实例调用 getPortOffset 方法来获取端口偏移量。
+        // 这是一种不需要使用反射的直接方法调用，通常更快。
+        // Try shortcut that should work for nearly all uses first as it does
+        // not use reflection and is therefore faster.
+        if (protocolHandler instanceof AbstractProtocol<?>) {
+            return ((AbstractProtocol<?>) protocolHandler).getPortOffset();
+        }
+        /* 2. 后备方案（使用反射） */
+        // 如果 protocolHandler 不是 AbstractProtocol 的实例，则使用反射来尝试获取端口偏移量。
+        // Fall back for custom protocol handlers not based on AbstractProtocol
+        Object port = getProperty("portOffset");
+        if (port instanceof Integer) {
+            return ((Integer) port).intValue();
+        }
+         // 如果以上步骤都失败（通常表示配置了无效的协议），方法返回 0。这意味着没有有效的端口偏移量或者默认的偏移量为0。
+        // Usually means an invalid protocol has been configured.
+        return 0;
     }
 
 
@@ -622,7 +645,7 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * @return the port number on which this connector is listening to requests. If the special value for
-     *             {@link #getPort} of zero is used then this method will report the actual port bound.
+     * {@link #getPort} of zero is used then this method will report the actual port bound.
      */
     public int getLocalPort() {
 //        return ((Integer) getProperty("localPort")).intValue();
@@ -697,7 +720,7 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * @return the port number to which a request should be redirected if it comes in on a non-SSL port and is subject
-     *             to a security constraint with a transport guarantee that requires SSL.
+     * to a security constraint with a transport guarantee that requires SSL.
      */
     public int getRedirectPort() {
         return this.redirectPort;
@@ -739,7 +762,7 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * @return the secure connection flag that will be assigned to requests received through this connector. Default
-     *             value is "false".
+     * value is "false".
      */
     public boolean getSecure() {
         return this.secure;
@@ -778,7 +801,7 @@ public class Connector extends LifecycleMBeanBase {
      * 用来设置URI编码
      * 这通常是Web服务器和应用服务器中处理请求的一个重要部分。
      * URI（统一资源标识符）编码用于确保传输过程中的特殊字符被正确处理。
-     *
+     * <p>
      * 参数：String URIEncoding - 这是要设置的新URI编码，例如 "UTF-8"。
      * 目的：该方法旨在将服务器用于解析请求URI的字符集更改为指定的编码。
      *
@@ -844,7 +867,7 @@ public class Connector extends LifecycleMBeanBase {
      * Enable the use of IP-based virtual hosting.
      *
      * @param useIPVHosts <code>true</code> if Hosts are identified by IP, <code>false</code> if Hosts are identified by
-     *                        name.
+     *                    name.
      */
     public void setUseIPVHosts(boolean useIPVHosts) {
         this.useIPVHosts = useIPVHosts;
@@ -1014,43 +1037,42 @@ public class Connector extends LifecycleMBeanBase {
     @Override
     protected void initInternal() throws LifecycleException {
 
-//        super.initInternal();
-//
-//        if (protocolHandler == null) {
-//            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"));
-//        }
-//
-//        // Initialize adapter
-//        adapter = new CoyoteAdapter(this);
-//        protocolHandler.setAdapter(adapter);
-//
-//        // Make sure parseBodyMethodsSet has a default
-//        if (null == parseBodyMethodsSet) {
-//            setParseBodyMethods(getParseBodyMethods());
-//        }
-//
-//        if (AprStatus.isAprAvailable() && AprStatus.getUseOpenSSL() &&
-//                protocolHandler instanceof AbstractHttp11JsseProtocol) {
-//            AbstractHttp11JsseProtocol<?> jsseProtocolHandler = (AbstractHttp11JsseProtocol<?>) protocolHandler;
-//            if (jsseProtocolHandler.isSSLEnabled() && jsseProtocolHandler.getSslImplementationName() == null) {
-//                // OpenSSL is compatible with the JSSE configuration, so use it if APR is available
-//                jsseProtocolHandler.setSslImplementationName(OpenSSLImplementation.class.getName());
-//            }
-//        }
-//
-//        try {
-//            protocolHandler.init();
-//        } catch (Exception e) {
-//            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInitializationFailed"), e);
-//        }
-        throw new UnsupportedOperationException();
+        super.initInternal();
+
+        if (protocolHandler == null) {
+            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"));
+        }
+
+        // Initialize adapter
+        adapter = new CoyoteAdapter(this);
+        protocolHandler.setAdapter(adapter);
+
+        // Make sure parseBodyMethodsSet has a default
+        if (null == parseBodyMethodsSet) {
+            setParseBodyMethods(getParseBodyMethods());
+        }
+
+        if (AprStatus.isAprAvailable() && AprStatus.getUseOpenSSL() &&
+                protocolHandler instanceof AbstractHttp11JsseProtocol) {
+            AbstractHttp11JsseProtocol<?> jsseProtocolHandler = (AbstractHttp11JsseProtocol<?>) protocolHandler;
+            if (jsseProtocolHandler.isSSLEnabled() && jsseProtocolHandler.getSslImplementationName() == null) {
+                // OpenSSL is compatible with the JSSE configuration, so use it if APR is available
+                jsseProtocolHandler.setSslImplementationName(OpenSSLImplementation.class.getName());
+            }
+        }
+
+        try {
+            protocolHandler.init();
+        } catch (Exception e) {
+            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInitializationFailed"), e);
+        }
     }
 
 
     /**
      * Begin processing requests via this Connector.
      *
-     * @exception LifecycleException if a fatal startup error occurs
+     * @throws LifecycleException if a fatal startup error occurs
      */
     @Override
     protected void startInternal() throws LifecycleException {
@@ -1082,7 +1104,7 @@ public class Connector extends LifecycleMBeanBase {
     /**
      * Terminate processing requests via this Connector.
      *
-     * @exception LifecycleException if a fatal shutdown error occurs
+     * @throws LifecycleException if a fatal shutdown error occurs
      */
     @Override
     protected void stopInternal() throws LifecycleException {
@@ -1172,10 +1194,6 @@ public class Connector extends LifecycleMBeanBase {
     protected String getObjectNameKeyProperties() {
         return createObjectNameKeyProperties("Connector");
     }
-
-
-
-
 
 
 }

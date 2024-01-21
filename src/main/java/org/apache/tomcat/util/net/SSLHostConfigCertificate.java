@@ -14,37 +14,23 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.ajp;
+package org.apache.tomcat.util.net;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.security.KeyStore;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.management.ObjectName;
+import javax.net.ssl.X509KeyManager;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.apache.tomcat.util.res.StringManager;
 
-/**
- * This the NIO based protocol handler implementation for AJP.
- */
-public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
-
-    private static final Log log = LogFactory.getLog(AjpNioProtocol.class);
-
-    @Override
-    protected Log getLog() {
-        return log;
-    }
-
-
-    // ------------------------------------------------------------ Constructor
-
-    public AjpNioProtocol() {
-        super(new NioEndpoint());
-    }
-
-
-    // ----------------------------------------------------- JMX related methods
-
-    @Override
-    protected String getNamePrefix() {
-        return "ajp-nio";
-    }
+public class SSLHostConfigCertificate implements Serializable {
 }

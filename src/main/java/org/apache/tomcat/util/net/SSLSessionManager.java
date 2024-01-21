@@ -14,37 +14,17 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.ajp;
-
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
+package org.apache.tomcat.util.net;
 
 /**
- * This the NIO based protocol handler implementation for AJP.
+ * Defines an interface used to manage SSL sessions. The manager operates on a
+ * single session.
  */
-public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
-
-    private static final Log log = LogFactory.getLog(AjpNioProtocol.class);
-
-    @Override
-    protected Log getLog() {
-        return log;
-    }
-
-
-    // ------------------------------------------------------------ Constructor
-
-    public AjpNioProtocol() {
-        super(new NioEndpoint());
-    }
-
-
-    // ----------------------------------------------------- JMX related methods
-
-    @Override
-    protected String getNamePrefix() {
-        return "ajp-nio";
+public interface SSLSessionManager {
+    /**
+     * Invalidate the SSL session
+     */
+    default void invalidateSession() {
+        throw new UnsupportedOperationException();
     }
 }

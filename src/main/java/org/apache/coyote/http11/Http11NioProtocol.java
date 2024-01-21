@@ -1,146 +1,82 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package org.apache.coyote.http11;
 
-import org.apache.coyote.Adapter;
-import org.apache.coyote.UpgradeProtocol;
-import org.apache.tomcat.util.net.AbstractEndpoint;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
-import org.apache.tomcat.util.net.SSLHostConfig;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * HTTP/1.1 protocol implementation using NIO.
  */
 public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
+    private static final Log log = LogFactory.getLog(Http11NioProtocol.class);
+
+
     public Http11NioProtocol() {
         this(new NioEndpoint());
     }
-    public Http11NioProtocol(AbstractEndpoint<NioChannel, ?> endpoint) {
+
+
+    public Http11NioProtocol(NioEndpoint endpoint) {
         super(endpoint);
     }
 
+
     @Override
-    public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+    protected Log getLog() {
+        return log;
+    }
+
+
+    // -------------------- Pool setup --------------------
+
+    public void setSelectorTimeout(long timeout) {
+//        ((NioEndpoint) getEndpoint()).setSelectorTimeout(timeout);
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void postRegister(Boolean registrationDone) {
+    public long getSelectorTimeout() {
+//        return ((NioEndpoint) getEndpoint()).getSelectorTimeout();
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void preDeregister() throws Exception {
+    public void setPollerThreadPriority(int threadPriority) {
+//        ((NioEndpoint) getEndpoint()).setPollerThreadPriority(threadPriority);
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void postDeregister() {
+    public int getPollerThreadPriority() {
+//        return ((NioEndpoint) getEndpoint()).getPollerThreadPriority();
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Adapter getAdapter() {
-        throw new UnsupportedOperationException();
-    }
+
+    // ----------------------------------------------------- JMX related methods
 
     @Override
-    public void setAdapter(Adapter adapter) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Executor getExecutor() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setExecutor(Executor executor) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ScheduledExecutorService getUtilityExecutor() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setUtilityExecutor(ScheduledExecutorService utilityExecutor) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void init() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void start() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void pause() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void resume() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void stop() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void closeServerSocketGraceful() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long awaitConnectionsClose(long waitMillis) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isSendfileSupported() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addSslHostConfig(SSLHostConfig sslHostConfig) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addSslHostConfig(SSLHostConfig sslHostConfig, boolean replace) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SSLHostConfig[] findSslHostConfigs() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addUpgradeProtocol(UpgradeProtocol upgradeProtocol) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public UpgradeProtocol[] findUpgradeProtocols() {
-        throw new UnsupportedOperationException();
+    protected String getNamePrefix() {
+        if (isSSLEnabled()) {
+            return "https-" + getSslImplementationShortName() + "-nio";
+        } else {
+            return "http-nio";
+        }
     }
 }

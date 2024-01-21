@@ -1,11 +1,21 @@
 package org.apache.coyote.http11;
 
+import jakarta.servlet.http.HttpUpgradeHandler;
 import org.apache.coyote.AbstractProtocol;
+import org.apache.coyote.Processor;
+import org.apache.coyote.UpgradeProtocol;
+import org.apache.coyote.UpgradeToken;
+import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
 import org.apache.tomcat.util.net.AbstractEndpoint;
+import org.apache.tomcat.util.net.SocketWrapperBase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
-    public AbstractHttp11Protocol(AbstractEndpoint<S, ?> endpoint) {
+    public AbstractHttp11Protocol(AbstractEndpoint<S,?> endpoint) {
         super(endpoint);
+        setConnectionTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
     }
 
     /**
@@ -80,5 +90,57 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     @Deprecated
     public void setRejectIllegalHeader(boolean rejectIllegalHeader) {
         this.rejectIllegalHeader = rejectIllegalHeader;
+    }
+
+
+
+
+    // ------------------------------------------------ HTTP specific properties
+    // ------------------------------------------ passed through to the EndPoint
+
+    public boolean isSSLEnabled() {
+        return getEndpoint().isSSLEnabled();
+    }
+
+
+
+    /**
+     * The protocols that are available via internal Tomcat support for access via HTTP upgrade.
+     */
+    private final Map<String,UpgradeProtocol> httpUpgradeProtocols = new HashMap<>();
+    /**
+     * The protocols that are available via internal Tomcat support for access via ALPN negotiation.
+     */
+    private final Map<String,UpgradeProtocol> negotiatedProtocols = new HashMap<>();
+    @Override
+    public UpgradeProtocol getNegotiatedProtocol(String negotiatedName) {
+        return negotiatedProtocols.get(negotiatedName);
+    }
+
+    @Override
+    public UpgradeProtocol getUpgradeProtocol(String upgradedName) {
+        return httpUpgradeProtocols.get(upgradedName);
+    }
+
+
+    // ------------------------------------------------------------- Common code
+
+    @Override
+    protected Processor createProcessor() {
+//        Http11Processor processor = new Http11Processor(this, adapter);
+//        return processor;
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    protected Processor createUpgradeProcessor(SocketWrapperBase<?> socket, UpgradeToken upgradeToken) {
+//        HttpUpgradeHandler httpUpgradeHandler = upgradeToken.getHttpUpgradeHandler();
+//        if (httpUpgradeHandler instanceof InternalHttpUpgradeHandler) {
+//            return new UpgradeProcessorInternal(socket, upgradeToken, getUpgradeGroupInfo(upgradeToken.getProtocol()));
+//        } else {
+//            return new UpgradeProcessorExternal(socket, upgradeToken, getUpgradeGroupInfo(upgradeToken.getProtocol()));
+//        }
+        throw new UnsupportedOperationException();
     }
 }
