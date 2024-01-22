@@ -970,37 +970,36 @@ public class Connector extends LifecycleMBeanBase {
 
     protected String createObjectNameKeyProperties(String type) {
 
-//        Object addressObj = getProperty("address");
-//
-//        StringBuilder sb = new StringBuilder("type=");
-//        sb.append(type);
-//        String id = (protocolHandler != null) ? protocolHandler.getId() : null;
-//        if (id != null) {
-//            // Maintain MBean name compatibility, even if not accurate
-//            sb.append(",port=0,address=");
-//            sb.append(ObjectName.quote(id));
-//        } else {
-//            sb.append(",port=");
-//            int port = getPortWithOffset();
-//            if (port > 0) {
-//                sb.append(port);
-//            } else {
-//                sb.append("auto-");
-//                sb.append(getProperty("nameIndex"));
-//            }
-//            String address = "";
-//            if (addressObj instanceof InetAddress) {
-//                address = ((InetAddress) addressObj).getHostAddress();
-//            } else if (addressObj != null) {
-//                address = addressObj.toString();
-//            }
-//            if (address.length() > 0) {
-//                sb.append(",address=");
-//                sb.append(ObjectName.quote(address));
-//            }
-//        }
-//        return sb.toString();
-        throw new UnsupportedOperationException();
+        Object addressObj = getProperty("address");
+
+        StringBuilder sb = new StringBuilder("type=");
+        sb.append(type);
+        String id = (protocolHandler != null) ? protocolHandler.getId() : null;
+        if (id != null) {
+            // Maintain MBean name compatibility, even if not accurate
+            sb.append(",port=0,address=");
+            sb.append(ObjectName.quote(id));
+        } else {
+            sb.append(",port=");
+            int port = getPortWithOffset();
+            if (port > 0) {
+                sb.append(port);
+            } else {
+                sb.append("auto-");
+                sb.append(getProperty("nameIndex"));
+            }
+            String address = "";
+            if (addressObj instanceof InetAddress) {
+                address = ((InetAddress) addressObj).getHostAddress();
+            } else if (addressObj != null) {
+                address = addressObj.toString();
+            }
+            if (address.length() > 0) {
+                sb.append(",address=");
+                sb.append(ObjectName.quote(address));
+            }
+        }
+        return sb.toString();
     }
 
 

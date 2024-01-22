@@ -29,8 +29,7 @@ public abstract class AbstractHttp11JsseProtocol<S> extends AbstractHttp11Protoc
     @Override
     protected AbstractJsseEndpoint<S, ?> getEndpoint() {
         // Over-ridden to add cast
-//        return (AbstractJsseEndpoint<S, ?>) super.getEndpoint();
-        throw new UnsupportedOperationException();
+        return (AbstractJsseEndpoint<S, ?>) super.getEndpoint();
     }
 
 

@@ -83,7 +83,7 @@ public class NoDescriptorRegistry extends Registry {
 
         @Override
         public ObjectInstance registerMBean(Object object, ObjectName name) throws InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {
-            throw new UnsupportedOperationException();
+            return null;
         }
 
         @Override
