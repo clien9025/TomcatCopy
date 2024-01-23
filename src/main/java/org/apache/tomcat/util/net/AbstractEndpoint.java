@@ -176,6 +176,7 @@ public abstract class AbstractEndpoint<S, U> {
      * Socket properties
      */
     protected final SocketProperties socketProperties = new SocketProperties();
+
     public SocketProperties getSocketProperties() {
         return socketProperties;
     }
@@ -199,6 +200,7 @@ public abstract class AbstractEndpoint<S, U> {
 
     /**
      * Get a set with the current open connections.
+     *
      * @return A set with the open socket wrappers
      */
     public Set<SocketWrapperBase<S>> getConnections() {
@@ -210,24 +212,26 @@ public abstract class AbstractEndpoint<S, U> {
     // ----------------------------------------------------------------- Properties
 
     private String defaultSSLHostConfigName = SSLHostConfig.DEFAULT_SSL_HOST_NAME;
+
     /**
      * @return The host name for the default SSL configuration for this endpoint
-     *         - always in lower case.
+     * - always in lower case.
      */
     public String getDefaultSSLHostConfigName() {
         return defaultSSLHostConfigName;
     }
+
     public void setDefaultSSLHostConfigName(String defaultSSLHostConfigName) {
         this.defaultSSLHostConfigName = defaultSSLHostConfigName.toLowerCase(Locale.ENGLISH);
     }
 
 
-    protected ConcurrentMap<String,SSLHostConfig> sslHostConfigs = new ConcurrentHashMap<>();
+    protected ConcurrentMap<String, SSLHostConfig> sslHostConfigs = new ConcurrentHashMap<>();
+
     /**
      * Add the given SSL Host configuration.
      *
      * @param sslHostConfig The configuration to add
-     *
      * @throws IllegalArgumentException If the host name is not valid or if a
      *                                  configuration has already been provided
      *                                  for that host
@@ -235,6 +239,7 @@ public abstract class AbstractEndpoint<S, U> {
     public void addSslHostConfig(SSLHostConfig sslHostConfig) throws IllegalArgumentException {
         addSslHostConfig(sslHostConfig, false);
     }
+
     /**
      * Add the given SSL Host configuration, optionally replacing the existing
      * configuration for the given host.
@@ -243,7 +248,6 @@ public abstract class AbstractEndpoint<S, U> {
      * @param replace       If {@code true} replacement of an existing
      *                      configuration is permitted, otherwise any such
      *                      attempted replacement will trigger an exception
-     *
      * @throws IllegalArgumentException If the host name is not valid or if a
      *                                  configuration has already been provided
      *                                  for that host and replacement is not
@@ -285,14 +289,14 @@ public abstract class AbstractEndpoint<S, U> {
 //        }
         throw new UnsupportedOperationException();
     }
+
     /**
      * Removes the SSL host configuration for the given host name, if such a
      * configuration exists.
      *
-     * @param hostName  The host name associated with the SSL host configuration
-     *                  to remove
-     *
-     * @return  The SSL host configuration that was removed, if any
+     * @param hostName The host name associated with the SSL host configuration
+     *                 to remove
+     * @return The SSL host configuration that was removed, if any
      */
     public SSLHostConfig removeSslHostConfig(String hostName) {
 //        if (hostName == null) {
@@ -311,6 +315,7 @@ public abstract class AbstractEndpoint<S, U> {
 //        return sslHostConfig;
         throw new UnsupportedOperationException();
     }
+
     /**
      * Re-read the configuration files for the SSL host and replace the existing
      * SSL configuration with the updated settings. Note this replacement will
@@ -334,6 +339,7 @@ public abstract class AbstractEndpoint<S, U> {
 //        addSslHostConfig(sslHostConfig, true);
         throw new UnsupportedOperationException();
     }
+
     /**
      * Re-read the configuration files for all SSL hosts and replace the
      * existing SSL configuration with the updated settings. Note this
@@ -345,6 +351,7 @@ public abstract class AbstractEndpoint<S, U> {
 //        }
         throw new UnsupportedOperationException();
     }
+
     public SSLHostConfig[] findSslHostConfigs() {
         return sslHostConfigs.values().toArray(new SSLHostConfig[0]);
     }
@@ -357,7 +364,7 @@ public abstract class AbstractEndpoint<S, U> {
      * @throws Exception If the SSLContext cannot be created for the given
      *                   SSLHostConfig
      */
-    protected void createSSLContext(SSLHostConfig sslHostConfig) throws Exception{
+    protected void createSSLContext(SSLHostConfig sslHostConfig) throws Exception {
         throw new UnsupportedOperationException();
     }
 
@@ -475,8 +482,7 @@ public abstract class AbstractEndpoint<S, U> {
      * <li>default SSLHostConfig</li>
      * </ol>
      *
-     * @param sniHostName   Host name - must be in lower case
-     *
+     * @param sniHostName Host name - must be in lower case
      * @return The SSLHostConfig for the given host name.
      */
     protected SSLHostConfig getSSLHostConfig(String sniHostName) {
@@ -512,9 +518,11 @@ public abstract class AbstractEndpoint<S, U> {
      * Has the user requested that send file be used where possible?
      */
     private boolean useSendfile = true;
+
     public boolean getUseSendfile() {
         return useSendfile;
     }
+
     public void setUseSendfile(boolean useSendfile) {
         this.useSendfile = useSendfile;
     }
@@ -540,13 +548,18 @@ public abstract class AbstractEndpoint<S, U> {
      * Priority of the acceptor threads.
      */
     protected int acceptorThreadPriority = Thread.NORM_PRIORITY;
+
     public void setAcceptorThreadPriority(int acceptorThreadPriority) {
         this.acceptorThreadPriority = acceptorThreadPriority;
     }
-    public int getAcceptorThreadPriority() { return acceptorThreadPriority; }
+
+    public int getAcceptorThreadPriority() {
+        return acceptorThreadPriority;
+    }
 
 
-    private int maxConnections = 8*1024;
+    private int maxConnections = 8 * 1024;
+
     /**
      * 定义了一个 setMaxConnections 方法来更新最大连接数，并相应地更新或初始化一个 LimitLatch 对象用于实际执行这一限制。
      * 这段代码的作用是控制端点能处理的最大并发连接数。（用来设置和管理服务器端点的最大连接数的）
@@ -579,7 +592,10 @@ public abstract class AbstractEndpoint<S, U> {
             initializeConnectionLatch();
         }
     }
-    public int getMaxConnections() { return this.maxConnections; }
+
+    public int getMaxConnections() {
+        return this.maxConnections;
+    }
 
     /**
      * Return the current count of connections handled by this endpoint, if the
@@ -609,17 +625,23 @@ public abstract class AbstractEndpoint<S, U> {
      * 私有成员变量executor
      */
     private Executor executor = null;
+
     public void setExecutor(Executor executor) {
         this.executor = executor;
         this.internalExecutor = (executor == null);
     }
-    public Executor getExecutor() { return executor; }
+
+    public Executor getExecutor() {
+        return executor;
+    }
 
 
     private boolean useVirtualThreads = false;
+
     public void setUseVirtualThreads(boolean useVirtualThreads) {
         this.useVirtualThreads = useVirtualThreads;
     }
+
     public boolean getUseVirtualThreads() {
         return useVirtualThreads;
     }
@@ -629,9 +651,11 @@ public abstract class AbstractEndpoint<S, U> {
      * External Executor based thread pool for utility tasks.
      */
     private ScheduledExecutorService utilityExecutor = null;
+
     public void setUtilityExecutor(ScheduledExecutorService utilityExecutor) {
         this.utilityExecutor = utilityExecutor;
     }
+
     public ScheduledExecutorService getUtilityExecutor() {
         if (utilityExecutor == null) {
             getLog().warn(sm.getString("endpoint.warn.noUtilityExecutor"));
@@ -645,13 +669,23 @@ public abstract class AbstractEndpoint<S, U> {
      * Server socket port.
      */
     private int port = -1;
-    public int getPort() { return port; }
-    public void setPort(int port ) { this.port=port; }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 
 
     private int portOffset = 0;
-    public int getPortOffset() { return portOffset; }
-    public void setPortOffset(int portOffset ) {
+
+    public int getPortOffset() {
+        return portOffset;
+    }
+
+    public void setPortOffset(int portOffset) {
         if (portOffset < 0) {
             throw new IllegalArgumentException(
                     sm.getString("endpoint.portOffset.invalid", Integer.valueOf(portOffset)));
@@ -661,13 +695,12 @@ public abstract class AbstractEndpoint<S, U> {
 
 
     public int getPortWithOffset() {
-//        // Zero is a special case and negative values are invalid
-//        int port = getPort();
-//        if (port > 0) {
-//            return port + getPortOffset();
-//        }
-//        return port;
-        throw new UnsupportedOperationException();
+        // Zero is a special case and negative values are invalid
+        int port = getPort();
+        if (port > 0) {
+            return port + getPortOffset();
+        }
+        return port;
     }
 
 
@@ -689,8 +722,14 @@ public abstract class AbstractEndpoint<S, U> {
      * Address for the server socket.
      */
     private InetAddress address;
-    public InetAddress getAddress() { return address; }
-    public void setAddress(InetAddress address) { this.address = address; }
+
+    public InetAddress getAddress() {
+        return address;
+    }
+
+    public void setAddress(InetAddress address) {
+        this.address = address;
+    }
 
 
     /**
@@ -700,12 +739,11 @@ public abstract class AbstractEndpoint<S, U> {
      * specifically set.
      *
      * @return The network address that the server socket is listening on or
-     *         null if the server socket is not currently bound.
-     *
+     * null if the server socket is not currently bound.
      * @throws IOException If there is a problem determining the currently bound
      *                     socket
      */
-    protected InetSocketAddress getLocalAddress() throws IOException{
+    protected InetSocketAddress getLocalAddress() throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -717,10 +755,16 @@ public abstract class AbstractEndpoint<S, U> {
      * 允许服务器开发人员指定应用于服务器套接字的acceptCount（积压）。默认情况下，该值为 100。
      */
     private int acceptCount = 100;
-    public void setAcceptCount(int acceptCount) { if (acceptCount > 0) {
-        this.acceptCount = acceptCount;
-    } }
-    public int getAcceptCount() { return acceptCount; }
+
+    public void setAcceptCount(int acceptCount) {
+        if (acceptCount > 0) {
+            this.acceptCount = acceptCount;
+        }
+    }
+
+    public int getAcceptCount() {
+        return acceptCount;
+    }
 
     /**
      * Controls when the Endpoint binds the port. <code>true</code>, the default
@@ -729,9 +773,17 @@ public abstract class AbstractEndpoint<S, U> {
      * unbound on {@link #stop()}.
      */
     private boolean bindOnInit = true;
-    public boolean getBindOnInit() { return bindOnInit; }
-    public void setBindOnInit(boolean b) { this.bindOnInit = b; }
+
+    public boolean getBindOnInit() {
+        return bindOnInit;
+    }
+
+    public void setBindOnInit(boolean b) {
+        this.bindOnInit = b;
+    }
+
     private volatile BindState bindState = BindState.UNBOUND;
+
     protected BindState getBindState() {
         return bindState;
     }
@@ -740,6 +792,7 @@ public abstract class AbstractEndpoint<S, U> {
      * Keepalive timeout, if not set the soTimeout is used.
      */
     private Integer keepAliveTimeout = null;
+
     public int getKeepAliveTimeout() {
 //        if (keepAliveTimeout == null) {
 //            return getConnectionTimeout();
@@ -748,6 +801,7 @@ public abstract class AbstractEndpoint<S, U> {
 //        }
         throw new UnsupportedOperationException();
     }
+
     public void setKeepAliveTimeout(int keepAliveTimeout) {
         this.keepAliveTimeout = Integer.valueOf(keepAliveTimeout);
     }
@@ -757,22 +811,30 @@ public abstract class AbstractEndpoint<S, U> {
      * Socket TCP no delay.
      *
      * @return The current TCP no delay setting for sockets created by this
-     *         endpoint
+     * endpoint
      */
-    public boolean getTcpNoDelay() { return socketProperties.getTcpNoDelay();}
-    public void setTcpNoDelay(boolean tcpNoDelay) { socketProperties.setTcpNoDelay(tcpNoDelay); }
+    public boolean getTcpNoDelay() {
+        return socketProperties.getTcpNoDelay();
+    }
+
+    public void setTcpNoDelay(boolean tcpNoDelay) {
+        socketProperties.setTcpNoDelay(tcpNoDelay);
+    }
 
 
     /**
      * Socket linger.
      *
      * @return The current socket linger time for sockets created by this
-     *         endpoint
+     * endpoint
      */
-    public int getConnectionLinger() { return socketProperties.getSoLingerTime(); }
+    public int getConnectionLinger() {
+        return socketProperties.getSoLingerTime();
+    }
+
     public void setConnectionLinger(int connectionLinger) {
         socketProperties.setSoLingerTime(connectionLinger);
-        socketProperties.setSoLingerOn(connectionLinger>=0);
+        socketProperties.setSoLingerOn(connectionLinger >= 0);
     }
 
 
@@ -781,17 +843,29 @@ public abstract class AbstractEndpoint<S, U> {
      *
      * @return The current socket timeout for sockets created by this endpoint
      */
-    public int getConnectionTimeout() { return socketProperties.getSoTimeout(); }
-    public void setConnectionTimeout(int soTimeout) { socketProperties.setSoTimeout(soTimeout); }
+    public int getConnectionTimeout() {
+        return socketProperties.getSoTimeout();
+    }
+
+    public void setConnectionTimeout(int soTimeout) {
+        socketProperties.setSoTimeout(soTimeout);
+    }
 
     /**
      * SSL engine.
      */
     private boolean SSLEnabled = false;
-    public boolean isSSLEnabled() { return SSLEnabled; }
-    public void setSSLEnabled(boolean SSLEnabled) { this.SSLEnabled = SSLEnabled; }
+
+    public boolean isSSLEnabled() {
+        return SSLEnabled;
+    }
+
+    public void setSSLEnabled(boolean SSLEnabled) {
+        this.SSLEnabled = SSLEnabled;
+    }
 
     private int minSpareThreads = 10;
+
     /**
      * 目的是设置线程池的最小空闲线程数，并适当地调整内部的ThreadPoolExecutor的核心池大小。
      *
@@ -810,9 +884,11 @@ public abstract class AbstractEndpoint<S, U> {
             ((ThreadPoolExecutor) executor).setCorePoolSize(minSpareThreads);
         }
     }
+
     public int getMinSpareThreads() {
         return Math.min(getMinSpareThreadsInternal(), getMaxThreads());
     }
+
     private int getMinSpareThreadsInternal() {
         if (internalExecutor) {
             return minSpareThreads;
@@ -827,6 +903,7 @@ public abstract class AbstractEndpoint<S, U> {
      * 只有在一个使用内部ThreadPoolExecutor的情况下，才允许动态地调整其最大线程数。
      */
     private int maxThreads = 200;
+
     /**
      * 设置线程池的最大线程数
      *
@@ -845,6 +922,7 @@ public abstract class AbstractEndpoint<S, U> {
             ((ThreadPoolExecutor) executor).setMaximumPoolSize(maxThreads);
         }
     }
+
     public int getMaxThreads() {
         if (internalExecutor) {
             return maxThreads;
@@ -858,10 +936,12 @@ public abstract class AbstractEndpoint<S, U> {
      * Priority of the worker threads.
      */
     protected int threadPriority = Thread.NORM_PRIORITY;
+
     public void setThreadPriority(int threadPriority) {
         // Can't change this once the executor has started
         this.threadPriority = threadPriority;
     }
+
     public int getThreadPriority() {
         if (internalExecutor) {
             return threadPriority;
@@ -874,7 +954,8 @@ public abstract class AbstractEndpoint<S, U> {
     /**
      * Max keep alive requests
      */
-    private int maxKeepAliveRequests=100; // as in Apache HTTPD server
+    private int maxKeepAliveRequests = 100; // as in Apache HTTPD server
+
     public int getMaxKeepAliveRequests() {
 //        // Disable keep-alive if the server socket is not bound
 //        if (bindState.isBound()) {
@@ -884,6 +965,7 @@ public abstract class AbstractEndpoint<S, U> {
 //        }
         throw new UnsupportedOperationException();
     }
+
     public void setMaxKeepAliveRequests(int maxKeepAliveRequests) {
         this.maxKeepAliveRequests = maxKeepAliveRequests;
     }
@@ -893,41 +975,64 @@ public abstract class AbstractEndpoint<S, U> {
      * Name of the thread pool, which will be used for naming child threads.
      */
     private String name = "TP";
-    public void setName(String name) { this.name = name; }
-    public String getName() { return name; }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 
 
     /**
      * Name of domain to use for JMX registration.
      */
     private String domain;
-    public void setDomain(String domain) { this.domain = domain; }
-    public String getDomain() { return domain; }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
 
 
     /**
      * The default is true - the created threads will be
-     *  in daemon mode. If set to false, the control thread
-     *  will not be daemon - and will keep the process alive.
+     * in daemon mode. If set to false, the control thread
+     * will not be daemon - and will keep the process alive.
      */
     private boolean daemon = true;
-    public void setDaemon(boolean b) { daemon = b; }
-    public boolean getDaemon() { return daemon; }
+
+    public void setDaemon(boolean b) {
+        daemon = b;
+    }
+
+    public boolean getDaemon() {
+        return daemon;
+    }
 
 
     /**
      * Expose asynchronous IO capability.
      */
     private boolean useAsyncIO = true;
-    public void setUseAsyncIO(boolean useAsyncIO) { this.useAsyncIO = useAsyncIO; }
-    public boolean getUseAsyncIO() { return useAsyncIO; }
+
+    public void setUseAsyncIO(boolean useAsyncIO) {
+        this.useAsyncIO = useAsyncIO;
+    }
+
+    public boolean getUseAsyncIO() {
+        return useAsyncIO;
+    }
 
 
     /**
      * Always returns {@code false}.
      *
      * @return Always {@code false}
-     *
      * @deprecated This code will be removed in Tomcat 11 onwards
      */
     @Deprecated
@@ -940,6 +1045,7 @@ public abstract class AbstractEndpoint<S, U> {
      * The default behavior is to identify connectors uniquely with address
      * and port. However, certain connectors are not using that and need
      * some other identifier, which then can be used as a replacement.
+     *
      * @return the id
      */
     public String getId() {
@@ -948,9 +1054,11 @@ public abstract class AbstractEndpoint<S, U> {
 
 
     protected final List<String> negotiableProtocols = new ArrayList<>();
+
     public void addNegotiatedProtocol(String negotiableProtocol) {
         negotiableProtocols.add(negotiableProtocol);
     }
+
     public boolean hasNegotiableProtocols() {
         return (negotiableProtocols.size() > 0);
     }
@@ -960,8 +1068,14 @@ public abstract class AbstractEndpoint<S, U> {
      * Handling of accepted sockets.
      */
     private Handler<S> handler = null;
-    public void setHandler(Handler<S> handler ) { this.handler = handler; }
-    public Handler<S> getHandler() { return handler; }
+
+    public void setHandler(Handler<S> handler) {
+        this.handler = handler;
+    }
+
+    public Handler<S> getHandler() {
+        return handler;
+    }
 
 
     /**
@@ -982,18 +1096,17 @@ public abstract class AbstractEndpoint<S, U> {
      * @param value The value to set the property to
      */
     public void setAttribute(String name, Object value) {
-//        if (getLog().isTraceEnabled()) {
-//            getLog().trace(sm.getString("endpoint.setAttribute", name, value));
-//        }
-//        attributes.put(name, value);
-        throw new UnsupportedOperationException();
+        if (getLog().isTraceEnabled()) {
+            getLog().trace(sm.getString("endpoint.setAttribute", name, value));
+        }
+        attributes.put(name, value);
     }
+
     /**
      * Used by sub-components to retrieve configuration information.
      *
      * @param key The name of the property for which the value should be
      *            retrieved
-     *
      * @return The value of the specified property
      */
     public Object getAttribute(String key) {
@@ -1006,22 +1119,21 @@ public abstract class AbstractEndpoint<S, U> {
     }
 
 
-
     public boolean setProperty(String name, String value) {
-//        setAttribute(name, value);
-//        final String socketName = "socket.";
-//        try {
-//            if (name.startsWith(socketName)) {
-//                return IntrospectionUtils.setProperty(socketProperties, name.substring(socketName.length()), value);
-//            } else {
-//                return IntrospectionUtils.setProperty(this,name,value,false);
-//            }
-//        }catch ( Exception x ) {
-//            getLog().error(sm.getString("endpoint.setAttributeError", name, value), x);
-//            return false;
-//        }
-        throw new UnsupportedOperationException();
+        setAttribute(name, value);
+        final String socketName = "socket.";
+        try {
+            if (name.startsWith(socketName)) {
+                return IntrospectionUtils.setProperty(socketProperties, name.substring(socketName.length()), value);
+            } else {
+                return IntrospectionUtils.setProperty(this, name, value, false);
+            }
+        } catch (Exception x) {
+            getLog().error(sm.getString("endpoint.setAttributeError", name, value), x);
+            return false;
+        }
     }
+
     public String getProperty(String name) {
 //        String value = (String) getAttribute(name);
 //        final String socketName = "socket.";
@@ -1270,8 +1382,7 @@ public abstract class AbstractEndpoint<S, U> {
      * @param socketWrapper The socket wrapper to process
      * @param event         The socket event to be processed
      * @param dispatch      Should the processing be performed on a new
-     *                          container thread
-     *
+     *                      container thread
      * @return if processing was triggered successfully
      */
     public boolean processSocket(SocketWrapperBase<S> socketWrapper,
@@ -1311,7 +1422,7 @@ public abstract class AbstractEndpoint<S, U> {
 
 
     protected SocketProcessorBase<S> createSocketProcessor(
-            SocketWrapperBase<S> socketWrapper, SocketEvent event){
+            SocketWrapperBase<S> socketWrapper, SocketEvent event) {
         throw new UnsupportedOperationException();
     }
 
@@ -1325,12 +1436,21 @@ public abstract class AbstractEndpoint<S, U> {
      * prevent invalid state transitions.
      */
 
-    public void bind() throws Exception{
+    public void bind() throws Exception {
         throw new UnsupportedOperationException();
     }
-    public void unbind() throws Exception{throw new UnsupportedOperationException();}
-    public void startInternal() throws Exception{throw new UnsupportedOperationException();}
-    public void stopInternal() throws Exception{throw new UnsupportedOperationException();}
+
+    public void unbind() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    public void startInternal() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    public void stopInternal() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 
     private void bindWithCleanup() throws Exception {
@@ -1494,21 +1614,31 @@ public abstract class AbstractEndpoint<S, U> {
     }
 
 
-    protected Log getLog(){throw new UnsupportedOperationException();}
+    protected Log getLog() {
+        throw new UnsupportedOperationException();
+    }
 
     protected Log getLogCertificate() {
         return getLog();
     }
 
+    /**
+     * initializeConnectionLatch 方法用于初始化一个用于控制最大并发连接数的 LimitLatch 对象
+     *
+     * @return
+     */
     protected LimitLatch initializeConnectionLatch() {
-//        if (maxConnections==-1) {
-//            return null;
-//        }
-//        if (connectionLimitLatch==null) {
-//            connectionLimitLatch = new LimitLatch(getMaxConnections());
-//        }
-//        return connectionLimitLatch;
-        throw new UnsupportedOperationException();
+        /* 检查最大连接数 */
+        // 如果 maxConnections 的值为 -1，这通常表示没有设置最大连接数限制。在这种情况下，方法返回 null，意味着不需要限制连接数
+        if (maxConnections == -1) {
+            return null;
+        }
+        if (connectionLimitLatch == null) {
+            // 使用 getMaxConnections() 方法的返回值（即最大连接数）来创建一个新的 LimitLatch 对象，
+            // 并将其赋值给 connectionLimitLatch。
+            connectionLimitLatch = new LimitLatch(getMaxConnections());
+        }
+        return connectionLimitLatch;
     }
 
     /**
@@ -1587,9 +1717,8 @@ public abstract class AbstractEndpoint<S, U> {
      * method will return when all of the client connections have closed or the
      * method has been waiting for {@code waitTimeMillis}.
      *
-     * @param waitMillis    The maximum time to wait in milliseconds for the
-     *                      client connections to close.
-     *
+     * @param waitMillis The maximum time to wait in milliseconds for the
+     *                   client connections to close.
      * @return The wait time, if any remaining when the method returned
      */
     public final long awaitConnectionsClose(long waitMillis) {
@@ -1612,17 +1741,24 @@ public abstract class AbstractEndpoint<S, U> {
      *
      * @throws IOException If an error occurs closing the socket
      */
-    protected void doCloseServerSocket() throws IOException{throw new UnsupportedOperationException();}
+    protected void doCloseServerSocket() throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
-    protected U serverSocketAccept() throws Exception{throw new UnsupportedOperationException();}
+    protected U serverSocketAccept() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
-    protected boolean setSocketOptions(U socket){throw new UnsupportedOperationException();}
+    protected boolean setSocketOptions(U socket) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Close the socket when the connection has to be immediately closed when
      * an error occurs while configuring the accepted socket or trying to
      * dispatch it for processing. The wrapper associated with the socket will
      * be used for the close.
+     *
      * @param socket The newly accepted socket
      */
     protected void closeSocket(U socket) {
@@ -1636,9 +1772,12 @@ public abstract class AbstractEndpoint<S, U> {
      * Close the socket. This is used when the connector is not in a state
      * which allows processing the socket, or if there was an error which
      * prevented the allocation of the socket wrapper.
+     *
      * @param socket The newly accepted socket
      */
-    protected void destroySocket(U socket){throw new UnsupportedOperationException();}
+    protected void destroySocket(U socket) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /* ++++++++++++++++++++++++++++++ */

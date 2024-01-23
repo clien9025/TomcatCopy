@@ -397,32 +397,31 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
 
 
     private String getNameInternal() {
-//        StringBuilder name = new StringBuilder(getNamePrefix());
-//        name.append('-');
-//        String id = getId();
-//        if (id != null) {
-//            name.append(id);
-//        } else {
-//            if (getAddress() != null) {
-//                name.append(getAddress().getHostAddress());
-//                name.append('-');
-//            }
-//            int port = getPortWithOffset();
-//            if (port == 0) {
-//                // Auto binding is in use. Check if port is known
-//                name.append("auto-");
-//                name.append(getNameIndex());
-//                port = getLocalPort();
-//                if (port != -1) {
-//                    name.append('-');
-//                    name.append(port);
-//                }
-//            } else {
-//                name.append(port);
-//            }
-//        }
-//        return name.toString();
-        throw new UnsupportedOperationException();
+        StringBuilder name = new StringBuilder(getNamePrefix());
+        name.append('-');
+        String id = getId();
+        if (id != null) {
+            name.append(id);
+        } else {
+            if (getAddress() != null) {
+                name.append(getAddress().getHostAddress());
+                name.append('-');
+            }
+            int port = getPortWithOffset();
+            if (port == 0) {
+                // Auto binding is in use. Check if port is known
+                name.append("auto-");
+                name.append(getNameIndex());
+                port = getLocalPort();
+                if (port != -1) {
+                    name.append('-');
+                    name.append(port);
+                }
+            } else {
+                name.append(port);
+            }
+        }
+        return name.toString();
     }
 
 
