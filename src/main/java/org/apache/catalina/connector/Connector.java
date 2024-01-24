@@ -529,24 +529,26 @@ public class Connector extends LifecycleMBeanBase {
 
     /**
      * Set list of HTTP methods which should allow body parameter parsing. This defaults to <code>POST</code>.
+     * <p>
+     * 设置哪些 HTTP 方法允许解析请求体中的参数
      *
      * @param methods Comma separated list of HTTP method names
      */
     public void setParseBodyMethods(String methods) {
 
-//        HashSet<String> methodSet = new HashSet<>();
-//
-//        if (null != methods) {
-//            methodSet.addAll(Arrays.asList(methods.split("\\s*,\\s*")));
-//        }
-//
-//        if (methodSet.contains("TRACE")) {
-//            throw new IllegalArgumentException(sm.getString("coyoteConnector.parseBodyMethodNoTrace"));
-//        }
-//
-//        this.parseBodyMethods = methods;
-//        this.parseBodyMethodsSet = methodSet;
-        throw new UnsupportedOperationException();
+        HashSet<String> methodSet = new HashSet<>();
+
+        if (null != methods) {
+            methodSet.addAll(Arrays.asList(methods.split("\\s*,\\s*")));
+        }
+        // 如果 methodSet 包含 "TRACE" 方法，方法会抛出 IllegalArgumentException 异常。
+        // 这是因为出于安全原因，通常不允许在 TRACE 请求中解析请求体。
+        if (methodSet.contains("TRACE")) {
+            throw new IllegalArgumentException(sm.getString("coyoteConnector.parseBodyMethodNoTrace"));
+        }
+
+        this.parseBodyMethods = methods;
+        this.parseBodyMethodsSet = methodSet;
     }
 
 
@@ -622,7 +624,7 @@ public class Connector extends LifecycleMBeanBase {
         if (port instanceof Integer) {
             return ((Integer) port).intValue();
         }
-         // 如果以上步骤都失败（通常表示配置了无效的协议），方法返回 0。这意味着没有有效的端口偏移量或者默认的偏移量为0。
+        // 如果以上步骤都失败（通常表示配置了无效的协议），方法返回 0。这意味着没有有效的端口偏移量或者默认的偏移量为0。
         // Usually means an invalid protocol has been configured.
         return 0;
     }
@@ -1035,25 +1037,40 @@ public class Connector extends LifecycleMBeanBase {
 
     @Override
     protected void initInternal() throws LifecycleException {
-
+        // super.initInternal() 调用了父类的 initInternal 方法，进行基础的初始化操作
         super.initInternal();
-
+        /* 2. 检查协议处理器 */
         if (protocolHandler == null) {
             throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"));
         }
-
-        // Initialize adapter
+        /* 3. 初始化适配器 */
+        // Initialize adapter (adapter:适配器)
+        // 创建一个 CoyoteAdapter 实例并将其分配给 adapter 成员变量。然后设置 protocolHandler 的适配器为此 adapter。
+        // CoyoteAdapter 这个类负责处理 HTTP 请求和响应
         adapter = new CoyoteAdapter(this);
         protocolHandler.setAdapter(adapter);
-
+        /* 4. 设置解析正文方法的默认值 */
+        // 如果 parseBodyMethodsSet 为 null，调用 setParseBodyMethods(getParseBodyMethods()) 来设置默认的 HTTP 方法，
+        // 这些方法在接收请求时将解析请求体
+        /* 这个检查是为了确定是否已经有一个指定的方法集合。
+        如果 parseBodyMethodsSet 不为 null，意味着已经有一个预定义的方法集合，无需再设置。
+        如果 parseBodyMethodsSet 为 null，则需要设置默认的方法集合。
+        */
         // Make sure parseBodyMethodsSet has a default
         if (null == parseBodyMethodsSet) {
             setParseBodyMethods(getParseBodyMethods());
         }
-
+        /* 5. 配置 SSL 实现（如果使用 APR 和 OpenSSL） */
+        // 如果 APR 可用并且配置了使用 OpenSSL，且 protocolHandler 是 AbstractHttp11JsseProtocol 的实例，
+        // 方法将检查并可能设置 SSL 实现。
+        /* APR（Apache Portable Runtime）是一组 C 语言库，旨在提供一个平台无关的 API，使得 Apache HTTP 服务器等软件能在
+        各种操作系统上运行。在 Tomcat 中，APR 用于提供更高效的网络通信和 SSL 加密处理。*/
         if (AprStatus.isAprAvailable() && AprStatus.getUseOpenSSL() &&
                 protocolHandler instanceof AbstractHttp11JsseProtocol) {
             AbstractHttp11JsseProtocol<?> jsseProtocolHandler = (AbstractHttp11JsseProtocol<?>) protocolHandler;
+            // 如果启用了 SSL 但没有指定 SSL 实现名称，则将其设置为 OpenSSLImplementation。
+            /* jsseProtocolHandler 是 AbstractHttp11JsseProtocol 类型的实例，它处理基于 JSSE
+            （Java Secure Socket Extension）的 SSL/TLS 加密网络通信。它为 HTTP/1.1 协议提供了安全的网络传输功能*/
             if (jsseProtocolHandler.isSSLEnabled() && jsseProtocolHandler.getSslImplementationName() == null) {
                 // OpenSSL is compatible with the JSSE configuration, so use it if APR is available
                 jsseProtocolHandler.setSslImplementationName(OpenSSLImplementation.class.getName());

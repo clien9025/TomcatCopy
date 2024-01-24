@@ -771,6 +771,8 @@ public abstract class AbstractEndpoint<S, U> {
      * binds the port on {@link #init()} and unbinds it on {@link #destroy()}.
      * If set to <code>false</code> the port is bound on {@link #start()} and
      * unbound on {@link #stop()}.
+     * <p>
+     * 控制端点何时绑定端口
      */
     private boolean bindOnInit = true;
 
@@ -1468,25 +1470,24 @@ public abstract class AbstractEndpoint<S, U> {
 
 
     public final void init() throws Exception {
-//        if (bindOnInit) {
-//            bindWithCleanup();
-//            bindState = BindState.BOUND_ON_INIT;
-//        }
-//        if (this.domain != null) {
-//            // Register endpoint (as ThreadPool - historical name)
-//            oname = new ObjectName(domain + ":type=ThreadPool,name=\"" + getName() + "\"");
-//            Registry.getRegistry(null, null).registerComponent(this, oname, null);
-//
-//            ObjectName socketPropertiesOname = new ObjectName(domain +
-//                    ":type=SocketProperties,name=\"" + getName() + "\"");
-//            socketProperties.setObjectName(socketPropertiesOname);
-//            Registry.getRegistry(null, null).registerComponent(socketProperties, socketPropertiesOname, null);
-//
-//            for (SSLHostConfig sslHostConfig : findSslHostConfigs()) {
-//                registerJmx(sslHostConfig);
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        if (bindOnInit) {
+            bindWithCleanup();
+            bindState = BindState.BOUND_ON_INIT;
+        }
+        if (this.domain != null) {
+            // Register endpoint (as ThreadPool - historical name)
+            oname = new ObjectName(domain + ":type=ThreadPool,name=\"" + getName() + "\"");
+            Registry.getRegistry(null, null).registerComponent(this, oname, null);
+
+            ObjectName socketPropertiesOname = new ObjectName(domain +
+                    ":type=SocketProperties,name=\"" + getName() + "\"");
+            socketProperties.setObjectName(socketPropertiesOname);
+            Registry.getRegistry(null, null).registerComponent(socketProperties, socketPropertiesOname, null);
+
+            for (SSLHostConfig sslHostConfig : findSslHostConfigs()) {
+                registerJmx(sslHostConfig);
+            }
+        }
     }
 
 

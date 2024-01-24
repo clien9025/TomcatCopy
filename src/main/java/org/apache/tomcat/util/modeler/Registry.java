@@ -115,7 +115,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
      */
     public static synchronized Registry getRegistry(Object key, Object guard) {
         // 如果 Registry 实例尚未创建，它会创建一个新的 Registry 实例。
-        // 此外，还有一个安全检查，以确保只有被授权的组件能够访问 Registry。
+        // 此外，还有一个安全检查(guard,可以成为保安)，以确保只有被授权的组件能够访问 Registry。
         if (registry == null) {
             registry = new Registry();
             registry.guard = guard;
@@ -124,9 +124,10 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         如果 guard 不为 null（意味着有一种安全机制被设置），并且传入的 guard 参数与 Registry 实例的 guard 不匹配，那么方法会返回 null。
         这样的检查确保了只有提供正确“钥匙”（即 guard 对象）的调用者才能访问 Registry 实例
         三种情况：
-                1. 本身设置了钥匙，传入的钥匙和本身的钥匙不匹配 ----> 进入内部代码（不安全就不给你 registry 注册对象）
-                2. 本身设置了钥匙，传入的钥匙和本身的钥匙匹配   ----> 不进入内部代码（安全给你 registry 注册对象）
-                3. 本身没设置钥匙，传入的钥匙为空（传入也没钥匙）----> 大家都没 守卫 “guard”（半斤八两，直接给你 registry 注册对象）
+
+1. 本身设置了钥匙，传入的钥匙和本身的钥匙不匹配 ----> 进入内部代码（不安全就不给你 registry 注册对象）
+2. 本身设置了钥匙，传入的钥匙和本身的钥匙匹配   ----> 不进入内部代码（安全给你 registry 注册对象）
+3. 本身没设置钥匙（registry.guard 为 null），就不管传入的有没有钥匙 ----> 大家都没 守卫 “guard”（半斤八两，直接给你 registry 注册对象）
         */
         if (registry.guard != null && registry.guard != guard) {
             return null;

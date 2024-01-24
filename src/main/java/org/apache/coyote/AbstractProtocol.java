@@ -392,6 +392,12 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
      * @return A name for this protocol instance that is appropriately quoted for use in an ObjectName.
      */
     public String getName() {
+        /* 在 Java 中，ObjectName.quote(String) 是一个用于处理 JMX（Java Management Extensions）对象名称的静态方法。
+        它的主要作用是对字符串进行引用，以便该字符串可以安全地用作 JMX 对象名称的一部分。这个方法特别重要，
+        因为 JMX 对象名称必须遵循一定的格式规则，特别是对于包含特殊字符的字符串。*/
+
+        /* 当你在 JMX 对象名称中使用字符串时，该字符串可能包含诸如逗号、等号、冒号等可能会破坏对象名称格式的特殊字符。
+        ObjectName.quote 方法确保这些字符被适当地转义，使得字符串可以安全地用作 JMX 对象名称的一部分。 */
         return ObjectName.quote(getNameInternal());
     }
 
@@ -574,29 +580,28 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
     }
 
     private ObjectName createObjectName() throws MalformedObjectNameException {
-//        // Use the same domain as the connector
-//        domain = getAdapter().getDomain();
-//
-//        if (domain == null) {
-//            return null;
-//        }
-//
-//        StringBuilder name = new StringBuilder(getDomain());
-//        name.append(":type=ProtocolHandler,port=");
-//        int port = getPortWithOffset();
-//        if (port > 0) {
-//            name.append(port);
-//        } else {
-//            name.append("auto-");
-//            name.append(getNameIndex());
-//        }
-//        InetAddress address = getAddress();
-//        if (address != null) {
-//            name.append(",address=");
-//            name.append(ObjectName.quote(address.getHostAddress()));
-//        }
-//        return new ObjectName(name.toString());
-        throw new UnsupportedOperationException();
+        // Use the same domain as the connector
+        domain = getAdapter().getDomain();
+
+        if (domain == null) {
+            return null;
+        }
+
+        StringBuilder name = new StringBuilder(getDomain());
+        name.append(":type=ProtocolHandler,port=");
+        int port = getPortWithOffset();
+        if (port > 0) {
+            name.append(port);
+        } else {
+            name.append("auto-");
+            name.append(getNameIndex());
+        }
+        InetAddress address = getAddress();
+        if (address != null) {
+            name.append(",address=");
+            name.append(ObjectName.quote(address.getHostAddress()));
+        }
+        return new ObjectName(name.toString());
     }
 
 
@@ -609,31 +614,34 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler, MBeanRegis
 
     @Override
     public void init() throws Exception {
-//        if (getLog().isInfoEnabled()) {
-//            getLog().info(sm.getString("abstractProtocolHandler.init", getName()));
-//            logPortOffset();
-//        }
-//
-//        if (oname == null) {
-//            // Component not pre-registered so register it
-//            oname = createObjectName();
-//            if (oname != null) {
-//                Registry.getRegistry(null, null).registerComponent(this, oname, null);
-//            }
-//        }
-//
-//        if (this.domain != null) {
-//            ObjectName rgOname = new ObjectName(domain + ":type=GlobalRequestProcessor,name=" + getName());
-//            this.rgOname = rgOname;
-//            Registry.getRegistry(null, null).registerComponent(getHandler().getGlobal(), rgOname, null);
-//        }
-//
-//        String endpointName = getName();
-//        endpoint.setName(endpointName.substring(1, endpointName.length() - 1));
-//        endpoint.setDomain(domain);
-//
-//        endpoint.init();
-        throw new UnsupportedOperationException();
+        if (getLog().isInfoEnabled()) {
+            getLog().info(sm.getString("abstractProtocolHandler.init", getName()));
+            logPortOffset();
+        }
+
+        if (oname == null) {
+            // Component not pre-registered so register it
+            oname = createObjectName();
+            if (oname != null) {
+                // 通过调用 createObjectName 方法创建一个新的对象名称，并使用 JMX 的 Registry 来注册这个对象。
+                Registry.getRegistry(null, null).registerComponent(this, oname, null);
+            }
+        }
+
+        if (this.domain != null) {
+            // 如果 domain（JMX 域名）不为空，创建一个全局请求处理器的对象名称 rgOname
+            ObjectName rgOname = new ObjectName(domain + ":type=GlobalRequestProcessor,name=" + getName());
+            this.rgOname = rgOname;
+            Registry.getRegistry(null, null).registerComponent(getHandler().getGlobal(), rgOname, null);
+        }
+        /* 设置端点名称和域 */
+        // 从 getName 方法获取端点名称，并设置给 endpoint 对象。
+        // 设置 endpoint 的域为 domain。
+        String endpointName = getName();
+        endpoint.setName(endpointName.substring(1, endpointName.length() - 1));
+        endpoint.setDomain(domain);
+        // 调用 endpoint.init() 初始化端点。endpoint 是网络通信的核心组件，负责处理实际的网络请求。
+        endpoint.init();
     }
 
 
