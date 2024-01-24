@@ -373,14 +373,13 @@ public interface Container extends Lifecycle {
      * @return the Service, or null if not found
      */
     static Service getService(Container container) {
-//        while (container != null && !(container instanceof Engine)) {
-//            container = container.getParent();
-//        }
-//        if (container == null) {
-//            return null;
-//        }
-//        return ((Engine) container).getService();
-        throw new UnsupportedOperationException();
+        while (container != null && !(container instanceof Engine)) {
+            container = container.getParent();
+        }
+        if (container == null) {
+            return null;
+        }
+        return ((Engine) container).getService();
     }
 
 

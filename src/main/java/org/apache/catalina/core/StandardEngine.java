@@ -1,10 +1,16 @@
 package org.apache.catalina.core;
 
 import org.apache.catalina.*;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.Response;
+import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -42,18 +48,46 @@ public class StandardEngine extends ContainerBase implements Engine {
      */
     private Service service = null;
 
-//
-//    /**
-//     * The JVM Route ID for this Tomcat instance. All Route ID's must be unique across the cluster.
-//     */
-//    private String jvmRouteId;
-//
-//    /**
-//     * Default access log to use for request/response pairs where we can't ID the intended host and context.
-//     */
-//    private final AtomicReference<AccessLog> defaultAccessLog = new AtomicReference<>();
+
+    /**
+     * The JVM Route ID for this Tomcat instance. All Route ID's must be unique across the cluster.
+     */
+    private String jvmRouteId;
+
+    /**
+     * Default access log to use for request/response pairs where we can't ID the intended host and context.
+     */
+    private final AtomicReference<AccessLog> defaultAccessLog = new AtomicReference<>();
 
     // ------------------------------------------------------------- Properties
+
+    /**
+     * Obtain the configured Realm and provide a default Realm implementation when no explicit configuration is set.
+     *
+     * @return configured realm, or a {@link NullRealm} by default
+     */
+    @Override
+    public Realm getRealm() {
+//        Realm configured = super.getRealm();
+//        // If no set realm has been called - default to NullRealm
+//        // This can be overridden at engine, context and host level
+//        if (configured == null) {
+//            configured = new NullRealm();
+//            this.setRealm(configured);
+//        }
+//        return configured;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Return the default host.
+     */
+    @Override
+    public String getDefaultHost() {
+        return defaultHost;
+    }
+
 
     /**
      * Set the default host.
@@ -76,6 +110,37 @@ public class StandardEngine extends ContainerBase implements Engine {
         support.firePropertyChange("defaultHost", oldDefaultHost, this.defaultHost);
     }
 
+
+    /**
+     * Set the cluster-wide unique identifier for this Engine. This value is only useful in a load-balancing scenario.
+     * <p>
+     * This property should not be changed once it is set.
+     */
+    @Override
+    public void setJvmRoute(String routeId) {
+        jvmRouteId = routeId;
+    }
+
+
+    /**
+     * Retrieve the cluster-wide unique identifier for this Engine. This value is only useful in a load-balancing
+     * scenario.
+     */
+    @Override
+    public String getJvmRoute() {
+        return jvmRouteId;
+    }
+
+
+    /**
+     * Return the <code>Service</code> with which we are associated (if any).
+     */
+    @Override
+    public Service getService() {
+        return this.service;
+    }
+
+
     /**
      * Set the <code>Service</code> with which we are associated (if any).
      *
@@ -85,20 +150,6 @@ public class StandardEngine extends ContainerBase implements Engine {
     public void setService(Service service) {
         this.service = service;
     }
-
-
-    // -------------------- JMX registration --------------------
-
-    @Override
-    protected String getObjectNameKeyProperties() {
-        return "type=Engine";
-    }
-
-    @Override
-    protected String getDomainInternal() {
-        return getName();
-    }
-
 
     // --------------------------------------------------------- Public Methods
 
@@ -115,8 +166,31 @@ public class StandardEngine extends ContainerBase implements Engine {
             throw new IllegalArgumentException(sm.getString("standardEngine.notHost"));
         }
         super.addChild(child);
+    }
+
+
+    /**
+     * Disallow any attempt to set a parent for this Container, since an Engine is supposed to be at the top of the
+     * Container hierarchy.
+     *
+     * @param container Proposed parent Container
+     */
+    @Override
+    public void setParent(Container container) {
+
+        throw new IllegalArgumentException(sm.getString("standardEngine.notParent"));
 
     }
+
+
+    @Override
+    protected void initInternal() throws LifecycleException {
+        // Ensure that a Realm is present before any attempt is made to start
+        // one. This will create the default NullRealm if necessary.
+        getRealm();
+        super.initInternal();
+    }
+
 
     /**
      * Start this component and implement the requirements of
@@ -128,14 +202,258 @@ public class StandardEngine extends ContainerBase implements Engine {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-        // Log our server identification information
-        if (log.isInfoEnabled()) {
-            log.info(sm.getString("standardEngine.start", ServerInfo.getServerInfo()));
+//        // Log our server identification information
+//        if (log.isInfoEnabled()) {
+//            log.info(sm.getString("standardEngine.start", ServerInfo.getServerInfo()));
+//        }
+//
+//        // Standard container startup
+//        super.startInternal();
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Override the default implementation. If no access log is defined for the Engine, look for one in the Engine's
+     * default host and then the default host's ROOT context. If still none is found, return the default NoOp access
+     * log.
+     */
+    @Override
+    public void logAccess(Request request, Response response, long time, boolean useDefault) {
+
+//        boolean logged = false;
+//
+//        if (getAccessLog() != null) {
+//            accessLog.log(request, response, time);
+//            logged = true;
+//        }
+//
+//        if (!logged && useDefault) {
+//            AccessLog newDefaultAccessLog = defaultAccessLog.get();
+//            if (newDefaultAccessLog == null) {
+//                // If we reached this point, this Engine can't have an AccessLog
+//                // Look in the defaultHost
+//                Host host = (Host) findChild(getDefaultHost());
+//                Context context = null;
+//                if (host != null && host.getState().isAvailable()) {
+//                    newDefaultAccessLog = host.getAccessLog();
+//
+//                    if (newDefaultAccessLog != null) {
+//                        if (defaultAccessLog.compareAndSet(null, newDefaultAccessLog)) {
+//                            AccessLogListener l = new AccessLogListener(this, host, null);
+//                            l.install();
+//                        }
+//                    } else {
+//                        // Try the ROOT context of default host
+//                        context = (Context) host.findChild("");
+//                        if (context != null && context.getState().isAvailable()) {
+//                            newDefaultAccessLog = context.getAccessLog();
+//                            if (newDefaultAccessLog != null) {
+//                                if (defaultAccessLog.compareAndSet(null, newDefaultAccessLog)) {
+//                                    AccessLogListener l = new AccessLogListener(this, null, context);
+//                                    l.install();
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                if (newDefaultAccessLog == null) {
+//                    newDefaultAccessLog = new NoopAccessLog();
+//                    if (defaultAccessLog.compareAndSet(null, newDefaultAccessLog)) {
+//                        AccessLogListener l = new AccessLogListener(this, host, context);
+//                        l.install();
+//                    }
+//                }
+//            }
+//
+//            newDefaultAccessLog.log(request, response, time);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Return the parent class loader for this component.
+     */
+    @Override
+    public ClassLoader getParentClassLoader() {
+//        if (parentClassLoader != null) {
+//            return parentClassLoader;
+//        }
+//        if (service != null) {
+//            return service.getParentClassLoader();
+//        }
+//        return ClassLoader.getSystemClassLoader();
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public File getCatalinaBase() {
+//        if (service != null) {
+//            Server s = service.getServer();
+//            if (s != null) {
+//                File base = s.getCatalinaBase();
+//                if (base != null) {
+//                    return base;
+//                }
+//            }
+//        }
+//        // Fall-back
+//        return super.getCatalinaBase();
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public File getCatalinaHome() {
+//        if (service != null) {
+//            Server s = service.getServer();
+//            if (s != null) {
+//                File base = s.getCatalinaHome();
+//                if (base != null) {
+//                    return base;
+//                }
+//            }
+//        }
+//        // Fall-back
+//        return super.getCatalinaHome();
+        throw new UnsupportedOperationException();
+    }
+
+
+
+
+
+
+
+    // -------------------- JMX registration --------------------
+
+    @Override
+    protected String getObjectNameKeyProperties() {
+        return "type=Engine";
+    }
+
+    @Override
+    protected String getDomainInternal() {
+        return getName();
+    }
+
+
+
+    // ----------------------------------------------------------- Inner classes
+    protected static final class NoopAccessLog implements AccessLog {
+
+        @Override
+        public void log(Request request, Response response, long time) {
+            // NOOP
         }
 
-        // Standard container startup
-        super.startInternal();
+        @Override
+        public void setRequestAttributesEnabled(boolean requestAttributesEnabled) {
+            // NOOP
+
+        }
+
+        @Override
+        public boolean getRequestAttributesEnabled() {
+            // NOOP
+            return false;
+        }
     }
+
+    protected static final class AccessLogListener
+            implements PropertyChangeListener, LifecycleListener, ContainerListener {
+
+        private final StandardEngine engine;
+        private final Host host;
+        private final Context context;
+        private volatile boolean disabled = false;
+
+        public AccessLogListener(StandardEngine engine, Host host, Context context) {
+            this.engine = engine;
+            this.host = host;
+            this.context = context;
+        }
+
+        public void install() {
+//            engine.addPropertyChangeListener(this);
+//            if (host != null) {
+//                host.addContainerListener(this);
+//                host.addLifecycleListener(this);
+//            }
+//            if (context != null) {
+//                context.addLifecycleListener(this);
+//            }
+            throw new UnsupportedOperationException();
+        }
+
+        private void uninstall() {
+//            disabled = true;
+//            if (context != null) {
+//                context.removeLifecycleListener(this);
+//            }
+//            if (host != null) {
+//                host.removeLifecycleListener(this);
+//                host.removeContainerListener(this);
+//            }
+//            engine.removePropertyChangeListener(this);
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void lifecycleEvent(LifecycleEvent event) {
+//            if (disabled) {
+//                return;
+//            }
+//
+//            String type = event.getType();
+//            if (AFTER_START_EVENT.equals(type) || BEFORE_STOP_EVENT.equals(type) || BEFORE_DESTROY_EVENT.equals(type)) {
+//                // Container is being started/stopped/removed
+//                // Force re-calculation and disable listener since it won't
+//                // be re-used
+//                engine.defaultAccessLog.set(null);
+//                uninstall();
+//            }
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+//            if (disabled) {
+//                return;
+//            }
+//            if ("defaultHost".equals(evt.getPropertyName())) {
+//                // Force re-calculation and disable listener since it won't
+//                // be re-used
+//                engine.defaultAccessLog.set(null);
+//                uninstall();
+//            }
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void containerEvent(ContainerEvent event) {
+//            // Only useful for hosts
+//            if (disabled) {
+//                return;
+//            }
+//            if (ADD_CHILD_EVENT.equals(event.getType())) {
+//                Context context = (Context) event.getData();
+//                if (context.getPath().isEmpty()) {
+//                    // Force re-calculation and disable listener since it won't
+//                    // be re-used
+//                    engine.defaultAccessLog.set(null);
+//                    uninstall();
+//                }
+//            }
+            throw new UnsupportedOperationException();
+        }
+    }
+
+
+
 
 
 }
