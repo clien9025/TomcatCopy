@@ -855,7 +855,15 @@ public class Tomcat {
         return new SimpleRealm();
     }
 
-
+    /**
+     * 在 Tomcat 中，Realm 类是用于实现身份验证和授权的关键组件。它提供了一种机制来验证用户身份（即身份验证）
+     * 并控制用户访问应用程序中不同部分的权限（即授权）。简而言之，Realm 是 Tomcat 安全架构中
+     * 用于存储和检索用户的安全数据（如用户名、密码和角色）的地方。
+     * <p>
+     * SimpleRealm 是 RealmBase 的一个子类，实现了特定的身份验证和授权逻辑
+     * SimpleRealm 类中的这些实现提供了一种简单的方式来管理和验证用户的凭据。在实际的生产环境中，Realm 的实现可能会连接到数据库、
+     * LDAP服务器或其他外部系统来检索用户凭据。在 Tomcat 中，可以配置不同类型的 Realm 来满足应用程序的特定安全需求。
+     */
     private class SimpleRealm extends RealmBase {
 
         @Override

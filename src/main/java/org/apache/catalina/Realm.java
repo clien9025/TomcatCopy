@@ -34,6 +34,9 @@ import org.ietf.jgss.GSSName;
  * associated with those users.  Realms can be attached at any Container
  * level, but will typically only be attached to a Context, or higher level,
  * Container.
+ * <p>
+ * 在 Tomcat 中，Realm 类是用于实现身份验证和授权的关键组件。它提供了一种机制来验证用户身份（即身份验证）并控制用户访问应用程序中
+ * 不同部分的权限（即授权）。简而言之，Realm 是 Tomcat 安全架构中用于存储和检索用户的安全数据（如用户名、密码和角色）的地方。
  *
  * @author Craig R. McClanahan
  */
@@ -134,18 +137,17 @@ public interface Realm extends Contained {
      * Implementations are expected to override the default implementation and
      * take account of the algorithm parameter.
      *
-     * @param username Username of the Principal to look up
-     * @param digest Digest which has been submitted by the client
-     * @param nonce Unique (or supposedly unique) token which has been used
-     * for this request
-     * @param nc the nonce counter
-     * @param cnonce the client chosen nonce
-     * @param qop the "quality of protection" ({@code nc} and {@code cnonce}
-     *        will only be used, if {@code qop} is not {@code null}).
-     * @param realm Realm name
-     * @param digestA2 Second digest calculated as digest(Method + ":" + uri)
+     * @param username  Username of the Principal to look up
+     * @param digest    Digest which has been submitted by the client
+     * @param nonce     Unique (or supposedly unique) token which has been used
+     *                  for this request
+     * @param nc        the nonce counter
+     * @param cnonce    the client chosen nonce
+     * @param qop       the "quality of protection" ({@code nc} and {@code cnonce}
+     *                  will only be used, if {@code qop} is not {@code null}).
+     * @param realm     Realm name
+     * @param digestA2  Second digest calculated as digest(Method + ":" + uri)
      * @param algorithm The message digest algorithm to use
-     *
      * @return the associated principal, or {@code null} if there is none.
      */
     default Principal authenticate(String username, String digest,
@@ -287,6 +289,7 @@ public interface Realm extends Contained {
 
     /**
      * Return the availability of the realm for authentication.
+     *
      * @return {@code true} if the realm is able to perform authentication
      */
     default boolean isAvailable() {

@@ -64,26 +64,25 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
     @Override
     public void startInternal() throws LifecycleException {
 
-//        setState(LifecycleState.STARTING);
-//
-//        Engine engine = service.getContainer();
-//        if (engine == null) {
-//            return;
-//        }
-//
-//        findDefaultHost();
-//
-//        addListeners(engine);
-//
-//        Container[] conHosts = engine.findChildren();
-//        for (Container conHost : conHosts) {
-//            Host host = (Host) conHost;
-//            if (!LifecycleState.NEW.equals(host.getState())) {
-//                // Registering the host will register the context and wrappers
-//                registerHost(host);
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        setState(LifecycleState.STARTING);
+
+        Engine engine = service.getContainer();
+        if (engine == null) {
+            return;
+        }
+
+        findDefaultHost();
+
+        addListeners(engine);
+
+        Container[] conHosts = engine.findChildren();
+        for (Container conHost : conHosts) {
+            Host host = (Host) conHost;
+            if (!LifecycleState.NEW.equals(host.getState())) {
+                // Registering the host will register the context and wrappers
+                registerHost(host);
+            }
+        }
     }
 
 
