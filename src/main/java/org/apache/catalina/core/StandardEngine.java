@@ -68,15 +68,14 @@ public class StandardEngine extends ContainerBase implements Engine {
      */
     @Override
     public Realm getRealm() {
-//        Realm configured = super.getRealm();
-//        // If no set realm has been called - default to NullRealm
-//        // This can be overridden at engine, context and host level
-//        if (configured == null) {
-//            configured = new NullRealm();
-//            this.setRealm(configured);
-//        }
-//        return configured;
-        throw new UnsupportedOperationException();
+        Realm configured = super.getRealm();
+        // If no set realm has been called - default to NullRealm
+        // This can be overridden at engine, context and host level
+        if (configured == null) {
+            configured = new NullRealm();
+            this.setRealm(configured);
+        }
+        return configured;
     }
 
 
