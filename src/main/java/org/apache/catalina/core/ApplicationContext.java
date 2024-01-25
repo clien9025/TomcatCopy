@@ -310,8 +310,7 @@ public class ApplicationContext implements ServletContext {
 
     @Override
     public String getContextPath() {
-//        return null;
-        throw new UnsupportedOperationException();
+        return context.getPath();
     }
 
     @Override

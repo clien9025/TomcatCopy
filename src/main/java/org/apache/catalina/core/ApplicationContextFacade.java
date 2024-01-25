@@ -86,7 +86,11 @@ public class ApplicationContextFacade implements ServletContext {
 
     @Override
     public String getContextPath() {
-        throw new UnsupportedOperationException();
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return (String) doPrivileged("getContextPath", null);
+        } else {
+            return context.getContextPath();
+        }
     }
 
     @Override

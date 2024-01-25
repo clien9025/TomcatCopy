@@ -797,30 +797,29 @@ public class StandardHost extends ContainerBase implements Host {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-//        // Set error report valve
-//        String errorValve = getErrorReportValveClass();
-//        if ((errorValve != null) && (!errorValve.equals(""))) {
-//            try {
-//                boolean found = false;
-//                Valve[] valves = getPipeline().getValves();
-//                for (Valve valve : valves) {
-//                    if (errorValve.equals(valve.getClass().getName())) {
-//                        found = true;
-//                        break;
-//                    }
-//                }
-//                if (!found) {
-//                    Valve valve = ErrorReportValve.class.getName().equals(errorValve) ? new ErrorReportValve() :
-//                            (Valve) Class.forName(errorValve).getConstructor().newInstance();
-//                    getPipeline().addValve(valve);
-//                }
-//            } catch (Throwable t) {
-//                ExceptionUtils.handleThrowable(t);
-//                log.error(sm.getString("standardHost.invalidErrorReportValveClass", errorValve), t);
-//            }
-//        }
-//        super.startInternal();
-        throw new UnsupportedOperationException();
+        // Set error report valve
+        String errorValve = getErrorReportValveClass();
+        if ((errorValve != null) && (!errorValve.equals(""))) {
+            try {
+                boolean found = false;
+                Valve[] valves = getPipeline().getValves();
+                for (Valve valve : valves) {
+                    if (errorValve.equals(valve.getClass().getName())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    Valve valve = ErrorReportValve.class.getName().equals(errorValve) ? new ErrorReportValve() :
+                            (Valve) Class.forName(errorValve).getConstructor().newInstance();
+                    getPipeline().addValve(valve);
+                }
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(sm.getString("standardHost.invalidErrorReportValveClass", errorValve), t);
+            }
+        }
+        super.startInternal();
     }
 
 
