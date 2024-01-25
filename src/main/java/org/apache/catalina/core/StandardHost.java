@@ -671,23 +671,21 @@ public class StandardHost extends ContainerBase implements Host {
     @Override
     public void addChild(Container child) {
 
-//        if (!(child instanceof Context)) {
-//            throw new IllegalArgumentException(sm.getString("standardHost.notContext"));
-//        }
-//
-//        child.addLifecycleListener(new MemoryLeakTrackingListener());
-//
-//        // Avoid NPE for case where Context is defined in server.xml with only a
-//        // docBase
-//        Context context = (Context) child;
-//        if (context.getPath() == null) {
-//            ContextName cn = new ContextName(context.getDocBase(), true);
-//            context.setPath(cn.getPath());
-//        }
-//
-//        super.addChild(child);
-        throw new UnsupportedOperationException();
+        if (!(child instanceof Context)) {
+            throw new IllegalArgumentException(sm.getString("standardHost.notContext"));
+        }
 
+        child.addLifecycleListener(new MemoryLeakTrackingListener());
+
+        // Avoid NPE for case where Context is defined in server.xml with only a
+        // docBase
+        Context context = (Context) child;
+        if (context.getPath() == null) {
+            ContextName cn = new ContextName(context.getDocBase(), true);
+            context.setPath(cn.getPath());
+        }
+
+        super.addChild(child);
     }
 
 
@@ -698,14 +696,13 @@ public class StandardHost extends ContainerBase implements Host {
     private class MemoryLeakTrackingListener implements LifecycleListener {
         @Override
         public void lifecycleEvent(LifecycleEvent event) {
-//            if (event.getType().equals(AFTER_START_EVENT)) {
-//                if (event.getSource() instanceof Context) {
-//                    Context context = ((Context) event.getSource());
-//                    childClassLoaders.put(context.getLoader().getClassLoader(),
-//                            context.getServletContext().getContextPath());
-//                }
-//            }
-            throw new UnsupportedOperationException();
+            if (event.getType().equals(AFTER_START_EVENT)) {
+                if (event.getSource() instanceof Context) {
+                    Context context = ((Context) event.getSource());
+                    childClassLoaders.put(context.getLoader().getClassLoader(),
+                            context.getServletContext().getContextPath());
+                }
+            }
         }
     }
 
