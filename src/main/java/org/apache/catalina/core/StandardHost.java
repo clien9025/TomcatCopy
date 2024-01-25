@@ -1,18 +1,17 @@
 package org.apache.catalina.core;
 
-import org.apache.catalina.Container;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Globals;
-import org.apache.catalina.Host;
+import org.apache.catalina.*;
+import org.apache.catalina.loader.WebappClassLoaderBase;
+import org.apache.catalina.util.ContextName;
+import org.apache.catalina.valves.ErrorReportValve;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.ExceptionUtils;
 
+import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
@@ -629,6 +628,8 @@ public class StandardHost extends ContainerBase implements Host {
     }
 
 
+    /* +++++++++++++++++++++++++++ */
+
 
     // --------------------------------------------------------- Public Methods
 
@@ -662,6 +663,198 @@ public class StandardHost extends ContainerBase implements Host {
     }
 
 
+    /**
+     * Add a child Container, only if the proposed child is an implementation of Context.
+     *
+     * @param child Child container to be added
+     */
+    @Override
+    public void addChild(Container child) {
+
+//        if (!(child instanceof Context)) {
+//            throw new IllegalArgumentException(sm.getString("standardHost.notContext"));
+//        }
+//
+//        child.addLifecycleListener(new MemoryLeakTrackingListener());
+//
+//        // Avoid NPE for case where Context is defined in server.xml with only a
+//        // docBase
+//        Context context = (Context) child;
+//        if (context.getPath() == null) {
+//            ContextName cn = new ContextName(context.getDocBase(), true);
+//            context.setPath(cn.getPath());
+//        }
+//
+//        super.addChild(child);
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    /**
+     * Used to ensure the regardless of {@link Context} implementation, a record is kept of the class loader used every
+     * time a context starts.
+     */
+    private class MemoryLeakTrackingListener implements LifecycleListener {
+        @Override
+        public void lifecycleEvent(LifecycleEvent event) {
+//            if (event.getType().equals(AFTER_START_EVENT)) {
+//                if (event.getSource() instanceof Context) {
+//                    Context context = ((Context) event.getSource());
+//                    childClassLoaders.put(context.getLoader().getClassLoader(),
+//                            context.getServletContext().getContextPath());
+//                }
+//            }
+            throw new UnsupportedOperationException();
+        }
+    }
+
+
+    /**
+     * Attempt to identify the contexts that have a class loader memory leak. This is usually triggered on context
+     * reload. Note: This method attempts to force a full garbage collection. This should be used with extreme caution
+     * on a production system.
+     *
+     * @return a list of possibly leaking contexts
+     */
+    public String[] findReloadedContextMemoryLeaks() {
+
+//        System.gc();
+//
+//        List<String> result = new ArrayList<>();
+//
+//        for (Map.Entry<ClassLoader,String> entry : childClassLoaders.entrySet()) {
+//            ClassLoader cl = entry.getKey();
+//            if (cl instanceof WebappClassLoaderBase) {
+//                if (!((WebappClassLoaderBase) cl).getState().isAvailable()) {
+//                    result.add(entry.getValue());
+//                }
+//            }
+//        }
+//
+//        return result.toArray(new String[0]);
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the set of alias names for this Host. If none are defined, a zero length array is returned.
+     */
+    @Override
+    public String[] findAliases() {
+        synchronized (aliasesLock) {
+            return this.aliases;
+        }
+    }
+
+
+    /**
+     * Remove the specified alias name from the aliases for this Host.
+     *
+     * @param alias Alias name to be removed
+     */
+    @Override
+    public void removeAlias(String alias) {
+
+//        alias = alias.toLowerCase(Locale.ENGLISH);
+//
+//        synchronized (aliasesLock) {
+//
+//            // Make sure this alias is currently present
+//            int n = -1;
+//            for (int i = 0; i < aliases.length; i++) {
+//                if (aliases[i].equals(alias)) {
+//                    n = i;
+//                    break;
+//                }
+//            }
+//            if (n < 0) {
+//                return;
+//            }
+//
+//            // Remove the specified alias
+//            int j = 0;
+//            String results[] = new String[aliases.length - 1];
+//            for (int i = 0; i < aliases.length; i++) {
+//                if (i != n) {
+//                    results[j++] = aliases[i];
+//                }
+//            }
+//            aliases = results;
+//
+//        }
+//
+//        // Inform interested listeners
+//        fireContainerEvent(REMOVE_ALIAS_EVENT, alias);
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    /**
+     * Start this component and implement the requirements of
+     * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void startInternal() throws LifecycleException {
+
+//        // Set error report valve
+//        String errorValve = getErrorReportValveClass();
+//        if ((errorValve != null) && (!errorValve.equals(""))) {
+//            try {
+//                boolean found = false;
+//                Valve[] valves = getPipeline().getValves();
+//                for (Valve valve : valves) {
+//                    if (errorValve.equals(valve.getClass().getName())) {
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//                if (!found) {
+//                    Valve valve = ErrorReportValve.class.getName().equals(errorValve) ? new ErrorReportValve() :
+//                            (Valve) Class.forName(errorValve).getConstructor().newInstance();
+//                    getPipeline().addValve(valve);
+//                }
+//            } catch (Throwable t) {
+//                ExceptionUtils.handleThrowable(t);
+//                log.error(sm.getString("standardHost.invalidErrorReportValveClass", errorValve), t);
+//            }
+//        }
+//        super.startInternal();
+        throw new UnsupportedOperationException();
+    }
+
+
+    // -------------------- JMX --------------------
+    /**
+     * @return the MBean Names of the Valves associated with this Host
+     *
+     * @exception Exception if an MBean cannot be created or registered
+     */
+    public String[] getValveNames() throws Exception {
+//        Valve[] valves = this.getPipeline().getValves();
+//        String[] mbeanNames = new String[valves.length];
+//        for (int i = 0; i < valves.length; i++) {
+//            if (valves[i] instanceof JmxEnabled) {
+//                ObjectName oname = ((JmxEnabled) valves[i]).getObjectName();
+//                if (oname != null) {
+//                    mbeanNames[i] = oname.toString();
+//                }
+//            }
+//        }
+//
+//        return mbeanNames;
+        throw new UnsupportedOperationException();
+    }
+
+    public String[] getAliases() {
+        synchronized (aliasesLock) {
+            return aliases;
+        }
+    }
+
     @Override
     protected String getObjectNameKeyProperties() {
 
@@ -670,5 +863,7 @@ public class StandardHost extends ContainerBase implements Host {
 
         return keyProperties.toString();
     }
+    /* +++++++++++++++++++++++++++ */
+
 
 }

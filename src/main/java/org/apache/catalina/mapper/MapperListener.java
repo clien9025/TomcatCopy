@@ -44,8 +44,6 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
     private final String domain = null;
 
 
-
-
     // ----------------------------------------------------------- Constructors
 
     /**
@@ -80,7 +78,7 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
             Host host = (Host) conHost;
             if (!LifecycleState.NEW.equals(host.getState())) {
                 // Registering the host will register the context and wrappers
-                registerHost(host);
+                registerHost(host);// todo 这里还没追完（1.25）
             }
         }
     }
@@ -228,37 +226,36 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
 
     private void findDefaultHost() {
 
-//        Engine engine = service.getContainer();
-//        String defaultHost = engine.getDefaultHost();
-//
-//        boolean found = false;
-//
-//        if (defaultHost != null && defaultHost.length() > 0) {
-//            Container[] containers = engine.findChildren();
-//
-//            for (Container container : containers) {
-//                Host host = (Host) container;
-//                if (defaultHost.equalsIgnoreCase(host.getName())) {
-//                    found = true;
-//                    break;
-//                }
-//
-//                String[] aliases = host.findAliases();
-//                for (String alias : aliases) {
-//                    if (defaultHost.equalsIgnoreCase(alias)) {
-//                        found = true;
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-//
-//        if (found) {
-//            mapper.setDefaultHostName(defaultHost);
-//        } else {
-//            log.error(sm.getString("mapperListener.unknownDefaultHost", defaultHost, service));
-//        }
-        throw new UnsupportedOperationException();
+        Engine engine = service.getContainer();
+        String defaultHost = engine.getDefaultHost();
+
+        boolean found = false;
+
+        if (defaultHost != null && defaultHost.length() > 0) {
+            Container[] containers = engine.findChildren();
+
+            for (Container container : containers) {
+                Host host = (Host) container;
+                if (defaultHost.equalsIgnoreCase(host.getName())) {
+                    found = true;
+                    break;
+                }
+
+                String[] aliases = host.findAliases();
+                for (String alias : aliases) {
+                    if (defaultHost.equalsIgnoreCase(alias)) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (found) {
+            mapper.setDefaultHostName(defaultHost);
+        } else {
+            log.error(sm.getString("mapperListener.unknownDefaultHost", defaultHost, service));
+        }
     }
 
 
@@ -266,23 +263,22 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      * Register host.
      */
     private void registerHost(Host host) {
+        // todo 这里还没追完（1.25）
+        String[] aliases = host.findAliases();
+        mapper.addHost(host.getName(), aliases, host);
 
-//        String[] aliases = host.findAliases();
-//        mapper.addHost(host.getName(), aliases, host);
-//
-//        for (Container container : host.findChildren()) {
-//            if (container.getState().isAvailable()) {
-//                registerContext((Context) container);
-//            }
-//        }
-//
-//        // Default host may have changed
-//        findDefaultHost();
-//
-//        if (log.isDebugEnabled()) {
-//            log.debug(sm.getString("mapperListener.registerHost", host.getName(), domain, service));
-//        }
-        throw new UnsupportedOperationException();
+        for (Container container : host.findChildren()) {
+            if (container.getState().isAvailable()) {
+                registerContext((Context) container);
+            }
+        }
+
+        // Default host may have changed
+        findDefaultHost();
+
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("mapperListener.registerHost", host.getName(), domain, service));
+        }
     }
 
 
@@ -469,16 +465,18 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
 
     /**
      * Add this mapper to the container and all child containers
+     * <p>
+     * 其目的是向指定的容器及其所有子容器添加监听器。
+     * 这在容器层次结构中是一种常见的模式，用于确保在容器及其所有子容器上都能监听和响应特定事件。
      *
      * @param container the container (and any associated children) to which the mapper is to be added
      */
     private void addListeners(Container container) {
-//        container.addContainerListener(this);
-//        container.addLifecycleListener(this);
-//        for (Container child : container.findChildren()) {
-//            addListeners(child);
-//        }
-        throw new UnsupportedOperationException();
+        container.addContainerListener(this);
+        container.addLifecycleListener(this);
+        for (Container child : container.findChildren()) {
+            addListeners(child);
+        }
     }
 
 

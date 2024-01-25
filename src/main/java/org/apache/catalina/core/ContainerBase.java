@@ -1,6 +1,8 @@
 package org.apache.catalina.core;
 
 import org.apache.catalina.*;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.Response;
 import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
@@ -11,6 +13,7 @@ import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.InlineExecutorService;
 
 import javax.management.ObjectName;
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -441,6 +444,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
+    /* ++++++++++++++++++++++++++++ */
+
+
     // ------------------------------------------------------ Container Methods
 
 
@@ -520,6 +526,47 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
+
+    /**
+     * Add a container event listener to this component.
+     *
+     * @param listener The listener to add
+     */
+    @Override
+    public void addContainerListener(ContainerListener listener) {
+        listeners.add(listener);
+    }
+
+
+    /**
+     * Add a property change listener to this component.
+     *
+     * @param listener The listener to add
+     */
+    @Override
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        support.addPropertyChangeListener(listener);
+    }
+
+
+    /**
+     * Return the child Container, associated with this Container, with the specified name (if any); otherwise, return
+     * <code>null</code>
+     *
+     * @param name Name of the child Container to be retrieved
+     */
+    @Override
+    public Container findChild(String name) {
+//        if (name == null) {
+//            return null;
+//        }
+//        synchronized (children) {
+//            return children.get(name);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
     /**
      * Return the set of children Containers associated with this Container. If this Container has no children, a
      * zero-length array is returned.
@@ -535,6 +582,89 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             return children.values().toArray(new Container[0]);
         }
     }
+
+
+    /**
+     * Return the set of container listeners associated with this Container. If this Container has no registered
+     * container listeners, a zero-length array is returned.
+     */
+    @Override
+    public ContainerListener[] findContainerListeners() {
+        return listeners.toArray(new ContainerListener[0]);
+    }
+
+
+    /**
+     * Remove an existing child Container from association with this parent Container.
+     *
+     * @param child Existing child Container to be removed
+     */
+    @Override
+    public void removeChild(Container child) {
+
+//        if (child == null) {
+//            return;
+//        }
+//
+//        try {
+//            if (child.getState().isAvailable()) {
+//                child.stop();
+//            }
+//        } catch (LifecycleException e) {
+//            log.error(sm.getString("containerBase.child.stop"), e);
+//        }
+//
+//        boolean destroy = false;
+//        try {
+//            // child.destroy() may have already been called which would have
+//            // triggered this call. If that is the case, no need to destroy the
+//            // child again.
+//            if (!LifecycleState.DESTROYING.equals(child.getState())) {
+//                child.destroy();
+//                destroy = true;
+//            }
+//        } catch (LifecycleException e) {
+//            log.error(sm.getString("containerBase.child.destroy"), e);
+//        }
+//
+//        if (!destroy) {
+//            fireContainerEvent(REMOVE_CHILD_EVENT, child);
+//        }
+//
+//        synchronized (children) {
+//            if (children.get(child.getName()) == null) {
+//                return;
+//            }
+//            children.remove(child.getName());
+//        }
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    /**
+     * Remove a container event listener from this component.
+     *
+     * @param listener The listener to remove
+     */
+    @Override
+    public void removeContainerListener(ContainerListener listener) {
+        listeners.remove(listener);
+    }
+
+
+    /**
+     * Remove a property change listener from this component.
+     *
+     * @param listener The listener to remove
+     */
+    @Override
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+
+        support.removePropertyChangeListener(listener);
+
+    }
+
 
     /**
      * 根据提供的线程数 threads 来配置 startStopExecutor。这个执行器用于在容器（Tomcat中的容器）中启动和停止各种组件。
@@ -637,6 +767,165 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
+    /**
+     * Stop this component and implement the requirements of
+     * {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
+     *
+     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
+     *                            used
+     */
+    @Override
+    protected synchronized void stopInternal() throws LifecycleException {
+
+//        // Stop our thread
+//        if (monitorFuture != null) {
+//            monitorFuture.cancel(true);
+//            monitorFuture = null;
+//        }
+//        threadStop();
+//
+//        setState(LifecycleState.STOPPING);
+//
+//        // Stop the Valves in our pipeline (including the basic), if any
+//        if (pipeline instanceof Lifecycle && ((Lifecycle) pipeline).getState().isAvailable()) {
+//            ((Lifecycle) pipeline).stop();
+//        }
+//
+//        // Stop our child containers, if any
+//        Container[] children = findChildren();
+//        List<Future<Void>> results = new ArrayList<>(children.length);
+//        for (Container child : children) {
+//            results.add(startStopExecutor.submit(new StopChild(child)));
+//        }
+//
+//        boolean fail = false;
+//        for (Future<Void> result : results) {
+//            try {
+//                result.get();
+//            } catch (Exception e) {
+//                log.error(sm.getString("containerBase.threadedStopFailed"), e);
+//                fail = true;
+//            }
+//        }
+//        if (fail) {
+//            throw new LifecycleException(sm.getString("containerBase.threadedStopFailed"));
+//        }
+//
+//        // Stop our subordinate components, if any
+//        Realm realm = getRealmInternal();
+//        if (realm instanceof Lifecycle) {
+//            ((Lifecycle) realm).stop();
+//        }
+//        Cluster cluster = getClusterInternal();
+//        if (cluster instanceof Lifecycle) {
+//            ((Lifecycle) cluster).stop();
+//        }
+//
+//        // If init fails, this may be null
+//        if (startStopExecutor != null) {
+//            startStopExecutor.shutdownNow();
+//            startStopExecutor = null;
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void destroyInternal() throws LifecycleException {
+
+//        Realm realm = getRealmInternal();
+//        if (realm instanceof Lifecycle) {
+//            ((Lifecycle) realm).destroy();
+//        }
+//        Cluster cluster = getClusterInternal();
+//        if (cluster instanceof Lifecycle) {
+//            ((Lifecycle) cluster).destroy();
+//        }
+//
+//        // Stop the Valves in our pipeline (including the basic), if any
+//        if (pipeline instanceof Lifecycle) {
+//            ((Lifecycle) pipeline).destroy();
+//        }
+//
+//        // Remove children now this container is being destroyed
+//        for (Container child : findChildren()) {
+//            removeChild(child);
+//        }
+//
+//        // Required if the child is destroyed directly.
+//        if (parent != null) {
+//            parent.removeChild(this);
+//        }
+//
+//        super.destroyInternal();
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Check this container for an access log and if none is found, look to the parent. If there is no parent and still
+     * none is found, use the NoOp access log.
+     */
+    @Override
+    public void logAccess(Request request, Response response, long time, boolean useDefault) {
+
+//        boolean logged = false;
+//
+//        if (getAccessLog() != null) {
+//            getAccessLog().log(request, response, time);
+//            logged = true;
+//        }
+//
+//        if (getParent() != null) {
+//            // No need to use default logger once request/response has been logged
+//            // once
+//            getParent().logAccess(request, response, time, (useDefault && !logged));
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AccessLog getAccessLog() {
+
+//        if (accessLogScanComplete) {
+//            return accessLog;
+//        }
+//
+//        AccessLogAdapter adapter = null;
+//        Valve[] valves = getPipeline().getValves();
+//        for (Valve valve : valves) {
+//            if (valve instanceof AccessLog) {
+//                if (adapter == null) {
+//                    adapter = new AccessLogAdapter((AccessLog) valve);
+//                } else {
+//                    adapter.add((AccessLog) valve);
+//                }
+//            }
+//        }
+//        if (adapter != null) {
+//            accessLog = adapter;
+//        }
+//        accessLogScanComplete = true;
+//        return accessLog;
+        throw new UnsupportedOperationException();
+    }
+
+    // ------------------------------------------------------- Pipeline Methods
+
+    /* ++++++++++++++++++++++++++++ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // ------------------------------------------------------ Protected Methods
 
     /**
@@ -688,6 +977,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     /**
      * 用于生成管理Bean（MBean）的关键属性字符串。
+     *
      * @return
      */
     @Override
