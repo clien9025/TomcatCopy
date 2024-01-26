@@ -760,36 +760,35 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     @Override
     protected void stopInternal() throws LifecycleException {
 
-//        setState(LifecycleState.STOPPING);
-//
-//        if (monitorFuture != null) {
-//            monitorFuture.cancel(true);
-//            monitorFuture = null;
-//        }
-//        if (periodicLifecycleEventFuture != null) {
-//            periodicLifecycleEventFuture.cancel(false);
-//            periodicLifecycleEventFuture = null;
-//        }
-//
-//        fireLifecycleEvent(CONFIGURE_STOP_EVENT, null);
-//
-//        // Stop our defined Services
-//        for (Service service : services) {
-//            service.stop();
-//        }
-//
-//        synchronized (utilityExecutorLock) {
-//            if (utilityExecutor != null) {
-//                utilityExecutor.shutdownNow();
-//                unregister("type=UtilityExecutor");
-//                utilityExecutor = null;
-//            }
-//        }
-//
-//        globalNamingResources.stop();
-//
-//        stopAwait();
-        throw new UnsupportedOperationException();
+        setState(LifecycleState.STOPPING);
+
+        if (monitorFuture != null) {
+            monitorFuture.cancel(true);
+            monitorFuture = null;
+        }
+        if (periodicLifecycleEventFuture != null) {
+            periodicLifecycleEventFuture.cancel(false);
+            periodicLifecycleEventFuture = null;
+        }
+
+        fireLifecycleEvent(CONFIGURE_STOP_EVENT, null);
+
+        // Stop our defined Services
+        for (Service service : services) {
+            service.stop();
+        }
+
+        synchronized (utilityExecutorLock) {
+            if (utilityExecutor != null) {
+                utilityExecutor.shutdownNow();
+                unregister("type=UtilityExecutor");
+                utilityExecutor = null;
+            }
+        }
+
+        globalNamingResources.stop();
+
+        stopAwait();
     }
 
     /**
