@@ -99,43 +99,46 @@ public final class Mapper {
      * @param host    Host object
      */
     public synchronized void addHost(String name, String[] aliases, Host host) {
-//        name = renameWildcardHost(name);
-//        MappedHost[] newHosts = new MappedHost[hosts.length + 1];
-//        MappedHost newHost = new MappedHost(name, host);
-//        if (insertMap(hosts, newHosts, newHost)) {
-//            hosts = newHosts;
-//            if (newHost.name.equals(defaultHostName)) {
-//                defaultHost = newHost;
-//            }
-//            if (log.isDebugEnabled()) {
-//                log.debug(sm.getString("mapper.addHost.success", name));
-//            }
-//        } else {
-//            MappedHost duplicate = hosts[find(hosts, name)];
-//            if (duplicate.object == host) {
-//                // The host is already registered in the mapper.
-//                // E.g. it might have been added by addContextVersion()
-//                if (log.isDebugEnabled()) {
-//                    log.debug(sm.getString("mapper.addHost.sameHost", name));
-//                }
-//                newHost = duplicate;
-//            } else {
-//                log.error(sm.getString("mapper.duplicateHost", name, duplicate.getRealHostName()));
-//                // Do not add aliases, as removeHost(hostName) won't be able to
-//                // remove them
-//                return;
-//            }
-//        }
-//        List<MappedHost> newAliases = new ArrayList<>(aliases.length);
-//        for (String alias : aliases) {
-//            alias = renameWildcardHost(alias);
-//            MappedHost newAlias = new MappedHost(alias, newHost);
-//            if (addHostAliasImpl(newAlias)) {
-//                newAliases.add(newAlias);
-//            }
-//        }
-//        newHost.addAliases(newAliases);
-        throw new UnsupportedOperationException();
+        name = renameWildcardHost(name);
+        MappedHost[] newHosts = new MappedHost[hosts.length + 1];
+        MappedHost newHost = new MappedHost(name, host);
+        /* 插入成功 */
+        if (insertMap(hosts, newHosts, newHost)) {
+            hosts = newHosts;
+            if (newHost.name.equals(defaultHostName)) {
+                defaultHost = newHost;
+            }
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("mapper.addHost.success", name));
+            }
+        } else {
+            /* 未插入成功 */
+            // 如果插入失败，代码会检查是否由于相同的 Host 对象已经存在于映射器中。
+            // 如果是，它会更新引用并继续执行；如果不是，它会记录错误并停止执行，避免添加无法移除的别名。
+            MappedHost duplicate = hosts[find(hosts, name)];
+            if (duplicate.object == host) {
+                // the host is already registered in the mapper.
+                // e.g. it might have been added by addcontextversion()
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("mapper.addHost.sameHost", name));
+                }
+                newHost = duplicate;
+            } else {
+                log.error(sm.getString("mapper.duplicateHost", name, duplicate.getRealHostName()));
+                // Do not add aliases, as removeHost(hostName) won't be able to
+                // remove them
+                return;
+            }
+        }
+        List<MappedHost> newAliases = new ArrayList<>(aliases.length);
+        for (String alias : aliases) {
+            alias = renameWildcardHost(alias);
+            MappedHost newAlias = new MappedHost(alias, newHost);
+            if (addHostAliasImpl(newAlias)) {
+                newAliases.add(newAlias);
+            }
+        }
+        newHost.addAliases(newAliases);
     }
 
 
@@ -185,32 +188,31 @@ public final class Mapper {
     }
 
     private synchronized boolean addHostAliasImpl(MappedHost newAlias) {
-//        MappedHost[] newHosts = new MappedHost[hosts.length + 1];
-//        if (insertMap(hosts, newHosts, newAlias)) {
-//            hosts = newHosts;
-//            if (newAlias.name.equals(defaultHostName)) {
-//                defaultHost = newAlias;
-//            }
-//            if (log.isDebugEnabled()) {
-//                log.debug(sm.getString("mapper.addHostAlias.success", newAlias.name, newAlias.getRealHostName()));
-//            }
-//            return true;
-//        } else {
-//            MappedHost duplicate = hosts[find(hosts, newAlias.name)];
-//            if (duplicate.getRealHost() == newAlias.getRealHost()) {
-//                // A duplicate Alias for the same Host.
-//                // A harmless redundancy. E.g.
-//                // <Host name="localhost"><Alias>localhost</Alias></Host>
-//                if (log.isDebugEnabled()) {
-//                    log.debug(sm.getString("mapper.addHostAlias.sameHost", newAlias.name, newAlias.getRealHostName()));
-//                }
-//                return false;
-//            }
-//            log.error(sm.getString("mapper.duplicateHostAlias", newAlias.name, newAlias.getRealHostName(),
-//                    duplicate.getRealHostName()));
-//            return false;
-//        }
-        throw new UnsupportedOperationException();
+        MappedHost[] newHosts = new MappedHost[hosts.length + 1];
+        if (insertMap(hosts, newHosts, newAlias)) {
+            hosts = newHosts;
+            if (newAlias.name.equals(defaultHostName)) {
+                defaultHost = newAlias;
+            }
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("mapper.addHostAlias.success", newAlias.name, newAlias.getRealHostName()));
+            }
+            return true;
+        } else {
+            MappedHost duplicate = hosts[find(hosts, newAlias.name)];
+            if (duplicate.getRealHost() == newAlias.getRealHost()) {
+                // A duplicate Alias for the same Host.
+                // A harmless redundancy. E.g.
+                // <Host name="localhost"><Alias>localhost</Alias></Host>
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("mapper.addHostAlias.sameHost", newAlias.name, newAlias.getRealHostName()));
+                }
+                return false;
+            }
+            log.error(sm.getString("mapper.duplicateHostAlias", newAlias.name, newAlias.getRealHostName(),
+                    duplicate.getRealHostName()));
+            return false;
+        }
     }
 
     /**
@@ -239,11 +241,10 @@ public final class Mapper {
      */
     private void updateContextList(MappedHost realHost, ContextList newContextList) {
 
-//        realHost.contextList = newContextList;
-//        for (MappedHost alias : realHost.getAliases()) {
-//            alias.contextList = newContextList;
-//        }
-        throw new UnsupportedOperationException();
+        realHost.contextList = newContextList;
+        for (MappedHost alias : realHost.getAliases()) {
+            alias.contextList = newContextList;
+        }
     }
 
     /**
@@ -261,56 +262,56 @@ public final class Mapper {
     public void addContextVersion(String hostName, Host host, String path, String version, Context context,
                                   String[] welcomeResources, WebResourceRoot resources, Collection<WrapperMappingInfo> wrappers) {
 
-//        hostName = renameWildcardHost(hostName);
-//
-//        MappedHost mappedHost = exactFind(hosts, hostName);
-//        if (mappedHost == null) {
-//            addHost(hostName, new String[0], host);
-//            mappedHost = exactFind(hosts, hostName);
-//            if (mappedHost == null) {
-//                log.error(sm.getString("mapper.addContext.noHost", hostName));
-//                return;
-//            }
-//        }
-//        if (mappedHost.isAlias()) {
-//            log.error(sm.getString("mapper.addContext.hostIsAlias", hostName));
-//            return;
-//        }
-//        int slashCount = slashCount(path);
-//        synchronized (mappedHost) {
-//            ContextVersion newContextVersion =
-//                    new ContextVersion(version, path, slashCount, context, resources, welcomeResources);
-//            if (wrappers != null) {
-//                addWrappers(newContextVersion, wrappers);
-//            }
-//
-//            ContextList contextList = mappedHost.contextList;
-//            MappedContext mappedContext = exactFind(contextList.contexts, path);
-//            if (mappedContext == null) {
-//                mappedContext = new MappedContext(path, newContextVersion);
-//                ContextList newContextList = contextList.addContext(mappedContext, slashCount);
-//                if (newContextList != null) {
-//                    updateContextList(mappedHost, newContextList);
-//                    contextObjectToContextVersionMap.put(context, newContextVersion);
-//                }
-//            } else {
-//                ContextVersion[] contextVersions = mappedContext.versions;
-//                ContextVersion[] newContextVersions = new ContextVersion[contextVersions.length + 1];
-//                if (insertMap(contextVersions, newContextVersions, newContextVersion)) {
-//                    mappedContext.versions = newContextVersions;
-//                    contextObjectToContextVersionMap.put(context, newContextVersion);
-//                } else {
-//                    // Re-registration after Context.reload()
-//                    // Replace ContextVersion with the new one
-//                    int pos = find(contextVersions, version);
-//                    if (pos >= 0 && contextVersions[pos].name.equals(version)) {
-//                        contextVersions[pos] = newContextVersion;
-//                        contextObjectToContextVersionMap.put(context, newContextVersion);
-//                    }
-//                }
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        hostName = renameWildcardHost(hostName);
+
+        MappedHost mappedHost = exactFind(hosts, hostName);
+        if (mappedHost == null) {
+            addHost(hostName, new String[0], host);
+            mappedHost = exactFind(hosts, hostName);
+            if (mappedHost == null) {
+                log.error(sm.getString("mapper.addContext.noHost", hostName));
+                return;
+            }
+        }
+        if (mappedHost.isAlias()) {
+            log.error(sm.getString("mapper.addContext.hostIsAlias", hostName));
+            return;
+        }
+        int slashCount = slashCount(path);
+        synchronized (mappedHost) {
+            ContextVersion newContextVersion =
+                    new ContextVersion(version, path, slashCount, context, resources, welcomeResources);
+            if (wrappers != null) {
+                addWrappers(newContextVersion, wrappers);
+            }
+
+            ContextList contextList = mappedHost.contextList;
+            MappedContext mappedContext = exactFind(contextList.contexts, path);
+            if (mappedContext == null) {
+                mappedContext = new MappedContext(path, newContextVersion);
+                ContextList newContextList = contextList.addContext(mappedContext, slashCount);
+                if (newContextList != null) {
+                    updateContextList(mappedHost, newContextList);
+                    contextObjectToContextVersionMap.put(context, newContextVersion);
+                }
+            } else {
+                ContextVersion[] contextVersions = mappedContext.versions;
+                ContextVersion[] newContextVersions = new ContextVersion[contextVersions.length + 1];
+                if (insertMap(contextVersions, newContextVersions, newContextVersion)) {
+                    mappedContext.versions = newContextVersions;
+                    contextObjectToContextVersionMap.put(context, newContextVersion);
+                } else {
+                    // Re-registration after Context.reload()
+                    // Replace ContextVersion with the new one
+                    // Context.reload() 后重新注册，用新的一个替换 ContextVersion
+                    int pos = find(contextVersions, version);
+                    if (pos >= 0 && contextVersions[pos].name.equals(version)) {
+                        contextVersions[pos] = newContextVersion;
+                        contextObjectToContextVersionMap.put(context, newContextVersion);
+                    }
+                }
+            }
+        }
 
     }
 
@@ -434,11 +435,10 @@ public final class Mapper {
      * @param wrappers       Information on wrapper mappings
      */
     private void addWrappers(ContextVersion contextVersion, Collection<WrapperMappingInfo> wrappers) {
-//        for (WrapperMappingInfo wrapper : wrappers) {
-//            addWrapper(contextVersion, wrapper.getMapping(), wrapper.getWrapper(), wrapper.isJspWildCard(),
-//                    wrapper.isResourceOnly());
-//        }
-        throw new UnsupportedOperationException();
+        for (WrapperMappingInfo wrapper : wrappers) {
+            addWrapper(contextVersion, wrapper.getMapping(), wrapper.getWrapper(), wrapper.isJspWildCard(),
+                    wrapper.isResourceOnly());
+        }
     }
 
     /**
@@ -454,52 +454,51 @@ public final class Mapper {
     protected void addWrapper(ContextVersion context, String path, Wrapper wrapper, boolean jspWildCard,
                               boolean resourceOnly) {
 
-//        synchronized (context) {
-//            if (path.endsWith("/*")) {
-//                // Wildcard wrapper
-//                String name = path.substring(0, path.length() - 2);
-//                MappedWrapper newWrapper = new MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
-//                MappedWrapper[] oldWrappers = context.wildcardWrappers;
-//                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
-//                if (insertMap(oldWrappers, newWrappers, newWrapper)) {
-//                    context.wildcardWrappers = newWrappers;
-//                    int slashCount = slashCount(newWrapper.name);
-//                    if (slashCount > context.nesting) {
-//                        context.nesting = slashCount;
-//                    }
-//                }
-//            } else if (path.startsWith("*.")) {
-//                // Extension wrapper
-//                String name = path.substring(2);
-//                MappedWrapper newWrapper = new MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
-//                MappedWrapper[] oldWrappers = context.extensionWrappers;
-//                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
-//                if (insertMap(oldWrappers, newWrappers, newWrapper)) {
-//                    context.extensionWrappers = newWrappers;
-//                }
-//            } else if (path.equals("/")) {
-//                // Default wrapper
-//                MappedWrapper newWrapper = new MappedWrapper("", wrapper, jspWildCard, resourceOnly);
-//                context.defaultWrapper = newWrapper;
-//            } else {
-//                // Exact wrapper
-//                final String name;
-//                if (path.length() == 0) {
-//                    // Special case for the Context Root mapping which is
-//                    // treated as an exact match
-//                    name = "/";
-//                } else {
-//                    name = path;
-//                }
-//                MappedWrapper newWrapper = new MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
-//                MappedWrapper[] oldWrappers = context.exactWrappers;
-//                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
-//                if (insertMap(oldWrappers, newWrappers, newWrapper)) {
-//                    context.exactWrappers = newWrappers;
-//                }
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        synchronized (context) {
+            if (path.endsWith("/*")) {
+                // Wildcard wrapper
+                String name = path.substring(0, path.length() - 2);
+                MappedWrapper newWrapper = new MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
+                MappedWrapper[] oldWrappers = context.wildcardWrappers;
+                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
+                if (insertMap(oldWrappers, newWrappers, newWrapper)) {
+                    context.wildcardWrappers = newWrappers;
+                    int slashCount = slashCount(newWrapper.name);
+                    if (slashCount > context.nesting) {
+                        context.nesting = slashCount;
+                    }
+                }
+            } else if (path.startsWith("*.")) {
+                // Extension wrapper
+                String name = path.substring(2);
+                MappedWrapper newWrapper = new MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
+                MappedWrapper[] oldWrappers = context.extensionWrappers;
+                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
+                if (insertMap(oldWrappers, newWrappers, newWrapper)) {
+                    context.extensionWrappers = newWrappers;
+                }
+            } else if (path.equals("/")) {
+                // Default wrapper
+                MappedWrapper newWrapper = new MappedWrapper("", wrapper, jspWildCard, resourceOnly);
+                context.defaultWrapper = newWrapper;
+            } else {
+                // Exact wrapper
+                final String name;
+                if (path.length() == 0) {
+                    // Special case for the Context Root mapping which is
+                    // treated as an exact match
+                    name = "/";
+                } else {
+                    name = path;
+                }
+                MappedWrapper newWrapper = new MappedWrapper(name, wrapper, jspWildCard, resourceOnly);
+                MappedWrapper[] oldWrappers = context.exactWrappers;
+                MappedWrapper[] newWrappers = new MappedWrapper[oldWrappers.length + 1];
+                if (insertMap(oldWrappers, newWrappers, newWrapper)) {
+                    context.exactWrappers = newWrappers;
+                }
+            }
+        }
     }
 
 
@@ -1312,11 +1311,10 @@ public final class Mapper {
     private static <T, E extends MapElement<T>> E exactFind(E[] map, String name) {
         int pos = find(map, name);
         if (pos >= 0) {
-//            E result = map[pos];
-//            if (name.equals(result.name)) {
-//                return result;
-//            }
-            throw new UnsupportedOperationException();
+            E result = map[pos];
+            if (name.equals(result.name)) {
+                return result;
+            }
         }
         return null;
     }
@@ -1467,13 +1465,12 @@ public final class Mapper {
      * Return the slash count in a given string.
      */
     private static int slashCount(String name) {
-//        int pos = -1;
-//        int count = 0;
-//        while ((pos = name.indexOf('/', pos + 1)) != -1) {
-//            count++;
-//        }
-//        return count;
-        throw new UnsupportedOperationException();
+        int pos = -1;
+        int count = 0;
+        while ((pos = name.indexOf('/', pos + 1)) != -1) {
+            count++;
+        }
+        return count;
     }
 
 
@@ -1481,17 +1478,15 @@ public final class Mapper {
      * Insert into the right place in a sorted MapElement array, and prevent duplicates.
      */
     private static <T> boolean insertMap(MapElement<T>[] oldMap, MapElement<T>[] newMap, MapElement<T> newElement) {
-//        int pos = find(oldMap, newElement.name);
-//        if ((pos != -1) && (newElement.name.equals(oldMap[pos].name))) {
-//            return false;
-//        }
-//        System.arraycopy(oldMap, 0, newMap, 0, pos + 1);
-//        newMap[pos + 1] = newElement;
-//        System.arraycopy(oldMap, pos + 1, newMap, pos + 2, oldMap.length - pos - 1);
-//        return true;
-        throw new UnsupportedOperationException();
+        int pos = find(oldMap, newElement.name);
+        if ((pos != -1) && (newElement.name.equals(oldMap[pos].name))) {
+            return false;
+        }
+        System.arraycopy(oldMap, 0, newMap, 0, pos + 1);
+        newMap[pos + 1] = newElement;
+        System.arraycopy(oldMap, pos + 1, newMap, pos + 2, oldMap.length - pos - 1);
+        return true;
     }
-
 
     /**
      * Insert into the right place in a sorted MapElement array.
@@ -1638,12 +1633,11 @@ public final class Mapper {
         }
 
         public ContextList addContext(MappedContext mappedContext, int slashCount) {
-//            MappedContext[] newContexts = new MappedContext[contexts.length + 1];
-//            if (insertMap(contexts, newContexts, mappedContext)) {
-//                return new ContextList(newContexts, Math.max(nesting, slashCount));
-//            }
-//            return null;
-            throw new UnsupportedOperationException();
+            MappedContext[] newContexts = new MappedContext[contexts.length + 1];
+            if (insertMap(contexts, newContexts, mappedContext)) {
+                return new ContextList(newContexts, Math.max(nesting, slashCount));
+            }
+            return null;
         }
 
         public ContextList removeContext(String path) {

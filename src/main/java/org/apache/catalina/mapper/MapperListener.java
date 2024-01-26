@@ -78,7 +78,7 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
             Host host = (Host) conHost;
             if (!LifecycleState.NEW.equals(host.getState())) {
                 // Registering the host will register the context and wrappers
-                registerHost(host);// todo 这里还没追完（1.25）
+                registerHost(host);
             }
         }
     }
@@ -263,7 +263,6 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      * Register host.
      */
     private void registerHost(Host host) {
-        // todo 这里还没追完（1.25）
         String[] aliases = host.findAliases();
         mapper.addHost(host.getName(), aliases, host);
 
@@ -334,31 +333,30 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      */
     private void registerContext(Context context) {
 
-//        String contextPath = context.getPath();
-//        if ("/".equals(contextPath)) {
-//            contextPath = "";
-//        }
-//        Host host = (Host) context.getParent();
-//
-//        WebResourceRoot resources = context.getResources();
-//        String[] welcomeFiles = context.findWelcomeFiles();
-//        List<WrapperMappingInfo> wrappers = new ArrayList<>();
-//
-//        for (Container container : context.findChildren()) {
-//            prepareWrapperMappingInfo(context, (Wrapper) container, wrappers);
-//
-//            if (log.isDebugEnabled()) {
-//                log.debug(sm.getString("mapperListener.registerWrapper", container.getName(), contextPath, service));
-//            }
-//        }
-//
-//        mapper.addContextVersion(host.getName(), host, contextPath, context.getWebappVersion(), context, welcomeFiles,
-//                resources, wrappers);
-//
-//        if (log.isDebugEnabled()) {
-//            log.debug(sm.getString("mapperListener.registerContext", contextPath, service));
-//        }
-        throw new UnsupportedOperationException();
+        String contextPath = context.getPath();
+        if ("/".equals(contextPath)) {
+            contextPath = "";
+        }
+        Host host = (Host) context.getParent();
+
+        WebResourceRoot resources = context.getResources();
+        String[] welcomeFiles = context.findWelcomeFiles();
+        List<WrapperMappingInfo> wrappers = new ArrayList<>();
+
+        for (Container container : context.findChildren()) {
+            prepareWrapperMappingInfo(context, (Wrapper) container, wrappers);
+
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("mapperListener.registerWrapper", container.getName(), contextPath, service));
+            }
+        }
+
+        mapper.addContextVersion(host.getName(), host, contextPath, context.getWebappVersion(), context, welcomeFiles,
+                resources, wrappers);
+
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("mapperListener.registerContext", contextPath, service));
+        }
     }
 
 
@@ -425,7 +423,7 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
 //            boolean jspWildCard = (wrapperName.equals("jsp") && mapping.endsWith("/*"));
 //            wrappers.add(new WrapperMappingInfo(mapping, wrapper, jspWildCard, resourceOnly));
 //        }
-        throw new UnsupportedOperationException();
+         throw new UnsupportedOperationException();
     }
 
     @Override
