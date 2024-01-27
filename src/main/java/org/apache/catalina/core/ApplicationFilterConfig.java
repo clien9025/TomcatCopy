@@ -52,7 +52,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  */
-public final class ApplicationFilterConfig implements /*FilterConfig, */Serializable {
+public final class ApplicationFilterConfig implements FilterConfig, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -129,8 +129,88 @@ public final class ApplicationFilterConfig implements /*FilterConfig, */Serializ
      */
     private ObjectName oname;
 
+    // --------------------------------------------------- FilterConfig Methods
 
 
+    /**
+     * Return the name of the filter we are configuring.
+     */
+    @Override
+    public String getFilterName() {
+        return filterDef.getFilterName();
+    }
+
+    /**
+     * @return The class of the filter we are configuring.
+     */
+    public String getFilterClass() {
+        return filterDef.getFilterClass();
+    }
+
+    /**
+     * Return a <code>String</code> containing the value of the named initialization parameter, or <code>null</code> if
+     * the parameter does not exist.
+     *
+     * @param name Name of the requested initialization parameter
+     */
+    @Override
+    public String getInitParameter(String name) {
+
+        Map<String,String> map = filterDef.getParameterMap();
+        if (map == null) {
+            return null;
+        }
+
+        return map.get(name);
+
+    }
+
+
+    /**
+     * Return an <code>Enumeration</code> of the names of the initialization parameters for this Filter.
+     */
+    @Override
+    public Enumeration<String> getInitParameterNames() {
+        Map<String,String> map = filterDef.getParameterMap();
+
+        if (map == null) {
+            return Collections.enumeration(emptyString);
+        }
+
+        return Collections.enumeration(map.keySet());
+    }
+
+
+    /**
+     * Return the ServletContext of our associated web application.
+     */
+    @Override
+    public ServletContext getServletContext() {
+
+        return this.context.getServletContext();
+
+    }
+
+
+    /**
+     * Return a String representation of this object.
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("ApplicationFilterConfig[");
+        sb.append("name=");
+        sb.append(filterDef.getFilterName());
+        sb.append(", filterClass=");
+        sb.append(filterDef.getFilterClass());
+        sb.append(']');
+        return sb.toString();
+    }
+
+    // --------------------------------------------------------- Public Methods
+
+    public Map<String,String> getFilterInitParameterMap() {
+        return Collections.unmodifiableMap(filterDef.getParameterMap());
+    }
 
     // -------------------------------------------------------- Package Methods
 
@@ -188,4 +268,114 @@ public final class ApplicationFilterConfig implements /*FilterConfig, */Serializ
 //        registerJMX();
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * Return the filter definition we are configured for.
+     */
+    FilterDef getFilterDef() {
+        return this.filterDef;
+    }
+
+    /**
+     * Release the Filter instance associated with this FilterConfig, if there is one.
+     */
+    void release() {
+
+//        unregisterJMX();
+//
+//        if (this.filter != null) {
+//            try {
+//                if (Globals.IS_SECURITY_ENABLED) {
+//                    try {
+//                        SecurityUtil.doAsPrivilege("destroy", filter);
+//                    } finally {
+//                        SecurityUtil.remove(filter);
+//                    }
+//                } else {
+//                    filter.destroy();
+//                }
+//            } catch (Throwable t) {
+//                ExceptionUtils.handleThrowable(t);
+//                context.getLogger().error(sm.getString("applicationFilterConfig.release", filterDef.getFilterName(),
+//                        filterDef.getFilterClass()), t);
+//            }
+//            if (!context.getIgnoreAnnotations()) {
+//                try {
+//                    context.getInstanceManager().destroyInstance(this.filter);
+//                } catch (Exception e) {
+//                    Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
+//                    ExceptionUtils.handleThrowable(t);
+//                    context.getLogger().error(sm.getString("applicationFilterConfig.preDestroy",
+//                            filterDef.getFilterName(), filterDef.getFilterClass()), t);
+//                }
+//            }
+//        }
+//        this.filter = null;
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    // -------------------------------------------------------- Private Methods
+
+    private void registerJMX() {
+//        String parentName = context.getName();
+//        if (!parentName.startsWith("/")) {
+//            parentName = "/" + parentName;
+//        }
+//
+//        String hostName = context.getParent().getName();
+//        hostName = (hostName == null) ? "DEFAULT" : hostName;
+//
+//        // domain == engine name
+//        String domain = context.getParent().getParent().getName();
+//
+//        String webMod = "//" + hostName + parentName;
+//        String onameStr = null;
+//        String filterName = filterDef.getFilterName();
+//        if (Util.objectNameValueNeedsQuote(filterName)) {
+//            filterName = ObjectName.quote(filterName);
+//        }
+//        if (context instanceof StandardContext) {
+//            StandardContext standardContext = (StandardContext) context;
+//            onameStr = domain + ":j2eeType=Filter,WebModule=" + webMod + ",name=" + filterName + ",J2EEApplication=" +
+//                    standardContext.getJ2EEApplication() + ",J2EEServer=" + standardContext.getJ2EEServer();
+//        } else {
+//            onameStr = domain + ":j2eeType=Filter,name=" + filterName + ",WebModule=" + webMod;
+//        }
+//        try {
+//            oname = new ObjectName(onameStr);
+//            Registry.getRegistry(null, null).registerComponent(this, oname, null);
+//        } catch (Exception ex) {
+//            log.warn(sm.getString("applicationFilterConfig.jmxRegisterFail", getFilterClass(), getFilterName()), ex);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    private void unregisterJMX() {
+//        // unregister this component
+//        if (oname != null) {
+//            try {
+//                Registry.getRegistry(null, null).unregisterComponent(oname);
+//                if (log.isDebugEnabled()) {
+//                    log.debug(sm.getString("applicationFilterConfig.jmxUnregister", getFilterClass(), getFilterName()));
+//                }
+//            } catch (Exception ex) {
+//                log.warn(sm.getString("applicationFilterConfig.jmxUnregisterFail", getFilterClass(), getFilterName()),
+//                        ex);
+//            }
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    /*
+     * Log objects are not Serializable.
+     */
+    private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+        ois.defaultReadObject();
+        log = LogFactory.getLog(ApplicationFilterConfig.class);
+    }
+
 }

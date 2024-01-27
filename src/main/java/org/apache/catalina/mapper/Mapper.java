@@ -148,22 +148,21 @@ public final class Mapper {
      * @param name Virtual host name
      */
     public synchronized void removeHost(String name) {
-//        name = renameWildcardHost(name);
-//        // Find and remove the old host
-//        MappedHost host = exactFind(hosts, name);
-//        if (host == null || host.isAlias()) {
-//            return;
-//        }
-//        MappedHost[] newHosts = hosts.clone();
-//        // Remove real host and all its aliases
-//        int j = 0;
-//        for (int i = 0; i < newHosts.length; i++) {
-//            if (newHosts[i].getRealHost() != host) {
-//                newHosts[j++] = newHosts[i];
-//            }
-//        }
-//        hosts = Arrays.copyOf(newHosts, j);
-        throw new UnsupportedOperationException();
+        name = renameWildcardHost(name);
+        // Find and remove the old host
+        MappedHost host = exactFind(hosts, name);
+        if (host == null || host.isAlias()) {
+            return;
+        }
+        MappedHost[] newHosts = hosts.clone();
+        // Remove real host and all its aliases
+        int j = 0;
+        for (int i = 0; i < newHosts.length; i++) {
+            if (newHosts[i].getRealHost() != host) {
+                newHosts[j++] = newHosts[i];
+            }
+        }
+        hosts = Arrays.copyOf(newHosts, j);
     }
 
     /**
@@ -511,13 +510,12 @@ public final class Mapper {
      * @param path        Wrapper mapping
      */
     public void removeWrapper(String hostName, String contextPath, String version, String path) {
-//        hostName = renameWildcardHost(hostName);
-//        ContextVersion contextVersion = findContextVersion(hostName, contextPath, version, true);
-//        if (contextVersion == null || contextVersion.isPaused()) {
-//            return;
-//        }
-//        removeWrapper(contextVersion, path);
-        throw new UnsupportedOperationException();
+        hostName = renameWildcardHost(hostName);
+        ContextVersion contextVersion = findContextVersion(hostName, contextPath, version, true);
+        if (contextVersion == null || contextVersion.isPaused()) {
+            return;
+        }
+        removeWrapper(contextVersion, path);
     }
 
     protected void removeWrapper(ContextVersion context, String path) {

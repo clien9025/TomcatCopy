@@ -286,17 +286,16 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      */
     private void unregisterHost(Host host) {
 
-//        String hostname = host.getName();
-//
-//        mapper.removeHost(hostname);
-//
-//        // Default host may have changed
-//        findDefaultHost();
-//
-//        if (log.isDebugEnabled()) {
-//            log.debug(sm.getString("mapperListener.unregisterHost", hostname, domain, service));
-//        }
-        throw new UnsupportedOperationException();
+        String hostname = host.getName();
+
+        mapper.removeHost(hostname);
+
+        // Default host may have changed
+        findDefaultHost();
+
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("mapperListener.unregisterHost", hostname, domain, service));
+        }
     }
 
 
@@ -305,26 +304,25 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      */
     private void unregisterWrapper(Wrapper wrapper) {
 
-//        Context context = ((Context) wrapper.getParent());
-//        String contextPath = context.getPath();
-//        String wrapperName = wrapper.getName();
-//
-//        if ("/".equals(contextPath)) {
-//            contextPath = "";
-//        }
-//        String version = context.getWebappVersion();
-//        String hostName = context.getParent().getName();
-//
-//        String[] mappings = wrapper.findMappings();
-//
-//        for (String mapping : mappings) {
-//            mapper.removeWrapper(hostName, contextPath, version, mapping);
-//        }
-//
-//        if (log.isDebugEnabled()) {
-//            log.debug(sm.getString("mapperListener.unregisterWrapper", wrapperName, contextPath, service));
-//        }
-        throw new UnsupportedOperationException();
+        Context context = ((Context) wrapper.getParent());
+        String contextPath = context.getPath();
+        String wrapperName = wrapper.getName();
+
+        if ("/".equals(contextPath)) {
+            contextPath = "";
+        }
+        String version = context.getWebappVersion();
+        String hostName = context.getParent().getName();
+
+        String[] mappings = wrapper.findMappings();
+
+        for (String mapping : mappings) {
+            mapper.removeWrapper(hostName, contextPath, version, mapping);
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("mapperListener.unregisterWrapper", wrapperName, contextPath, service));
+        }
     }
 
 
@@ -365,26 +363,25 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      */
     private void unregisterContext(Context context) {
 
-//        String contextPath = context.getPath();
-//        if ("/".equals(contextPath)) {
-//            contextPath = "";
-//        }
-//        String hostName = context.getParent().getName();
-//
-//        if (context.getPaused()) {
-//            if (log.isDebugEnabled()) {
-//                log.debug(sm.getString("mapperListener.pauseContext", contextPath, service));
-//            }
-//
-//            mapper.pauseContextVersion(context, hostName, contextPath, context.getWebappVersion());
-//        } else {
-//            if (log.isDebugEnabled()) {
-//                log.debug(sm.getString("mapperListener.unregisterContext", contextPath, service));
-//            }
-//
-//            mapper.removeContextVersion(context, hostName, contextPath, context.getWebappVersion());
-//        }
-        throw new UnsupportedOperationException();
+        String contextPath = context.getPath();
+        if ("/".equals(contextPath)) {
+            contextPath = "";
+        }
+        String hostName = context.getParent().getName();
+
+        if (context.getPaused()) {
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("mapperListener.pauseContext", contextPath, service));
+            }
+
+            mapper.pauseContextVersion(context, hostName, contextPath, context.getWebappVersion());
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("mapperListener.unregisterContext", contextPath, service));
+            }
+
+            mapper.removeContextVersion(context, hostName, contextPath, context.getWebappVersion());
+        }
     }
 
 
@@ -428,36 +425,35 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
 
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
-//        if (event.getType().equals(AFTER_START_EVENT)) {
-//            Object obj = event.getSource();
-//            if (obj instanceof Wrapper) {
-//                Wrapper w = (Wrapper) obj;
-//                // Only if the Context has started. If it has not, then it will
-//                // have its own "after_start" event later.
-//                if (w.getParent().getState().isAvailable()) {
-//                    registerWrapper(w);
-//                }
-//            } else if (obj instanceof Context) {
-//                Context c = (Context) obj;
-//                // Only if the Host has started. If it has not, then it will
-//                // have its own "after_start" event later.
-//                if (c.getParent().getState().isAvailable()) {
-//                    registerContext(c);
-//                }
-//            } else if (obj instanceof Host) {
-//                registerHost((Host) obj);
-//            }
-//        } else if (event.getType().equals(BEFORE_STOP_EVENT)) {
-//            Object obj = event.getSource();
-//            if (obj instanceof Wrapper) {
-//                unregisterWrapper((Wrapper) obj);
-//            } else if (obj instanceof Context) {
-//                unregisterContext((Context) obj);
-//            } else if (obj instanceof Host) {
-//                unregisterHost((Host) obj);
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        if (event.getType().equals(AFTER_START_EVENT)) {
+            Object obj = event.getSource();
+            if (obj instanceof Wrapper) {
+                Wrapper w = (Wrapper) obj;
+                // Only if the Context has started. If it has not, then it will
+                // have its own "after_start" event later.
+                if (w.getParent().getState().isAvailable()) {
+                    registerWrapper(w);
+                }
+            } else if (obj instanceof Context) {
+                Context c = (Context) obj;
+                // Only if the Host has started. If it has not, then it will
+                // have its own "after_start" event later.
+                if (c.getParent().getState().isAvailable()) {
+                    registerContext(c);
+                }
+            } else if (obj instanceof Host) {
+                registerHost((Host) obj);
+            }
+        } else if (event.getType().equals(BEFORE_STOP_EVENT)) {
+            Object obj = event.getSource();
+            if (obj instanceof Wrapper) {
+                unregisterWrapper((Wrapper) obj);
+            } else if (obj instanceof Context) {
+                unregisterContext((Context) obj);
+            } else if (obj instanceof Host) {
+                unregisterHost((Host) obj);
+            }
+        }
     }
 
 

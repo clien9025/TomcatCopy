@@ -777,56 +777,55 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
 
-//        // Stop our thread
-//        if (monitorFuture != null) {
-//            monitorFuture.cancel(true);
-//            monitorFuture = null;
-//        }
-//        threadStop();
-//
-//        setState(LifecycleState.STOPPING);
-//
-//        // Stop the Valves in our pipeline (including the basic), if any
-//        if (pipeline instanceof Lifecycle && ((Lifecycle) pipeline).getState().isAvailable()) {
-//            ((Lifecycle) pipeline).stop();
-//        }
-//
-//        // Stop our child containers, if any
-//        Container[] children = findChildren();
-//        List<Future<Void>> results = new ArrayList<>(children.length);
-//        for (Container child : children) {
-//            results.add(startStopExecutor.submit(new StopChild(child)));
-//        }
-//
-//        boolean fail = false;
-//        for (Future<Void> result : results) {
-//            try {
-//                result.get();
-//            } catch (Exception e) {
-//                log.error(sm.getString("containerBase.threadedStopFailed"), e);
-//                fail = true;
-//            }
-//        }
-//        if (fail) {
-//            throw new LifecycleException(sm.getString("containerBase.threadedStopFailed"));
-//        }
-//
-//        // Stop our subordinate components, if any
-//        Realm realm = getRealmInternal();
-//        if (realm instanceof Lifecycle) {
-//            ((Lifecycle) realm).stop();
-//        }
-//        Cluster cluster = getClusterInternal();
-//        if (cluster instanceof Lifecycle) {
-//            ((Lifecycle) cluster).stop();
-//        }
-//
-//        // If init fails, this may be null
-//        if (startStopExecutor != null) {
-//            startStopExecutor.shutdownNow();
-//            startStopExecutor = null;
-//        }
-        throw new UnsupportedOperationException();
+        // Stop our thread
+        if (monitorFuture != null) {
+            monitorFuture.cancel(true);
+            monitorFuture = null;
+        }
+        threadStop();
+
+        setState(LifecycleState.STOPPING);
+
+        // Stop the Valves in our pipeline (including the basic), if any
+        if (pipeline instanceof Lifecycle && ((Lifecycle) pipeline).getState().isAvailable()) {
+            ((Lifecycle) pipeline).stop();
+        }
+
+        // Stop our child containers, if any
+        Container[] children = findChildren();
+        List<Future<Void>> results = new ArrayList<>(children.length);
+        for (Container child : children) {
+            results.add(startStopExecutor.submit(new StopChild(child)));
+        }
+
+        boolean fail = false;
+        for (Future<Void> result : results) {
+            try {
+                result.get();
+            } catch (Exception e) {
+                log.error(sm.getString("containerBase.threadedStopFailed"), e);
+                fail = true;
+            }
+        }
+        if (fail) {
+            throw new LifecycleException(sm.getString("containerBase.threadedStopFailed"));
+        }
+
+        // Stop our subordinate components, if any
+        Realm realm = getRealmInternal();
+        if (realm instanceof Lifecycle) {
+            ((Lifecycle) realm).stop();
+        }
+        Cluster cluster = getClusterInternal();
+        if (cluster instanceof Lifecycle) {
+            ((Lifecycle) cluster).stop();
+        }
+
+        // If init fails, this may be null
+        if (startStopExecutor != null) {
+            startStopExecutor.shutdownNow();
+            startStopExecutor = null;
+        }
     }
 
     @Override

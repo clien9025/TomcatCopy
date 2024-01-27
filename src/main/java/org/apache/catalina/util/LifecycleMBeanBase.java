@@ -39,8 +39,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
      */
     @Override
     public final ObjectName getObjectName() {
-//        return oname;
-        throw new UnsupportedOperationException();
+        return oname;
     }
 
 

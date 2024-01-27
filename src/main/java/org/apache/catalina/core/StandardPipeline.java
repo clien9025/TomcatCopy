@@ -162,20 +162,19 @@ public class StandardPipeline extends LifecycleBase implements Pipeline {
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
 
-//        setState(LifecycleState.STOPPING);
-//
-//        // Stop the Valves in our pipeline (including the basic), if any
-//        Valve current = first;
-//        if (current == null) {
-//            current = basic;
-//        }
-//        while (current != null) {
-//            if (current instanceof Lifecycle) {
-//                ((Lifecycle) current).stop();
-//            }
-//            current = current.getNext();
-//        }
-        throw new UnsupportedOperationException();
+        setState(LifecycleState.STOPPING);
+
+        // Stop the Valves in our pipeline (including the basic), if any
+        Valve current = first;
+        if (current == null) {
+            current = basic;
+        }
+        while (current != null) {
+            if (current instanceof Lifecycle) {
+                ((Lifecycle) current).stop();
+            }
+            current = current.getNext();
+        }
     }
 
 

@@ -127,6 +127,7 @@ import org.apache.tomcat.util.http.CookieProcessor;
 import org.apache.tomcat.util.scan.StandardJarScanner;
 //import org.apache.tomcat.util.security.PrivilegedGetTccl;
 //import org.apache.tomcat.util.security.PrivilegedSetTccl;
+import org.apache.tomcat.util.security.PrivilegedSetTccl;
 import org.apache.tomcat.util.threads.ScheduledThreadPoolExecutor;
 
 /**
@@ -4306,6 +4307,1097 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     // ----------------------------------------------------- Context Properties
 
 
+
+
+
+
+    /* 9999999999999999999999999999999999 */
+
+
+    // --------------------------------------------------------- Public Methods
+
+
+    /**
+     * Configure and initialize the set of filters for this Context.
+     *
+     * @return <code>true</code> if all filter initialization completed successfully, or <code>false</code> otherwise.
+     */
+    public boolean filterStart() {
+
+//        if (getLogger().isDebugEnabled()) {
+//            getLogger().debug("Starting filters");
+//        }
+//        // Instantiate and record a FilterConfig for each defined filter
+//        boolean ok = true;
+//        synchronized (filterDefs) {
+//            filterConfigs.clear();
+//            for (Entry<String,FilterDef> entry : filterDefs.entrySet()) {
+//                String name = entry.getKey();
+//                if (getLogger().isDebugEnabled()) {
+//                    getLogger().debug(" Starting filter '" + name + "'");
+//                }
+//                try {
+//                    ApplicationFilterConfig filterConfig = new ApplicationFilterConfig(this, entry.getValue());
+//                    filterConfigs.put(name, filterConfig);
+//                } catch (Throwable t) {
+//                    t = ExceptionUtils.unwrapInvocationTargetException(t);
+//                    ExceptionUtils.handleThrowable(t);
+//                    getLogger().error(sm.getString("standardContext.filterStart", name), t);
+//                    ok = false;
+//                }
+//            }
+//        }
+//
+//        return ok;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Finalize and release the set of filters for this Context.
+     *
+     * @return <code>true</code> if all filter finalization completed successfully, or <code>false</code> otherwise.
+     */
+    public boolean filterStop() {
+
+//        if (getLogger().isDebugEnabled()) {
+//            getLogger().debug("Stopping filters");
+//        }
+//
+//        // Release all Filter and FilterConfig instances
+//        synchronized (filterDefs) {
+//            for (Entry<String,ApplicationFilterConfig> entry : filterConfigs.entrySet()) {
+//                if (getLogger().isDebugEnabled()) {
+//                    getLogger().debug(" Stopping filter '" + entry.getKey() + "'");
+//                }
+//                ApplicationFilterConfig filterConfig = entry.getValue();
+//                filterConfig.release();
+//            }
+//            filterConfigs.clear();
+//        }
+//        return true;
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    /**
+     * Find and return the initialized <code>FilterConfig</code> for the specified filter name, if any; otherwise return
+     * <code>null</code>.
+     *
+     * @param name Name of the desired filter
+     *
+     * @return the filter config object
+     */
+    public FilterConfig findFilterConfig(String name) {
+        synchronized (filterDefs) {
+            return filterConfigs.get(name);
+        }
+    }
+
+
+    /**
+     * Configure the set of instantiated application event listeners for this Context.
+     *
+     * @return <code>true</code> if all listeners wre initialized successfully, or <code>false</code> otherwise.
+     */
+    public boolean listenerStart() {
+
+//        if (log.isDebugEnabled()) {
+//            log.debug("Configuring application event listeners");
+//        }
+//
+//        // Instantiate the required listeners
+//        String listeners[] = findApplicationListeners();
+//        Object results[] = new Object[listeners.length];
+//        boolean ok = true;
+//        for (int i = 0; i < results.length; i++) {
+//            if (getLogger().isDebugEnabled()) {
+//                getLogger().debug(" Configuring event listener class '" + listeners[i] + "'");
+//            }
+//            try {
+//                String listener = listeners[i];
+//                results[i] = getInstanceManager().newInstance(listener);
+//            } catch (Throwable t) {
+//                t = ExceptionUtils.unwrapInvocationTargetException(t);
+//                ExceptionUtils.handleThrowable(t);
+//                getLogger().error(sm.getString("standardContext.applicationListener", listeners[i]), t);
+//                ok = false;
+//            }
+//        }
+//        if (!ok) {
+//            getLogger().error(sm.getString("standardContext.applicationSkipped"));
+//            return false;
+//        }
+//
+//        // Sort listeners in two arrays
+//        List<Object> eventListeners = new ArrayList<>();
+//        List<Object> lifecycleListeners = new ArrayList<>();
+//        for (Object result : results) {
+//            if ((result instanceof ServletContextAttributeListener) ||
+//                    (result instanceof ServletRequestAttributeListener) || (result instanceof ServletRequestListener) ||
+//                    (result instanceof HttpSessionIdListener) || (result instanceof HttpSessionAttributeListener)) {
+//                eventListeners.add(result);
+//            }
+//            if ((result instanceof ServletContextListener) || (result instanceof HttpSessionListener)) {
+//                lifecycleListeners.add(result);
+//            }
+//        }
+//
+//        // Listener instances may have been added directly to this Context by
+//        // ServletContextInitializers and other code via the pluggability APIs.
+//        // Put them these listeners after the ones defined in web.xml and/or
+//        // annotations then overwrite the list of instances with the new, full
+//        // list.
+//        eventListeners.addAll(Arrays.asList(getApplicationEventListeners()));
+//        setApplicationEventListeners(eventListeners.toArray());
+//        for (Object lifecycleListener : getApplicationLifecycleListeners()) {
+//            lifecycleListeners.add(lifecycleListener);
+//            if (lifecycleListener instanceof ServletContextListener) {
+//                noPluggabilityListeners.add(lifecycleListener);
+//            }
+//        }
+//        setApplicationLifecycleListeners(lifecycleListeners.toArray());
+//
+//        // Send application start events
+//
+//        if (getLogger().isDebugEnabled()) {
+//            getLogger().debug("Sending application start events");
+//        }
+//
+//        // Ensure context is not null
+//        getServletContext();
+//        context.setNewServletContextListenerAllowed(false);
+//
+//        Object instances[] = getApplicationLifecycleListeners();
+//        if (instances == null || instances.length == 0) {
+//            return ok;
+//        }
+//
+//        ServletContextEvent event = new ServletContextEvent(getServletContext());
+//        ServletContextEvent tldEvent = null;
+//        if (noPluggabilityListeners.size() > 0) {
+//            noPluggabilityServletContext = new NoPluggabilityServletContext(getServletContext());
+//            tldEvent = new ServletContextEvent(noPluggabilityServletContext);
+//        }
+//        for (Object instance : instances) {
+//            if (!(instance instanceof ServletContextListener)) {
+//                continue;
+//            }
+//            ServletContextListener listener = (ServletContextListener) instance;
+//            try {
+//                fireContainerEvent("beforeContextInitialized", listener);
+//                if (noPluggabilityListeners.contains(listener)) {
+//                    listener.contextInitialized(tldEvent);
+//                } else {
+//                    listener.contextInitialized(event);
+//                }
+//                fireContainerEvent("afterContextInitialized", listener);
+//            } catch (Throwable t) {
+//                ExceptionUtils.handleThrowable(t);
+//                fireContainerEvent("afterContextInitialized", listener);
+//                getLogger().error(sm.getString("standardContext.listenerStart", instance.getClass().getName()), t);
+//                ok = false;
+//            }
+//        }
+//        return ok;
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    /**
+     * Send an application stop event to all interested listeners.
+     *
+     * @return <code>true</code> if all events were sent successfully, or <code>false</code> otherwise.
+     */
+    public boolean listenerStop() {
+
+//        if (log.isDebugEnabled()) {
+//            log.debug("Sending application stop events");
+//        }
+//
+//        boolean ok = true;
+//        Object listeners[] = getApplicationLifecycleListeners();
+//        if (listeners != null && listeners.length > 0) {
+//            ServletContextEvent event = new ServletContextEvent(getServletContext());
+//            ServletContextEvent tldEvent = null;
+//            if (noPluggabilityServletContext != null) {
+//                tldEvent = new ServletContextEvent(noPluggabilityServletContext);
+//            }
+//            for (int i = 0; i < listeners.length; i++) {
+//                int j = (listeners.length - 1) - i;
+//                if (listeners[j] == null) {
+//                    continue;
+//                }
+//                if (listeners[j] instanceof ServletContextListener) {
+//                    ServletContextListener listener = (ServletContextListener) listeners[j];
+//                    try {
+//                        fireContainerEvent("beforeContextDestroyed", listener);
+//                        if (noPluggabilityListeners.contains(listener)) {
+//                            listener.contextDestroyed(tldEvent);
+//                        } else {
+//                            listener.contextDestroyed(event);
+//                        }
+//                        fireContainerEvent("afterContextDestroyed", listener);
+//                    } catch (Throwable t) {
+//                        ExceptionUtils.handleThrowable(t);
+//                        fireContainerEvent("afterContextDestroyed", listener);
+//                        getLogger().error(
+//                                sm.getString("standardContext.listenerStop", listeners[j].getClass().getName()), t);
+//                        ok = false;
+//                    }
+//                }
+//                try {
+//                    if (getInstanceManager() != null) {
+//                        getInstanceManager().destroyInstance(listeners[j]);
+//                    }
+//                } catch (Throwable t) {
+//                    t = ExceptionUtils.unwrapInvocationTargetException(t);
+//                    ExceptionUtils.handleThrowable(t);
+//                    getLogger().error(sm.getString("standardContext.listenerStop", listeners[j].getClass().getName()),
+//                            t);
+//                    ok = false;
+//                }
+//            }
+//        }
+//
+//        // Annotation processing
+//        listeners = getApplicationEventListeners();
+//        if (listeners != null) {
+//            for (int i = 0; i < listeners.length; i++) {
+//                int j = (listeners.length - 1) - i;
+//                if (listeners[j] == null) {
+//                    continue;
+//                }
+//                try {
+//                    if (getInstanceManager() != null) {
+//                        getInstanceManager().destroyInstance(listeners[j]);
+//                    }
+//                } catch (Throwable t) {
+//                    t = ExceptionUtils.unwrapInvocationTargetException(t);
+//                    ExceptionUtils.handleThrowable(t);
+//                    getLogger().error(sm.getString("standardContext.listenerStop", listeners[j].getClass().getName()),
+//                            t);
+//                    ok = false;
+//                }
+//            }
+//        }
+//
+//        setApplicationEventListeners(null);
+//        setApplicationLifecycleListeners(null);
+//
+//        noPluggabilityServletContext = null;
+//        noPluggabilityListeners.clear();
+//
+//        return ok;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Allocate resources, including proxy.
+     *
+     * @throws LifecycleException if a start error occurs
+     */
+    public void resourcesStart() throws LifecycleException {
+
+        // Check current status in case resources were added that had already
+        // been started
+        if (!resources.getState().isAvailable()) {
+            resources.start();
+        }
+
+        if (effectiveMajorVersion >= 3 && addWebinfClassesResources) {
+            WebResource webinfClassesResource = resources.getResource("/WEB-INF/classes/META-INF/resources");
+            if (webinfClassesResource.isDirectory()) {
+                getResources().createWebResourceSet(WebResourceRoot.ResourceSetType.RESOURCE_JAR, "/",
+                        webinfClassesResource.getURL(), "/");
+            }
+        }
+    }
+
+
+    /**
+     * Deallocate resources and destroy proxy.
+     *
+     * @return <code>true</code> if no error occurred
+     */
+    public boolean resourcesStop() {
+
+        boolean ok = true;
+
+        Lock writeLock = resourcesLock.writeLock();
+        writeLock.lock();
+        try {
+            if (resources != null) {
+                resources.stop();
+            }
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.error(sm.getString("standardContext.resourcesStop"), t);
+            ok = false;
+        } finally {
+            writeLock.unlock();
+        }
+
+        return ok;
+    }
+
+
+    /**
+     * Load and initialize all servlets marked "load on startup" in the web application deployment descriptor.
+     *
+     * @param children Array of wrappers for all currently defined servlets (including those not declared load on
+     *                     startup)
+     *
+     * @return <code>true</code> if load on startup was considered successful
+     */
+    public boolean loadOnStartup(Container children[]) {
+
+//        // Collect "load on startup" servlets that need to be initialized
+//        TreeMap<Integer,ArrayList<Wrapper>> map = new TreeMap<>();
+//        for (Container child : children) {
+//            Wrapper wrapper = (Wrapper) child;
+//            int loadOnStartup = wrapper.getLoadOnStartup();
+//            if (loadOnStartup < 0) {
+//                continue;
+//            }
+//            Integer key = Integer.valueOf(loadOnStartup);
+//            map.computeIfAbsent(key, k -> new ArrayList<>()).add(wrapper);
+//        }
+//
+//        // Load the collected "load on startup" servlets
+//        for (ArrayList<Wrapper> list : map.values()) {
+//            for (Wrapper wrapper : list) {
+//                try {
+//                    wrapper.load();
+//                } catch (ServletException e) {
+//                    getLogger().error(
+//                            sm.getString("standardContext.loadOnStartup.loadException", getName(), wrapper.getName()),
+//                            StandardWrapper.getRootCause(e));
+//                    // NOTE: load errors (including a servlet that throws
+//                    // UnavailableException from the init() method) are NOT
+//                    // fatal to application startup
+//                    // unless failCtxIfServletStartFails="true" is specified
+//                    if (getComputedFailCtxIfServletStartFails()) {
+//                        return false;
+//                    }
+//                }
+//            }
+//        }
+//        return true;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Start this component and implement the requirements of
+     * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void startInternal() throws LifecycleException {
+
+//        if (log.isDebugEnabled()) {
+//            log.debug("Starting " + getBaseName());
+//        }
+//
+//        // Send j2ee.state.starting notification
+//        if (this.getObjectName() != null) {
+//            Notification notification =
+//                    new Notification("j2ee.state.starting", this.getObjectName(), sequenceNumber.getAndIncrement());
+//            broadcaster.sendNotification(notification);
+//        }
+//
+//        setConfigured(false);
+//        boolean ok = true;
+//
+//        // Currently this is effectively a NO-OP but needs to be called to
+//        // ensure the NamingResources follows the correct lifecycle
+//        if (namingResources != null) {
+//            namingResources.start();
+//        }
+//
+//        // Post work directory
+//        postWorkDirectory();
+//
+//        // Add missing components as necessary
+//        if (getResources() == null) { // (1) Required by Loader
+//            if (log.isDebugEnabled()) {
+//                log.debug("Configuring default Resources");
+//            }
+//
+//            try {
+//                setResources(new StandardRoot(this));
+//            } catch (IllegalArgumentException e) {
+//                log.error(sm.getString("standardContext.resourcesInit"), e);
+//                ok = false;
+//            }
+//        }
+//        if (ok) {
+//            resourcesStart();
+//        }
+//
+//        if (getLoader() == null) {
+//            WebappLoader webappLoader = new WebappLoader();
+//            webappLoader.setDelegate(getDelegate());
+//            setLoader(webappLoader);
+//        }
+//
+//        // An explicit cookie processor hasn't been specified; use the default
+//        if (cookieProcessor == null) {
+//            cookieProcessor = new Rfc6265CookieProcessor();
+//        }
+//
+//        // Initialize character set mapper
+//        getCharsetMapper();
+//
+//        // Reading the "catalina.useNaming" environment variable
+//        String useNamingProperty = System.getProperty("catalina.useNaming");
+//        if ((useNamingProperty != null) && (useNamingProperty.equals("false"))) {
+//            useNaming = false;
+//        }
+//
+//        if (ok && isUseNaming()) {
+//            if (getNamingContextListener() == null) {
+//                NamingContextListener ncl = new NamingContextListener();
+//                ncl.setName(getNamingContextName());
+//                ncl.setExceptionOnFailedWrite(getJndiExceptionOnFailedWrite());
+//                addLifecycleListener(ncl);
+//                setNamingContextListener(ncl);
+//            }
+//        }
+//
+//        // Standard container startup
+//        if (log.isDebugEnabled()) {
+//            log.debug("Processing standard container startup");
+//        }
+//
+//
+//        // Binding thread
+//        ClassLoader oldCCL = bindThread();
+//
+//        try {
+//            if (ok) {
+//                // Start our subordinate components, if any
+//                Loader loader = getLoader();
+//                if (loader instanceof Lifecycle) {
+//                    ((Lifecycle) loader).start();
+//                }
+//
+//                // since the loader just started, the webapp classloader is now
+//                // created.
+//                if (loader.getClassLoader() instanceof WebappClassLoaderBase) {
+//                    WebappClassLoaderBase cl = (WebappClassLoaderBase) loader.getClassLoader();
+//                    cl.setClearReferencesRmiTargets(getClearReferencesRmiTargets());
+//                    cl.setClearReferencesStopThreads(getClearReferencesStopThreads());
+//                    cl.setClearReferencesStopTimerThreads(getClearReferencesStopTimerThreads());
+//                    cl.setClearReferencesHttpClientKeepAliveThread(getClearReferencesHttpClientKeepAliveThread());
+//                    cl.setClearReferencesObjectStreamClassCaches(getClearReferencesObjectStreamClassCaches());
+//                    cl.setClearReferencesThreadLocals(getClearReferencesThreadLocals());
+//                    cl.setSkipMemoryLeakChecksOnJvmShutdown(getSkipMemoryLeakChecksOnJvmShutdown());
+//                }
+//
+//                // By calling unbindThread and bindThread in a row, we setup the
+//                // current Thread CCL to be the webapp classloader
+//                unbindThread(oldCCL);
+//                oldCCL = bindThread();
+//
+//                // Initialize logger again. Other components might have used it
+//                // too early, so it should be reset.
+//                logger = null;
+//                getLogger();
+//
+//                Realm realm = getRealmInternal();
+//                if (null != realm) {
+//                    if (realm instanceof Lifecycle) {
+//                        ((Lifecycle) realm).start();
+//                    }
+//
+//                    // Place the CredentialHandler into the ServletContext so
+//                    // applications can have access to it. Wrap it in a "safe"
+//                    // handler so application's can't modify it.
+//                    CredentialHandler safeHandler = new CredentialHandler() {
+//                        @Override
+//                        public boolean matches(String inputCredentials, String storedCredentials) {
+//                            return getRealmInternal().getCredentialHandler().matches(inputCredentials,
+//                                    storedCredentials);
+//                        }
+//
+//                        @Override
+//                        public String mutate(String inputCredentials) {
+//                            return getRealmInternal().getCredentialHandler().mutate(inputCredentials);
+//                        }
+//                    };
+//                    context.setAttribute(Globals.CREDENTIAL_HANDLER, safeHandler);
+//                }
+//
+//                // Notify our interested LifecycleListeners
+//                fireLifecycleEvent(CONFIGURE_START_EVENT, null);
+//
+//                // Start our child containers, if not already started
+//                for (Container child : findChildren()) {
+//                    if (!child.getState().isAvailable()) {
+//                        child.start();
+//                    }
+//                }
+//
+//                // Start the Valves in our pipeline (including the basic),
+//                // if any
+//                if (pipeline instanceof Lifecycle) {
+//                    ((Lifecycle) pipeline).start();
+//                }
+//
+//                // Acquire clustered manager
+//                Manager contextManager = null;
+//                Manager manager = getManager();
+//                if (manager == null) {
+//                    if (log.isDebugEnabled()) {
+//                        log.debug(sm.getString("standardContext.cluster.noManager",
+//                                Boolean.valueOf((getCluster() != null)), Boolean.valueOf(distributable)));
+//                    }
+//                    if ((getCluster() != null) && distributable) {
+//                        try {
+//                            contextManager = getCluster().createManager(getName());
+//                        } catch (Exception ex) {
+//                            log.error(sm.getString("standardContext.cluster.managerError"), ex);
+//                            ok = false;
+//                        }
+//                    } else {
+//                        contextManager = new StandardManager();
+//                    }
+//                }
+//
+//                // Configure default manager if none was specified
+//                if (contextManager != null) {
+//                    if (log.isDebugEnabled()) {
+//                        log.debug(sm.getString("standardContext.manager", contextManager.getClass().getName()));
+//                    }
+//                    setManager(contextManager);
+//                }
+//
+//                if (manager != null && (getCluster() != null) && distributable) {
+//                    // let the cluster know that there is a context that is distributable
+//                    // and that it has its own manager
+//                    getCluster().registerManager(manager);
+//                }
+//            }
+//
+//            if (!getConfigured()) {
+//                log.error(sm.getString("standardContext.configurationFail"));
+//                ok = false;
+//            }
+//
+//            // We put the resources into the servlet context
+//            if (ok) {
+//                getServletContext().setAttribute(Globals.RESOURCES_ATTR, getResources());
+//
+//                if (getInstanceManager() == null) {
+//                    setInstanceManager(createInstanceManager());
+//                }
+//                getServletContext().setAttribute(InstanceManager.class.getName(), getInstanceManager());
+//                InstanceManagerBindings.bind(getLoader().getClassLoader(), getInstanceManager());
+//
+//                // Create context attributes that will be required
+//                getServletContext().setAttribute(JarScanner.class.getName(), getJarScanner());
+//
+//                // Make the version info available
+//                getServletContext().setAttribute(Globals.WEBAPP_VERSION, getWebappVersion());
+//
+//                // Make the utility executor available
+//                if (!Globals.IS_SECURITY_ENABLED) {
+//                    getServletContext().setAttribute(ScheduledThreadPoolExecutor.class.getName(),
+//                            Container.getService(this).getServer().getUtilityExecutor());
+//                }
+//            }
+//
+//            // Set up the context init params
+//            mergeParameters();
+//
+//            // Call ServletContainerInitializers
+//            for (Map.Entry<ServletContainerInitializer,Set<Class<?>>> entry : initializers.entrySet()) {
+//                try {
+//                    entry.getKey().onStartup(entry.getValue(), getServletContext());
+//                } catch (ServletException e) {
+//                    log.error(sm.getString("standardContext.sciFail"), e);
+//                    ok = false;
+//                    break;
+//                }
+//            }
+//
+//            // Configure and call application event listeners
+//            if (ok) {
+//                if (!listenerStart()) {
+//                    log.error(sm.getString("standardContext.listenerFail"));
+//                    ok = false;
+//                }
+//            }
+//
+//            // Check constraints for uncovered HTTP methods
+//            // Needs to be after SCIs and listeners as they may programmatically
+//            // change constraints
+//            if (ok) {
+//                checkConstraintsForUncoveredMethods(findConstraints());
+//            }
+//
+//            try {
+//                // Start manager
+//                Manager manager = getManager();
+//                if (manager instanceof Lifecycle) {
+//                    ((Lifecycle) manager).start();
+//                }
+//            } catch (Exception e) {
+//                log.error(sm.getString("standardContext.managerFail"), e);
+//                ok = false;
+//            }
+//
+//            // Configure and call application filters
+//            if (ok) {
+//                if (!filterStart()) {
+//                    log.error(sm.getString("standardContext.filterFail"));
+//                    ok = false;
+//                }
+//            }
+//
+//            // Load and initialize all "load on startup" servlets
+//            if (ok) {
+//                if (!loadOnStartup(findChildren())) {
+//                    log.error(sm.getString("standardContext.servletFail"));
+//                    ok = false;
+//                }
+//            }
+//
+//            // Start ContainerBackgroundProcessor thread
+//            super.threadStart();
+//        } finally {
+//            // Unbinding thread
+//            unbindThread(oldCCL);
+//        }
+//
+//        // Set available status depending upon startup success
+//        if (ok) {
+//            if (log.isDebugEnabled()) {
+//                log.debug("Starting completed");
+//            }
+//        } else {
+//            log.error(sm.getString("standardContext.startFailed", getName()));
+//        }
+//
+//        startTime = System.currentTimeMillis();
+//
+//        // Send j2ee.state.running notification
+//        if (ok && (this.getObjectName() != null)) {
+//            Notification notification =
+//                    new Notification("j2ee.state.running", this.getObjectName(), sequenceNumber.getAndIncrement());
+//            broadcaster.sendNotification(notification);
+//        }
+//
+//        // The WebResources implementation caches references to JAR files. On
+//        // some platforms these references may lock the JAR files. Since web
+//        // application start is likely to have read from lots of JARs, trigger
+//        // a clean-up now.
+//        getResources().gc();
+//
+//        // Reinitializing if something went wrong
+//        if (!ok) {
+//            setState(LifecycleState.FAILED);
+//            // Send j2ee.object.failed notification
+//            if (this.getObjectName() != null) {
+//                Notification notification =
+//                        new Notification("j2ee.object.failed", this.getObjectName(), sequenceNumber.getAndIncrement());
+//                broadcaster.sendNotification(notification);
+//            }
+//        } else {
+//            setState(LifecycleState.STARTING);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    private void checkConstraintsForUncoveredMethods(SecurityConstraint[] constraints) {
+//        SecurityConstraint[] newConstraints =
+//                SecurityConstraint.findUncoveredHttpMethods(constraints, getDenyUncoveredHttpMethods(), getLogger());
+//        for (SecurityConstraint constraint : newConstraints) {
+//            addConstraint(constraint);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public InstanceManager createInstanceManager() {
+//        javax.naming.Context context = null;
+//        if (isUseNaming() && getNamingContextListener() != null) {
+//            context = getNamingContextListener().getEnvContext();
+//        }
+//        Map<String,Map<String,String>> injectionMap =
+//                buildInjectionMap(getIgnoreAnnotations() ? new NamingResourcesImpl() : getNamingResources());
+//        return new DefaultInstanceManager(context, injectionMap, this, this.getClass().getClassLoader());
+        throw new UnsupportedOperationException();
+    }
+
+    private Map<String,Map<String,String>> buildInjectionMap(NamingResourcesImpl namingResources) {
+//        Map<String,Map<String,String>> injectionMap = new HashMap<>();
+//        for (Injectable resource : namingResources.findLocalEjbs()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        for (Injectable resource : namingResources.findEjbs()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        for (Injectable resource : namingResources.findEnvironments()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        for (Injectable resource : namingResources.findMessageDestinationRefs()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        for (Injectable resource : namingResources.findResourceEnvRefs()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        for (Injectable resource : namingResources.findResources()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        for (Injectable resource : namingResources.findServices()) {
+//            addInjectionTarget(resource, injectionMap);
+//        }
+//        return injectionMap;
+        throw new UnsupportedOperationException();
+    }
+
+    private void addInjectionTarget(Injectable resource, Map<String,Map<String,String>> injectionMap) {
+//        List<InjectionTarget> injectionTargets = resource.getInjectionTargets();
+//        if (injectionTargets != null && injectionTargets.size() > 0) {
+//            String jndiName = resource.getName();
+//            for (InjectionTarget injectionTarget : injectionTargets) {
+//                String clazz = injectionTarget.getTargetClass();
+//                injectionMap.computeIfAbsent(clazz, k -> new HashMap<>()).put(injectionTarget.getTargetName(),
+//                        jndiName);
+//            }
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Merge the context initialization parameters specified in the application deployment descriptor with the
+     * application parameters described in the server configuration, respecting the <code>override</code> property of
+     * the application parameters appropriately.
+     */
+    private void mergeParameters() {
+//        Map<String,String> mergedParams = new HashMap<>();
+//
+//        String names[] = findParameters();
+//        for (String s : names) {
+//            mergedParams.put(s, findParameter(s));
+//        }
+//
+//        ApplicationParameter params[] = findApplicationParameters();
+//        for (ApplicationParameter param : params) {
+//            if (param.getOverride()) {
+//                mergedParams.computeIfAbsent(param.getName(), k -> param.getValue());
+//            } else {
+//                mergedParams.put(param.getName(), param.getValue());
+//            }
+//        }
+//
+//        ServletContext sc = getServletContext();
+//        for (Map.Entry<String,String> entry : mergedParams.entrySet()) {
+//            sc.setInitParameter(entry.getKey(), entry.getValue());
+//        }
+        throw new UnsupportedOperationException();
+
+    }
+
+
+    /**
+     * Stop this component and implement the requirements of
+     * {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
+     *
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
+     */
+    @Override
+    protected synchronized void stopInternal() throws LifecycleException {
+
+//        // Send j2ee.state.stopping notification
+//        if (this.getObjectName() != null) {
+//            Notification notification =
+//                    new Notification("j2ee.state.stopping", this.getObjectName(), sequenceNumber.getAndIncrement());
+//            broadcaster.sendNotification(notification);
+//        }
+//
+//        // Context has been removed from Mapper at this point (so no new
+//        // requests will be mapped) but is still available.
+//
+//        // Give the in progress async requests a chance to complete
+//        long limit = System.currentTimeMillis() + unloadDelay;
+//        while (inProgressAsyncCount.get() > 0 && System.currentTimeMillis() < limit) {
+//            try {
+//                Thread.sleep(50);
+//            } catch (InterruptedException e) {
+//                log.info(sm.getString("standardContext.stop.asyncWaitInterrupted"), e);
+//                break;
+//            }
+//        }
+//
+//        // Once the state is set to STOPPING, the Context will report itself as
+//        // not available and any in progress async requests will timeout
+//        setState(LifecycleState.STOPPING);
+//
+//        // Binding thread
+//        ClassLoader oldCCL = bindThread();
+//
+//        try {
+//            // Stop our child containers, if any
+//            final Container[] children = findChildren();
+//
+//            // Stop ContainerBackgroundProcessor thread
+//            threadStop();
+//
+//            for (Container child : children) {
+//                child.stop();
+//            }
+//
+//            // Stop our filters
+//            filterStop();
+//
+//            Manager manager = getManager();
+//            if (manager instanceof Lifecycle && ((Lifecycle) manager).getState().isAvailable()) {
+//                ((Lifecycle) manager).stop();
+//            }
+//
+//            // Stop our application listeners
+//            listenerStop();
+//
+//            // Finalize our character set mapper
+//            setCharsetMapper(null);
+//
+//            // Normal container shutdown processing
+//            if (log.isDebugEnabled()) {
+//                log.debug("Processing standard container shutdown");
+//            }
+//
+//            // JNDI resources are unbound in CONFIGURE_STOP_EVENT so stop
+//            // naming resources before they are unbound since NamingResources
+//            // does a JNDI lookup to retrieve the resource. This needs to be
+//            // after the application has finished with the resource
+//            if (namingResources != null) {
+//                namingResources.stop();
+//            }
+//
+//            fireLifecycleEvent(CONFIGURE_STOP_EVENT, null);
+//
+//            // Stop the Valves in our pipeline (including the basic), if any
+//            if (pipeline instanceof Lifecycle && ((Lifecycle) pipeline).getState().isAvailable()) {
+//                ((Lifecycle) pipeline).stop();
+//            }
+//
+//            // Clear all application-originated servlet context attributes
+//            if (context != null) {
+//                context.clearAttributes();
+//            }
+//
+//            Realm realm = getRealmInternal();
+//            if (realm instanceof Lifecycle) {
+//                ((Lifecycle) realm).stop();
+//            }
+//            Loader loader = getLoader();
+//            if (loader instanceof Lifecycle) {
+//                ClassLoader classLoader = loader.getClassLoader();
+//                ((Lifecycle) loader).stop();
+//                if (classLoader != null) {
+//                    InstanceManagerBindings.unbind(classLoader);
+//                }
+//            }
+//
+//            // Stop resources
+//            resourcesStop();
+//
+//        } finally {
+//
+//            // Unbinding thread
+//            unbindThread(oldCCL);
+//
+//        }
+//
+//        // Send j2ee.state.stopped notification
+//        if (this.getObjectName() != null) {
+//            Notification notification =
+//                    new Notification("j2ee.state.stopped", this.getObjectName(), sequenceNumber.getAndIncrement());
+//            broadcaster.sendNotification(notification);
+//        }
+//
+//        // Reset application context
+//        context = null;
+//
+//        // This object will no longer be visible or used.
+//        try {
+//            resetContext();
+//        } catch (Exception ex) {
+//            log.error("Error resetting context " + this + " " + ex, ex);
+//        }
+//
+//        // reset the instance manager
+//        setInstanceManager(null);
+//
+//        if (log.isDebugEnabled()) {
+//            log.debug("Stopping complete");
+//        }
+        throw new UnsupportedOperationException();
+
+    }
+
+    /**
+     * Destroy needs to clean up the context completely. The problem is that undoing all the config in start() and
+     * restoring a 'fresh' state is impossible. After stop()/destroy()/init()/start() we should have the same state as
+     * if a fresh start was done - i.e read modified web.xml, etc. This can only be done by completely removing the
+     * context object and remapping a new one, or by cleaning up everything.
+     */
+    @Override
+    protected void destroyInternal() throws LifecycleException {
+
+//        // If in state NEW when destroy is called, the object name will never
+//        // have been set so the notification can't be created
+//        if (getObjectName() != null) {
+//            // Send j2ee.object.deleted notification
+//            Notification notification =
+//                    new Notification("j2ee.object.deleted", this.getObjectName(), sequenceNumber.getAndIncrement());
+//            broadcaster.sendNotification(notification);
+//        }
+//
+//        if (namingResources != null) {
+//            namingResources.destroy();
+//        }
+//
+//        Loader loader = getLoader();
+//        if (loader instanceof Lifecycle) {
+//            ((Lifecycle) loader).destroy();
+//        }
+//
+//        Manager manager = getManager();
+//        if (manager instanceof Lifecycle) {
+//            ((Lifecycle) manager).destroy();
+//        }
+//
+//        if (resources != null) {
+//            resources.destroy();
+//        }
+//
+//        super.destroyInternal();
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public void backgroundProcess() {
+
+        if (!getState().isAvailable()) {
+            return;
+        }
+
+        Loader loader = getLoader();
+        if (loader != null) {
+            try {
+                loader.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("standardContext.backgroundProcess.loader", loader), e);
+            }
+        }
+        Manager manager = getManager();
+        if (manager != null) {
+            try {
+                manager.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("standardContext.backgroundProcess.manager", manager), e);
+            }
+        }
+        WebResourceRoot resources = getResources();
+        if (resources != null) {
+            try {
+                resources.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("standardContext.backgroundProcess.resources", resources), e);
+            }
+        }
+        InstanceManager instanceManager = getInstanceManager();
+        if (instanceManager != null) {
+            try {
+                instanceManager.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("standardContext.backgroundProcess.instanceManager", resources), e);
+            }
+        }
+        super.backgroundProcess();
+    }
+
+
+    private void resetContext() throws Exception {
+        // Restore the original state ( pre reading web.xml in start )
+        // If you extend this - override this method and make sure to clean up
+
+        // Don't reset anything that is read from a <Context.../> element since
+        // <Context .../> elements are read at initialisation will not be read
+        // again for this object
+        for (Container child : findChildren()) {
+            removeChild(child);
+        }
+        startupTime = 0;
+        startTime = 0;
+        tldScanTime = 0;
+
+        // Bugzilla 32867
+        distributable = false;
+
+        applicationListeners.clear();
+        applicationEventListenersList.clear();
+        applicationLifecycleListenersObjects = new Object[0];
+        jspConfigDescriptor = null;
+
+        initializers.clear();
+
+        createdServlets.clear();
+
+        postConstructMethods.clear();
+        preDestroyMethods.clear();
+
+        if (log.isDebugEnabled()) {
+            log.debug("resetContext " + getObjectName());
+        }
+    }
+
+
+    // ------------------------------------------------------ Protected Methods
+
+    /**
+     * Adjust the URL pattern to begin with a leading slash, if appropriate (i.e. we are running a servlet 2.2
+     * application). Otherwise, return the specified URL pattern unchanged.
+     *
+     * @param urlPattern The URL pattern to be adjusted (if needed) and returned
+     *
+     * @return the URL pattern with a leading slash if needed
+     */
+    protected String adjustURLPattern(String urlPattern) {
+
+//        if (urlPattern == null) {
+//            return urlPattern;
+//        }
+//        if (urlPattern.startsWith("/") || urlPattern.startsWith("*.")) {
+//            return urlPattern;
+//        }
+//        if (!isServlet22()) {
+//            return urlPattern;
+//        }
+//        if (log.isDebugEnabled()) {
+//            log.debug(sm.getString("standardContext.urlPattern.patternWarning", urlPattern));
+//        }
+//        return "/" + urlPattern;
+        throw new UnsupportedOperationException();
+
+    }
+
+
     /**
      * Are we processing a version 2.2 deployment descriptor?
      * <p>
@@ -4326,23 +5418,519 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
 
     @Override
-    public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException {
+    public Set<String> addServletSecurity(ServletRegistration.Dynamic registration,
+                                          ServletSecurityElement servletSecurityElement) {
+
+//        Set<String> conflicts = new HashSet<>();
+//
+//        Collection<String> urlPatterns = registration.getMappings();
+//        for (String urlPattern : urlPatterns) {
+//            boolean foundConflict = false;
+//
+//            SecurityConstraint[] securityConstraints = findConstraints();
+//            for (SecurityConstraint securityConstraint : securityConstraints) {
+//
+//                SecurityCollection[] collections = securityConstraint.findCollections();
+//                for (SecurityCollection collection : collections) {
+//                    if (collection.findPattern(urlPattern)) {
+//                        // First pattern found will indicate if there is a
+//                        // conflict since for any given pattern all matching
+//                        // constraints will be from either the descriptor or
+//                        // not. It is not permitted to have a mixture
+//                        if (collection.isFromDescriptor()) {
+//                            // Skip this pattern
+//                            foundConflict = true;
+//                            conflicts.add(urlPattern);
+//                            break;
+//                        } else {
+//                            // Need to overwrite constraint for this pattern
+//                            collection.removePattern(urlPattern);
+//                            // If the collection is now empty, remove it
+//                            if (collection.findPatterns().length == 0) {
+//                                securityConstraint.removeCollection(collection);
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                // If the constraint now has no collections - remove it
+//                if (securityConstraint.findCollections().length == 0) {
+//                    removeConstraint(securityConstraint);
+//                }
+//
+//                // No need to check other constraints for the current pattern
+//                // once a conflict has been found
+//                if (foundConflict) {
+//                    break;
+//                }
+//            }
+//
+//            // Note: For programmatically added Servlets this may not be the
+//            // complete set of security constraints since additional
+//            // URL patterns can be added after the application has called
+//            // setSecurity. For all programmatically added servlets, the
+//            // #dynamicServletAdded() method sets a flag that ensures that
+//            // the constraints are re-evaluated before the servlet is
+//            // first used
+//
+//            // If the pattern did not conflict, add the new constraint(s).
+//            if (!foundConflict) {
+//                SecurityConstraint[] newSecurityConstraints =
+//                        SecurityConstraint.createConstraints(servletSecurityElement, urlPattern);
+//                for (SecurityConstraint securityConstraint : newSecurityConstraints) {
+//                    addConstraint(securityConstraint);
+//                }
+//            }
+//        }
+//
+//        return conflicts;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Bind current thread, both for CL purposes and for JNDI ENC support during : startup, shutdown and reloading of
+     * the context.
+     *
+     * @return the previous context class loader
+     */
+    protected ClassLoader bindThread() {
+
+        ClassLoader oldContextClassLoader = bind(false, null);
+
+        if (isUseNaming()) {
+            try {
+                ContextBindings.bindThread(this, getNamingToken());
+            } catch (NamingException e) {
+                // Silent catch, as this is a normal case during the early
+                // startup stages
+            }
+        }
+
+        return oldContextClassLoader;
+    }
+
+
+    /**
+     * Unbind thread and restore the specified context classloader.
+     *
+     * @param oldContextClassLoader the previous classloader
+     */
+    protected void unbindThread(ClassLoader oldContextClassLoader) {
+
+        if (isUseNaming()) {
+            ContextBindings.unbindThread(this, getNamingToken());
+        }
+
+        unbind(false, oldContextClassLoader);
+    }
+
+
+    @Override
+    public ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
+//        Loader loader = getLoader();
+//        ClassLoader webApplicationClassLoader = null;
+//        if (loader != null) {
+//            webApplicationClassLoader = loader.getClassLoader();
+//        }
+//
+//        Thread currentThread = Thread.currentThread();
+//        if (originalClassLoader == null) {
+//            if (usePrivilegedAction) {
+//                PrivilegedAction<ClassLoader> pa = new PrivilegedGetTccl(currentThread);
+//                originalClassLoader = AccessController.doPrivileged(pa);
+//            } else {
+//                originalClassLoader = currentThread.getContextClassLoader();
+//            }
+//        }
+//
+//        if (webApplicationClassLoader == null || webApplicationClassLoader == originalClassLoader) {
+//            // Not possible or not necessary to switch class loaders. Return
+//            // null to indicate this.
+//            return null;
+//        }
+//
+//        ThreadBindingListener threadBindingListener = getThreadBindingListener();
+//
+//        if (usePrivilegedAction) {
+//            PrivilegedAction<Void> pa = new PrivilegedSetTccl(currentThread, webApplicationClassLoader);
+//            AccessController.doPrivileged(pa);
+//        } else {
+//            currentThread.setContextClassLoader(webApplicationClassLoader);
+//        }
+//        if (threadBindingListener != null) {
+//            try {
+//                threadBindingListener.bind();
+//            } catch (Throwable t) {
+//                ExceptionUtils.handleThrowable(t);
+//                log.error(sm.getString("standardContext.threadBindingListenerError", getName()), t);
+//            }
+//        }
+//
+//        return originalClassLoader;
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 解绑（unbind）当前线程的上下文类加载器（Context ClassLoader）
+     * @param usePrivilegedAction Should a {@link java.security.PrivilegedAction} be used when
+     *                            setting the current thread context class loader?
+     * @param originalClassLoader The class loader to restore as the thread context class loader
+     */
+    @Override
+    public void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
+        if (originalClassLoader == null) {
+            return;
+        }
+
+        if (threadBindingListener != null) {
+            try {
+                threadBindingListener.unbind();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(sm.getString("standardContext.threadBindingListenerError", getName()), t);
+            }
+        }
+
+        Thread currentThread = Thread.currentThread();
+        if (usePrivilegedAction) {
+            PrivilegedAction<Void> pa = new PrivilegedSetTccl(currentThread, originalClassLoader);
+            AccessController.doPrivileged(pa);
+        } else {
+            currentThread.setContextClassLoader(originalClassLoader);
+        }
+    }
+
+
+    /**
+     * Get naming context full name.
+     *
+     * @return the context name
+     */
+    private String getNamingContextName() {
+        if (namingContextName == null) {
+            Container parent = getParent();
+            if (parent == null) {
+                namingContextName = getName();
+            } else {
+                Deque<String> stk = new ArrayDeque<>();
+                StringBuilder buff = new StringBuilder();
+                while (parent != null) {
+                    stk.addFirst(parent.getName());
+                    parent = parent.getParent();
+                }
+                while (!stk.isEmpty()) {
+                    buff.append('/').append(stk.remove());
+                }
+                buff.append(getName());
+                namingContextName = buff.toString();
+            }
+        }
+        return namingContextName;
+    }
+
+
+    /**
+     * Naming context listener accessor.
+     *
+     * @return the naming context listener associated with the webapp
+     */
+    public NamingContextListener getNamingContextListener() {
+        return namingContextListener;
+    }
+
+
+    /**
+     * Naming context listener setter.
+     *
+     * @param namingContextListener the new naming context listener
+     */
+    public void setNamingContextListener(NamingContextListener namingContextListener) {
+        this.namingContextListener = namingContextListener;
+    }
+
+
+    /**
+     * @return the request processing paused flag for this Context.
+     */
+    @Override
+    public boolean getPaused() {
+        return this.paused;
+    }
+
+
+    @Override
+    public boolean fireRequestInitEvent(ServletRequest request) {
+
+//        Object instances[] = getApplicationEventListeners();
+//
+//        if ((instances != null) && (instances.length > 0)) {
+//
+//            ServletRequestEvent event = new ServletRequestEvent(getServletContext(), request);
+//
+//            for (Object instance : instances) {
+//                if (instance == null) {
+//                    continue;
+//                }
+//                if (!(instance instanceof ServletRequestListener)) {
+//                    continue;
+//                }
+//                ServletRequestListener listener = (ServletRequestListener) instance;
+//
+//                try {
+//                    listener.requestInitialized(event);
+//                } catch (Throwable t) {
+//                    ExceptionUtils.handleThrowable(t);
+//                    getLogger().error(
+//                            sm.getString("standardContext.requestListener.requestInit", instance.getClass().getName()),
+//                            t);
+//                    request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, t);
+//                    return false;
+//                }
+//            }
+//        }
+//        return true;
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public boolean fireRequestDestroyEvent(ServletRequest request) {
+//        Object instances[] = getApplicationEventListeners();
+//
+//        if ((instances != null) && (instances.length > 0)) {
+//
+//            ServletRequestEvent event = new ServletRequestEvent(getServletContext(), request);
+//
+//            for (int i = 0; i < instances.length; i++) {
+//                int j = (instances.length - 1) - i;
+//                if (instances[j] == null) {
+//                    continue;
+//                }
+//                if (!(instances[j] instanceof ServletRequestListener)) {
+//                    continue;
+//                }
+//                ServletRequestListener listener = (ServletRequestListener) instances[j];
+//
+//                try {
+//                    listener.requestDestroyed(event);
+//                } catch (Throwable t) {
+//                    ExceptionUtils.handleThrowable(t);
+//                    getLogger().error(sm.getString("standardContext.requestListener.requestDestroyed",
+//                            instances[j].getClass().getName()), t);
+//                    request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, t);
+//                    return false;
+//                }
+//            }
+//        }
+//        return true;
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public void addPostConstructMethod(String clazz, String method) {
+        if (clazz == null || method == null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.postconstruct.required"));
+        }
+        if (postConstructMethods.get(clazz) != null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.postconstruct.duplicate", clazz));
+        }
+
+        postConstructMethods.put(clazz, method);
+        fireContainerEvent("addPostConstructMethod", clazz);
+    }
+
+
+    @Override
+    public void removePostConstructMethod(String clazz) {
+        postConstructMethods.remove(clazz);
+        fireContainerEvent("removePostConstructMethod", clazz);
+    }
+
+
+    @Override
+    public void addPreDestroyMethod(String clazz, String method) {
+        if (clazz == null || method == null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.predestroy.required"));
+        }
+        if (preDestroyMethods.get(clazz) != null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.predestroy.duplicate", clazz));
+        }
+
+        preDestroyMethods.put(clazz, method);
+        fireContainerEvent("addPreDestroyMethod", clazz);
+    }
+
+
+    @Override
+    public void removePreDestroyMethod(String clazz) {
+        preDestroyMethods.remove(clazz);
+        fireContainerEvent("removePreDestroyMethod", clazz);
+    }
+
+
+    @Override
+    public String findPostConstructMethod(String clazz) {
+        return postConstructMethods.get(clazz);
+    }
+
+
+    @Override
+    public String findPreDestroyMethod(String clazz) {
+        return preDestroyMethods.get(clazz);
+    }
+
+
+    @Override
+    public Map<String,String> findPostConstructMethods() {
+        return postConstructMethods;
+    }
+
+
+    @Override
+    public Map<String,String> findPreDestroyMethods() {
+        return preDestroyMethods;
+    }
+
+
+    /**
+     * Set the appropriate context attribute for our work directory.
+     */
+    protected void postWorkDirectory() {
+
+//        // Acquire (or calculate) the work directory path
+//        String workDir = getWorkDir();
+//        if (workDir == null || workDir.length() == 0) {
+//
+//            // Retrieve our parent (normally a host) name
+//            String hostName = null;
+//            String engineName = null;
+//            String hostWorkDir = null;
+//            Container parentHost = getParent();
+//            if (parentHost != null) {
+//                hostName = parentHost.getName();
+//                if (parentHost instanceof StandardHost) {
+//                    hostWorkDir = ((StandardHost) parentHost).getWorkDir();
+//                }
+//                Container parentEngine = parentHost.getParent();
+//                if (parentEngine != null) {
+//                    engineName = parentEngine.getName();
+//                }
+//            }
+//            if ((hostName == null) || (hostName.length() < 1)) {
+//                hostName = "_";
+//            }
+//            if ((engineName == null) || (engineName.length() < 1)) {
+//                engineName = "_";
+//            }
+//
+//            String temp = getBaseName();
+//            if (temp.startsWith("/")) {
+//                temp = temp.substring(1);
+//            }
+//            temp = temp.replace('/', '_');
+//            temp = temp.replace('\\', '_');
+//            if (temp.length() < 1) {
+//                temp = ContextName.ROOT_NAME;
+//            }
+//            if (hostWorkDir != null) {
+//                workDir = hostWorkDir + File.separator + temp;
+//            } else {
+//                workDir = "work" + File.separator + engineName + File.separator + hostName + File.separator + temp;
+//            }
+//            setWorkDir(workDir);
+//        }
+//
+//        // Create this directory if necessary
+//        File dir = new File(workDir);
+//        if (!dir.isAbsolute()) {
+//            String catalinaHomePath = null;
+//            try {
+//                catalinaHomePath = getCatalinaBase().getCanonicalPath();
+//                dir = new File(catalinaHomePath, workDir);
+//            } catch (IOException e) {
+//                log.warn(sm.getString("standardContext.workCreateException", workDir, catalinaHomePath, getName()), e);
+//            }
+//        }
+//        if (!dir.mkdirs() && !dir.isDirectory()) {
+//            log.warn(sm.getString("standardContext.workCreateFail", dir, getName()));
+//        }
+//
+//        // Set the appropriate servlet context attribute
+//        if (context == null) {
+//            getServletContext();
+//        }
+//        context.setAttribute(ServletContext.TEMPDIR, dir);
+//        context.setAttributeReadOnly(ServletContext.TEMPDIR);
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Set the request processing paused flag for this Context.
+     *
+     * @param paused The new request processing paused flag
+     */
+    private void setPaused(boolean paused) {
+
+        this.paused = paused;
 
     }
 
-    @Override
-    public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws IllegalArgumentException {
+
+    /**
+     * Validate the syntax of a proposed <code>&lt;url-pattern&gt;</code> for conformance with specification
+     * requirements.
+     *
+     * @param urlPattern URL pattern to be validated
+     *
+     * @return <code>true</code> if the URL pattern is conformant
+     */
+    private boolean validateURLPattern(String urlPattern) {
+
+//        if (urlPattern == null) {
+//            return false;
+//        }
+//        if (urlPattern.indexOf('\n') >= 0 || urlPattern.indexOf('\r') >= 0) {
+//            return false;
+//        }
+//        if (urlPattern.equals("")) {
+//            return true;
+//        }
+//        if (urlPattern.startsWith("*.")) {
+//            if (urlPattern.indexOf('/') < 0) {
+//                checkUnusualURLPattern(urlPattern);
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        }
+//        if (urlPattern.startsWith("/") && !urlPattern.contains("*.")) {
+//            checkUnusualURLPattern(urlPattern);
+//            return true;
+//        } else {
+//            return false;
+//        }
+        throw new UnsupportedOperationException();
 
     }
 
-    @Override
-    public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
 
-    }
-
-    @Override
-    public MBeanNotificationInfo[] getNotificationInfo() {
-        return new MBeanNotificationInfo[0];
+    /**
+     * Check for unusual but valid <code>&lt;url-pattern&gt;</code>s. See Bugzilla 34805, 43079 & 43080
+     */
+    private void checkUnusualURLPattern(String urlPattern) {
+//        if (log.isInfoEnabled()) {
+//            // First group checks for '*' or '/foo*' style patterns
+//            // Second group checks for *.foo.bar style patterns
+//            if ((urlPattern.endsWith("*") &&
+//                    (urlPattern.length() < 2 || urlPattern.charAt(urlPattern.length() - 2) != '/')) ||
+//                    urlPattern.startsWith("*.") && urlPattern.length() > 2 && urlPattern.lastIndexOf('.') > 1) {
+//                log.info(sm.getString("standardContext.suspiciousUrl", urlPattern, getName()));
+//            }
+//        }
+        throw new UnsupportedOperationException();
     }
 
 
@@ -4378,6 +5966,96 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
         return result.toString();
     }
+
+    @Override
+    protected void initInternal() throws LifecycleException {
+        super.initInternal();
+
+        // Register the naming resources
+        if (namingResources != null) {
+            namingResources.init();
+        }
+
+        // Send j2ee.object.created notification
+        if (this.getObjectName() != null) {
+            // 这行代码创建了一个Notification对象。
+            // Notification 是 JMX（Java Management Extensions）框架中用于发送管理和监控通知的类
+            Notification notification =
+                    new Notification("j2ee.object.created", this.getObjectName(), sequenceNumber.getAndIncrement());
+            // 这行代码使用一个 broadcaster 对象 发送先前创建的 notification
+            // broadcaster 是一个实现了NotificationBroadcaster接口的对象，用于向所有注册的监听器广播Notification对象
+            broadcaster.sendNotification(notification);
+        }
+    }
+
+
+    /**
+     * Remove a JMX notificationListener
+     *
+     * @see javax.management.NotificationEmitter#removeNotificationListener(javax.management.NotificationListener,
+     *          javax.management.NotificationFilter, java.lang.Object)
+     */
+    @Override
+    public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object object)
+            throws ListenerNotFoundException {
+        broadcaster.removeNotificationListener(listener, filter, object);
+    }
+
+    private MBeanNotificationInfo[] notificationInfo;
+
+    /**
+     * Get JMX Broadcaster Info
+     *
+     * @see javax.management.NotificationBroadcaster#getNotificationInfo()
+     */
+    @Override
+    public MBeanNotificationInfo[] getNotificationInfo() {
+        // FIXME: we not send j2ee.attribute.changed
+        if (notificationInfo == null) {
+            notificationInfo = new MBeanNotificationInfo[] {
+                    new MBeanNotificationInfo(new String[] { "j2ee.object.created" }, Notification.class.getName(),
+                            "web application is created"),
+                    new MBeanNotificationInfo(new String[] { "j2ee.state.starting" }, Notification.class.getName(),
+                            "change web application is starting"),
+                    new MBeanNotificationInfo(new String[] { "j2ee.state.running" }, Notification.class.getName(),
+                            "web application is running"),
+                    new MBeanNotificationInfo(new String[] { "j2ee.state.stopping" }, Notification.class.getName(),
+                            "web application start to stopped"),
+                    new MBeanNotificationInfo(new String[] { "j2ee.object.stopped" }, Notification.class.getName(),
+                            "web application is stopped"),
+                    new MBeanNotificationInfo(new String[] { "j2ee.object.deleted" }, Notification.class.getName(),
+                            "web application is deleted"),
+                    new MBeanNotificationInfo(new String[] { "j2ee.object.failed" }, Notification.class.getName(),
+                            "web application failed") };
+        }
+
+        return notificationInfo;
+    }
+
+
+    /**
+     * Add a JMX NotificationListener
+     *
+     * @see javax.management.NotificationBroadcaster#addNotificationListener(javax.management.NotificationListener,
+     *          javax.management.NotificationFilter, java.lang.Object)
+     */
+    @Override
+    public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object object)
+            throws IllegalArgumentException {
+        broadcaster.addNotificationListener(listener, filter, object);
+    }
+
+
+    /**
+     * Remove a JMX-NotificationListener
+     *
+     * @see javax.management.NotificationBroadcaster#removeNotificationListener(javax.management.NotificationListener)
+     */
+    @Override
+    public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
+        broadcaster.removeNotificationListener(listener);
+    }
+    /* 9999999999999999999999999999999999 */
 
     // ------------------------------------------------------------- Attributes
 
