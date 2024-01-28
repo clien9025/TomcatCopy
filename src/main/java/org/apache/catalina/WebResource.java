@@ -29,18 +29,24 @@ public interface WebResource {
     /**
      * @return {@link java.io.File#lastModified()}.
      */
-    long getLastModified();
+    default long getLastModified() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the last modified time of this resource in the correct format for
      * the HTTP Last-Modified header as specified by RFC 2616.
      */
-    String getLastModifiedHttp();
+    default String getLastModifiedHttp() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#exists()}.
      */
-    boolean exists();
+    default boolean exists() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Indicates if this resource is required for applications to correctly scan
@@ -51,121 +57,159 @@ public interface WebResource {
      *
      * @return <code>true</code> for a virtual resource
      */
-    boolean isVirtual();
+    default boolean isVirtual() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#isDirectory()}.
      */
-    boolean isDirectory();
+    default boolean isDirectory() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#isFile()}.
      */
-    boolean isFile();
+    default boolean isFile() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#delete()}.
      */
-    boolean delete();
+    default boolean delete() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#getName()}.
      */
-    String getName();
+    default String getName() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#length()}.
      */
-    long getContentLength();
+    default long getContentLength() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#getCanonicalPath()}.
      */
-    String getCanonicalPath();
+    default String getCanonicalPath() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return {@link java.io.File#canRead()}.
      */
-    boolean canRead();
+    default boolean canRead() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return The path of this resource relative to the web application root. If the
      * resource is a directory, the return value will end in '/'.
      */
-    String getWebappPath();
+    default String getWebappPath() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Return the strong ETag if available (currently not supported) else return
      * the weak ETag calculated from the content length and last modified.
      *
-     * @return  The ETag for this resource
+     * @return The ETag for this resource
      */
-    String getETag();
+    default String getETag() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the MIME type for this Resource.
      *
      * @param mimeType The mime type that will be associated with the resource
      */
-    void setMimeType(String mimeType);
+    default void setMimeType(String mimeType) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the MIME type for this Resource.
      */
-    String getMimeType();
+    default String getMimeType() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain an InputStream based on the contents of this resource.
      *
-     * @return  An InputStream based on the contents of this resource or
-     *          <code>null</code> if the resource does not exist or does not
-     *          represent a file
+     * @return An InputStream based on the contents of this resource or
+     * <code>null</code> if the resource does not exist or does not
+     * represent a file
      */
-    InputStream getInputStream();
+    default InputStream getInputStream() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the binary content of this resource or {@code null} if it is not
-     *         available in a byte[] because, for example, it is too big.
+     * available in a byte[] because, for example, it is too big.
      */
-    byte[] getContent();
+    default byte[] getContent() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return The time the file was created. If not available, the result of
      * {@link #getLastModified()} will be returned.
      */
-    long getCreation();
+    default long getCreation() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return a URL to access the resource or <code>null</code> if no such URL
      * is available or if the resource does not exist.
      */
-    URL getURL();
+    default URL getURL() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the code base for this resource that will be used when looking up the
      * assigned permissions for the code base in the security policy file when
      * running under a security manager.
      */
-    URL getCodeBase();
+    default URL getCodeBase() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return a reference to the WebResourceRoot of which this WebResource is a
      * part.
      */
-    WebResourceRoot getWebResourceRoot();
+    default WebResourceRoot getWebResourceRoot() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the certificates that were used to sign this resource to verify
      * it or @null if none.
-     *
      * @see java.util.jar.JarEntry#getCertificates()
      */
-    Certificate[] getCertificates();
+    default Certificate[] getCertificates() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the manifest associated with this resource or @null if none.
-     *
      * @see java.util.jar.JarFile#getManifest()
      */
-    Manifest getManifest();
+    default Manifest getManifest() {
+        throw new UnsupportedOperationException();
+    }
 }

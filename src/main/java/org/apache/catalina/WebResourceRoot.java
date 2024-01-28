@@ -89,12 +89,13 @@ public interface WebResourceRoot extends Lifecycle {
      * exist, the WebResource returned will be associated with the main
      * WebResourceSet.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The object that represents the resource at the given path
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The object that represents the resource at the given path
      */
-    WebResource getResource(String path);
+    default WebResource getResource(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the objects that represent the resource at the given path. Note
@@ -104,12 +105,13 @@ public interface WebResourceRoot extends Lifecycle {
      * not normally be accessible (e.g. because it was overridden by another
      * resource)
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The objects that represents the resource at the given path
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The objects that represents the resource at the given path
      */
-    WebResource[] getResources(String path);
+    default WebResource[] getResources(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the object that represents the class loader resource at the given
@@ -118,14 +120,15 @@ public interface WebResourceRoot extends Lifecycle {
      * subsequent calls to this method until the web application is reloaded. No
      * guarantee is made as to what the search order for JAR files may be.
      *
-     * @param path  The path of the class loader resource of interest relative
-     *              to the the root of class loader resources for this web
-     *              application.
-     *
-     * @return  The object that represents the class loader resource at the
-     *          given path
+     * @param path The path of the class loader resource of interest relative
+     *             to the the root of class loader resources for this web
+     *             application.
+     * @return The object that represents the class loader resource at the
+     * given path
      */
-    WebResource getClassLoaderResource(String path);
+    default WebResource getClassLoaderResource(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the objects that represent the class loader resource at the given
@@ -135,62 +138,67 @@ public interface WebResourceRoot extends Lifecycle {
      * not normally be accessible (e.g. because it was overridden by another
      * resource)
      *
-     * @param path  The path for the class loader resource of interest relative
-     *              to the root of the class loader resources for the web
-     *              application. It must start with '/'.
-     *
-     * @return  The objects that represents the class loader resources at the
-     *          given path. There will always be at least one element although
-     *          that element may represent a resource that is not present.
+     * @param path The path for the class loader resource of interest relative
+     *             to the root of the class loader resources for the web
+     *             application. It must start with '/'.
+     * @return The objects that represents the class loader resources at the
+     * given path. There will always be at least one element although
+     * that element may represent a resource that is not present.
      */
-    WebResource[] getClassLoaderResources(String path);
+    default WebResource[] getClassLoaderResources(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the list of the names of all of the files and directories located
      * in the specified directory.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The list of resources. If path does not refer to a directory
-     *          then a zero length array will be returned.
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The list of resources. If path does not refer to a directory
+     * then a zero length array will be returned.
      */
-    String[] list(String path);
+    default String[] list(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the Set of the web applications pathnames of all of the files and
      * directories located in the specified directory. Paths representing
      * directories will end with a '/' character.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The Set of resources. If path does not refer to a directory
-     *          then null will be returned.
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The Set of resources. If path does not refer to a directory
+     * then null will be returned.
      */
-    Set<String> listWebAppPaths(String path);
+    default Set<String> listWebAppPaths(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the list of all of the WebResources in the specified directory.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The list of resources. If path does not refer to a directory
-     *          then a zero length array will be returned.
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The list of resources. If path does not refer to a directory
+     * then a zero length array will be returned.
      */
-    WebResource[] listResources(String path);
+    default WebResource[] listResources(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Create a new directory at the given path.
      *
-     * @param path  The path for the new resource to create relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  <code>true</code> if the directory was created, otherwise
-     *          <code>false</code>
+     * @param path The path for the new resource to create relative to the root
+     *             of the web application. It must start with '/'.
+     * @return <code>true</code> if the directory was created, otherwise
+     * <code>false</code>
      */
-    boolean mkdir(String path);
+    default boolean mkdir(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Create a new resource at the requested path using the provided
@@ -204,45 +212,50 @@ public interface WebResourceRoot extends Lifecycle {
      * @param overwrite If <code>true</code> and the resource already exists it
      *                  will be overwritten. If <code>false</code> and the
      *                  resource already exists the write will fail.
-     *
-     * @return  <code>true</code> if and only if the new Resource is written
+     * @return <code>true</code> if and only if the new Resource is written
      */
-    boolean write(String path, InputStream is, boolean overwrite);
+    default boolean write(String path, InputStream is, boolean overwrite) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Creates a new {@link WebResourceSet} for this {@link WebResourceRoot}
      * based on the provided parameters.
      *
-     * @param type          The type of {@link WebResourceSet} to create
-     * @param webAppMount   The path within the web application that the
-     *                          resources should be published at. It must start
-     *                          with '/'.
-     * @param url           The URL of the resource (must locate a JAR, file or
-     *                          directory)
-     * @param internalPath  The path within the resource where the content is to
-     *                          be found. It must start with '/'.
+     * @param type         The type of {@link WebResourceSet} to create
+     * @param webAppMount  The path within the web application that the
+     *                     resources should be published at. It must start
+     *                     with '/'.
+     * @param url          The URL of the resource (must locate a JAR, file or
+     *                     directory)
+     * @param internalPath The path within the resource where the content is to
+     *                     be found. It must start with '/'.
      */
-    void createWebResourceSet(ResourceSetType type, String webAppMount, URL url,
-                              String internalPath);
+    default void createWebResourceSet(ResourceSetType type, String webAppMount, URL url,
+                                      String internalPath) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Creates a new {@link WebResourceSet} for this {@link WebResourceRoot}
      * based on the provided parameters.
      *
-     * @param type          The type of {@link WebResourceSet} to create
-     * @param webAppMount   The path within the web application that the
-     *                          resources should be published at. It must start
-     *                          with '/'.
-     * @param base          The location of the resources
-     * @param archivePath   The path within the resource to the archive where
-     *                          the content is to be found. If there is no
-     *                          archive then this should be <code>null</code>.
-     * @param internalPath  The path within the archive (or the resource if the
-     *                          archivePath is <code>null</code> where the
-     *                          content is to be found. It must start with '/'.
+     * @param type         The type of {@link WebResourceSet} to create
+     * @param webAppMount  The path within the web application that the
+     *                     resources should be published at. It must start
+     *                     with '/'.
+     * @param base         The location of the resources
+     * @param archivePath  The path within the resource to the archive where
+     *                     the content is to be found. If there is no
+     *                     archive then this should be <code>null</code>.
+     * @param internalPath The path within the archive (or the resource if the
+     *                     archivePath is <code>null</code> where the
+     *                     content is to be found. It must start with '/'.
      */
-    void createWebResourceSet(ResourceSetType type, String webAppMount,
-                              String base, String archivePath, String internalPath);
+    default void createWebResourceSet(ResourceSetType type, String webAppMount,
+                                      String base, String archivePath, String internalPath) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -251,13 +264,17 @@ public interface WebResourceRoot extends Lifecycle {
      *
      * @param webResourceSet the resource set to use
      */
-    void addPreResources(WebResourceSet webResourceSet);
+    default void addPreResources(WebResourceSet webResourceSet) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the list of WebResourceSet configured to this web application
      * as a 'Pre' resource.
      */
-    WebResourceSet[] getPreResources();
+    default WebResourceSet[] getPreResources() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Adds the provided WebResourceSet to this web application as a 'Jar'
@@ -265,13 +282,17 @@ public interface WebResourceRoot extends Lifecycle {
      *
      * @param webResourceSet the resource set to use
      */
-    void addJarResources(WebResourceSet webResourceSet);
+    default void addJarResources(WebResourceSet webResourceSet) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the list of WebResourceSet configured to this web application
      * as a 'Jar' resource.
      */
-    WebResourceSet[] getJarResources();
+    default WebResourceSet[] getJarResources() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Adds the provided WebResourceSet to this web application as a 'Post'
@@ -279,97 +300,125 @@ public interface WebResourceRoot extends Lifecycle {
      *
      * @param webResourceSet the resource set to use
      */
-    void addPostResources(WebResourceSet webResourceSet);
+    default void addPostResources(WebResourceSet webResourceSet) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the list of WebResourceSet configured to this web application
      * as a 'Post' resource.
      */
-    WebResourceSet[] getPostResources();
+    default WebResourceSet[] getPostResources() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the web application this WebResourceRoot is associated with.
      */
-    Context getContext();
+    default Context getContext() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the web application this WebResourceRoot is associated with.
      *
      * @param context the associated context
      */
-    void setContext(Context context);
+    default void setContext(Context context) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Configure if this resources allow the use of symbolic links.
      *
-     * @param allowLinking  <code>true</code> if symbolic links are allowed.
+     * @param allowLinking <code>true</code> if symbolic links are allowed.
      */
-    void setAllowLinking(boolean allowLinking);
+    default void setAllowLinking(boolean allowLinking) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Determine if this resources allow the use of symbolic links.
      *
-     * @return  <code>true</code> if symbolic links are allowed
+     * @return <code>true</code> if symbolic links are allowed
      */
-    boolean getAllowLinking();
+    default boolean getAllowLinking() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set whether or not caching is permitted for this web application.
      *
-     * @param cachingAllowed    <code>true</code> to enable caching, else
-     *                          <code>false</code>
+     * @param cachingAllowed <code>true</code> to enable caching, else
+     *                       <code>false</code>
      */
-    void setCachingAllowed(boolean cachingAllowed);
+    default void setCachingAllowed(boolean cachingAllowed) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return <code>true</code> if caching is permitted for this web application.
      */
-    boolean isCachingAllowed();
+    default boolean isCachingAllowed() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the Time-To-Live (TTL) for cache entries.
      *
-     * @param ttl   TTL in milliseconds
+     * @param ttl TTL in milliseconds
      */
-    void setCacheTtl(long ttl);
+    default void setCacheTtl(long ttl) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the Time-To-Live (TTL) for cache entries.
      *
-     * @return  TTL in milliseconds
+     * @return TTL in milliseconds
      */
-    long getCacheTtl();
+    default long getCacheTtl() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the maximum permitted size for the cache.
      *
-     * @param cacheMaxSize  Maximum cache size in kilobytes
+     * @param cacheMaxSize Maximum cache size in kilobytes
      */
-    void setCacheMaxSize(long cacheMaxSize);
+    default void setCacheMaxSize(long cacheMaxSize) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the maximum permitted size for the cache.
      *
-     * @return  Maximum cache size in kilobytes
+     * @return Maximum cache size in kilobytes
      */
-    long getCacheMaxSize();
+    default long getCacheMaxSize() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the maximum permitted size for a single object in the cache. Note
      * that the maximum size in bytes may not exceed {@link Integer#MAX_VALUE}.
      *
-     * @param cacheObjectMaxSize    Maximum size for a single cached object in
-     *                              kilobytes
+     * @param cacheObjectMaxSize Maximum size for a single cached object in
+     *                           kilobytes
      */
-    void setCacheObjectMaxSize(int cacheObjectMaxSize);
+    default void setCacheObjectMaxSize(int cacheObjectMaxSize) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the maximum permitted size for a single object in the cache. Note
      * that the maximum size in bytes may not exceed {@link Integer#MAX_VALUE}.
      *
-     * @return  Maximum size for a single cached object in kilobytes
+     * @return Maximum size for a single cached object in kilobytes
      */
-    int getCacheObjectMaxSize();
+    default int getCacheObjectMaxSize() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Controls whether the track locked files feature is enabled. If enabled,
@@ -390,67 +439,89 @@ public interface WebResourceRoot extends Lifecycle {
      * @param trackLockedFiles {@code true} to enable it, {@code false} to
      *                         disable it
      */
-    void setTrackLockedFiles(boolean trackLockedFiles);
+    default void setTrackLockedFiles(boolean trackLockedFiles) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Has the track locked files feature been enabled?
      *
      * @return {@code true} if it has been enabled, otherwise {@code false}
      */
-    boolean getTrackLockedFiles();
+    default boolean getTrackLockedFiles() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set the strategy to use for the resources archive lookup.
      *
      * @param archiveIndexStrategy The strategy to use for the resources archive lookup
      */
-    void setArchiveIndexStrategy(String archiveIndexStrategy);
+    default void setArchiveIndexStrategy(String archiveIndexStrategy) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the strategy to use for the resources archive lookup.
      *
      * @return The strategy to use for the resources archive lookup
      */
-    String getArchiveIndexStrategy();
+    default String getArchiveIndexStrategy() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Get the strategy to use for the resources archive lookup.
      *
      * @return The strategy to use for the resources archive lookup
      */
-    ArchiveIndexStrategy getArchiveIndexStrategyEnum();
+    default ArchiveIndexStrategy getArchiveIndexStrategyEnum() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * This method will be invoked by the context on a periodic basis and allows
      * the implementation a method that executes periodic tasks, such as purging
      * expired cache entries.
      */
-    void backgroundProcess();
+    default void backgroundProcess() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Add a specified resource to track to be able to later release
      * resources on stop.
+     *
      * @param trackedResource the resource that will be tracked
      */
-    void registerTrackedResource(TrackedWebResource trackedResource);
+    default void registerTrackedResource(TrackedWebResource trackedResource) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Stop tracking specified resource, once it no longer needs to free resources.
+     *
      * @param trackedResource the resource that was tracked
      */
-    void deregisterTrackedResource(TrackedWebResource trackedResource);
+    default void deregisterTrackedResource(TrackedWebResource trackedResource) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * @return the set of {@link WebResourceSet#getBaseUrl()} for all
      * {@link WebResourceSet}s used by this root.
      */
-    List<URL> getBaseUrls();
+    default List<URL> getBaseUrls() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Implementations may cache some information to improve performance. This
      * method triggers the clean-up of those resources.
      */
-    void gc();
+    default void gc() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the current caching strategy.
@@ -516,12 +587,13 @@ public interface WebResourceRoot extends Lifecycle {
          * Should the result of looking up the resource at the given path be
          * excluded from caching?
          *
-         * @param path  The path to check against the strategy to see if the
-         *              result should be cached
-         *
+         * @param path The path to check against the strategy to see if the
+         *             result should be cached
          * @return {@code true} if the result should not be cached, otherwise
-         *         {@code false}
+         * {@code false}
          */
-        boolean noCache(String path);
+        default boolean noCache(String path) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

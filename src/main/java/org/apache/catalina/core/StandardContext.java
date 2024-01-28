@@ -104,16 +104,19 @@ import org.apache.catalina.deploy.NamingResourcesImpl;
 import org.apache.catalina.loader.WebappClassLoaderBase;
 import org.apache.catalina.loader.WebappLoader;
 //import org.apache.catalina.session.StandardManager;
+import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.util.CharsetMapper;
 import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.ErrorPageSupport;
 import org.apache.catalina.util.URLEncoder;
 //import org.apache.catalina.webresources.StandardRoot;
+import org.apache.catalina.webresources.StandardRoot;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.naming.ContextBindings;
 import org.apache.tomcat.InstanceManager;
 //import org.apache.tomcat.InstanceManagerBindings;
+import org.apache.tomcat.InstanceManagerBindings;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.StringUtils;
@@ -124,6 +127,7 @@ import org.apache.tomcat.util.descriptor.web.*;
 //import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.http.CookieProcessor;
 //import org.apache.tomcat.util.http.Rfc6265CookieProcessor;
+import org.apache.tomcat.util.http.Rfc6265CookieProcessor;
 import org.apache.tomcat.util.scan.StandardJarScanner;
 //import org.apache.tomcat.util.security.PrivilegedGetTccl;
 //import org.apache.tomcat.util.security.PrivilegedSetTccl;
@@ -4701,319 +4705,318 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-//        if (log.isDebugEnabled()) {
-//            log.debug("Starting " + getBaseName());
-//        }
-//
-//        // Send j2ee.state.starting notification
-//        if (this.getObjectName() != null) {
-//            Notification notification =
-//                    new Notification("j2ee.state.starting", this.getObjectName(), sequenceNumber.getAndIncrement());
-//            broadcaster.sendNotification(notification);
-//        }
-//
-//        setConfigured(false);
-//        boolean ok = true;
-//
-//        // Currently this is effectively a NO-OP but needs to be called to
-//        // ensure the NamingResources follows the correct lifecycle
-//        if (namingResources != null) {
-//            namingResources.start();
-//        }
-//
-//        // Post work directory
-//        postWorkDirectory();
-//
-//        // Add missing components as necessary
-//        if (getResources() == null) { // (1) Required by Loader
-//            if (log.isDebugEnabled()) {
-//                log.debug("Configuring default Resources");
-//            }
-//
-//            try {
-//                setResources(new StandardRoot(this));
-//            } catch (IllegalArgumentException e) {
-//                log.error(sm.getString("standardContext.resourcesInit"), e);
-//                ok = false;
-//            }
-//        }
-//        if (ok) {
-//            resourcesStart();
-//        }
-//
-//        if (getLoader() == null) {
-//            WebappLoader webappLoader = new WebappLoader();
-//            webappLoader.setDelegate(getDelegate());
-//            setLoader(webappLoader);
-//        }
-//
-//        // An explicit cookie processor hasn't been specified; use the default
-//        if (cookieProcessor == null) {
-//            cookieProcessor = new Rfc6265CookieProcessor();
-//        }
-//
-//        // Initialize character set mapper
-//        getCharsetMapper();
-//
-//        // Reading the "catalina.useNaming" environment variable
-//        String useNamingProperty = System.getProperty("catalina.useNaming");
-//        if ((useNamingProperty != null) && (useNamingProperty.equals("false"))) {
-//            useNaming = false;
-//        }
-//
-//        if (ok && isUseNaming()) {
-//            if (getNamingContextListener() == null) {
-//                NamingContextListener ncl = new NamingContextListener();
-//                ncl.setName(getNamingContextName());
-//                ncl.setExceptionOnFailedWrite(getJndiExceptionOnFailedWrite());
-//                addLifecycleListener(ncl);
-//                setNamingContextListener(ncl);
-//            }
-//        }
-//
-//        // Standard container startup
-//        if (log.isDebugEnabled()) {
-//            log.debug("Processing standard container startup");
-//        }
-//
-//
-//        // Binding thread
-//        ClassLoader oldCCL = bindThread();
-//
-//        try {
-//            if (ok) {
-//                // Start our subordinate components, if any
-//                Loader loader = getLoader();
-//                if (loader instanceof Lifecycle) {
-//                    ((Lifecycle) loader).start();
-//                }
-//
-//                // since the loader just started, the webapp classloader is now
-//                // created.
-//                if (loader.getClassLoader() instanceof WebappClassLoaderBase) {
-//                    WebappClassLoaderBase cl = (WebappClassLoaderBase) loader.getClassLoader();
-//                    cl.setClearReferencesRmiTargets(getClearReferencesRmiTargets());
-//                    cl.setClearReferencesStopThreads(getClearReferencesStopThreads());
-//                    cl.setClearReferencesStopTimerThreads(getClearReferencesStopTimerThreads());
-//                    cl.setClearReferencesHttpClientKeepAliveThread(getClearReferencesHttpClientKeepAliveThread());
-//                    cl.setClearReferencesObjectStreamClassCaches(getClearReferencesObjectStreamClassCaches());
-//                    cl.setClearReferencesThreadLocals(getClearReferencesThreadLocals());
-//                    cl.setSkipMemoryLeakChecksOnJvmShutdown(getSkipMemoryLeakChecksOnJvmShutdown());
-//                }
-//
-//                // By calling unbindThread and bindThread in a row, we setup the
-//                // current Thread CCL to be the webapp classloader
-//                unbindThread(oldCCL);
-//                oldCCL = bindThread();
-//
-//                // Initialize logger again. Other components might have used it
-//                // too early, so it should be reset.
-//                logger = null;
-//                getLogger();
-//
-//                Realm realm = getRealmInternal();
-//                if (null != realm) {
-//                    if (realm instanceof Lifecycle) {
-//                        ((Lifecycle) realm).start();
-//                    }
-//
-//                    // Place the CredentialHandler into the ServletContext so
-//                    // applications can have access to it. Wrap it in a "safe"
-//                    // handler so application's can't modify it.
-//                    CredentialHandler safeHandler = new CredentialHandler() {
-//                        @Override
-//                        public boolean matches(String inputCredentials, String storedCredentials) {
-//                            return getRealmInternal().getCredentialHandler().matches(inputCredentials,
-//                                    storedCredentials);
-//                        }
-//
-//                        @Override
-//                        public String mutate(String inputCredentials) {
-//                            return getRealmInternal().getCredentialHandler().mutate(inputCredentials);
-//                        }
-//                    };
-//                    context.setAttribute(Globals.CREDENTIAL_HANDLER, safeHandler);
-//                }
-//
-//                // Notify our interested LifecycleListeners
-//                fireLifecycleEvent(CONFIGURE_START_EVENT, null);
-//
-//                // Start our child containers, if not already started
-//                for (Container child : findChildren()) {
-//                    if (!child.getState().isAvailable()) {
-//                        child.start();
-//                    }
-//                }
-//
-//                // Start the Valves in our pipeline (including the basic),
-//                // if any
-//                if (pipeline instanceof Lifecycle) {
-//                    ((Lifecycle) pipeline).start();
-//                }
-//
-//                // Acquire clustered manager
-//                Manager contextManager = null;
-//                Manager manager = getManager();
-//                if (manager == null) {
-//                    if (log.isDebugEnabled()) {
-//                        log.debug(sm.getString("standardContext.cluster.noManager",
-//                                Boolean.valueOf((getCluster() != null)), Boolean.valueOf(distributable)));
-//                    }
-//                    if ((getCluster() != null) && distributable) {
-//                        try {
-//                            contextManager = getCluster().createManager(getName());
-//                        } catch (Exception ex) {
-//                            log.error(sm.getString("standardContext.cluster.managerError"), ex);
-//                            ok = false;
-//                        }
-//                    } else {
-//                        contextManager = new StandardManager();
-//                    }
-//                }
-//
-//                // Configure default manager if none was specified
-//                if (contextManager != null) {
-//                    if (log.isDebugEnabled()) {
-//                        log.debug(sm.getString("standardContext.manager", contextManager.getClass().getName()));
-//                    }
-//                    setManager(contextManager);
-//                }
-//
-//                if (manager != null && (getCluster() != null) && distributable) {
-//                    // let the cluster know that there is a context that is distributable
-//                    // and that it has its own manager
-//                    getCluster().registerManager(manager);
-//                }
-//            }
-//
-//            if (!getConfigured()) {
-//                log.error(sm.getString("standardContext.configurationFail"));
-//                ok = false;
-//            }
-//
-//            // We put the resources into the servlet context
-//            if (ok) {
-//                getServletContext().setAttribute(Globals.RESOURCES_ATTR, getResources());
-//
-//                if (getInstanceManager() == null) {
-//                    setInstanceManager(createInstanceManager());
-//                }
-//                getServletContext().setAttribute(InstanceManager.class.getName(), getInstanceManager());
-//                InstanceManagerBindings.bind(getLoader().getClassLoader(), getInstanceManager());
-//
-//                // Create context attributes that will be required
-//                getServletContext().setAttribute(JarScanner.class.getName(), getJarScanner());
-//
-//                // Make the version info available
-//                getServletContext().setAttribute(Globals.WEBAPP_VERSION, getWebappVersion());
-//
-//                // Make the utility executor available
-//                if (!Globals.IS_SECURITY_ENABLED) {
-//                    getServletContext().setAttribute(ScheduledThreadPoolExecutor.class.getName(),
-//                            Container.getService(this).getServer().getUtilityExecutor());
-//                }
-//            }
-//
-//            // Set up the context init params
-//            mergeParameters();
-//
-//            // Call ServletContainerInitializers
-//            for (Map.Entry<ServletContainerInitializer,Set<Class<?>>> entry : initializers.entrySet()) {
-//                try {
-//                    entry.getKey().onStartup(entry.getValue(), getServletContext());
-//                } catch (ServletException e) {
-//                    log.error(sm.getString("standardContext.sciFail"), e);
-//                    ok = false;
-//                    break;
-//                }
-//            }
-//
-//            // Configure and call application event listeners
-//            if (ok) {
-//                if (!listenerStart()) {
-//                    log.error(sm.getString("standardContext.listenerFail"));
-//                    ok = false;
-//                }
-//            }
-//
-//            // Check constraints for uncovered HTTP methods
-//            // Needs to be after SCIs and listeners as they may programmatically
-//            // change constraints
-//            if (ok) {
-//                checkConstraintsForUncoveredMethods(findConstraints());
-//            }
-//
-//            try {
-//                // Start manager
-//                Manager manager = getManager();
-//                if (manager instanceof Lifecycle) {
-//                    ((Lifecycle) manager).start();
-//                }
-//            } catch (Exception e) {
-//                log.error(sm.getString("standardContext.managerFail"), e);
-//                ok = false;
-//            }
-//
-//            // Configure and call application filters
-//            if (ok) {
-//                if (!filterStart()) {
-//                    log.error(sm.getString("standardContext.filterFail"));
-//                    ok = false;
-//                }
-//            }
-//
-//            // Load and initialize all "load on startup" servlets
-//            if (ok) {
-//                if (!loadOnStartup(findChildren())) {
-//                    log.error(sm.getString("standardContext.servletFail"));
-//                    ok = false;
-//                }
-//            }
-//
-//            // Start ContainerBackgroundProcessor thread
-//            super.threadStart();
-//        } finally {
-//            // Unbinding thread
-//            unbindThread(oldCCL);
-//        }
-//
-//        // Set available status depending upon startup success
-//        if (ok) {
-//            if (log.isDebugEnabled()) {
-//                log.debug("Starting completed");
-//            }
-//        } else {
-//            log.error(sm.getString("standardContext.startFailed", getName()));
-//        }
-//
-//        startTime = System.currentTimeMillis();
-//
-//        // Send j2ee.state.running notification
-//        if (ok && (this.getObjectName() != null)) {
-//            Notification notification =
-//                    new Notification("j2ee.state.running", this.getObjectName(), sequenceNumber.getAndIncrement());
-//            broadcaster.sendNotification(notification);
-//        }
-//
-//        // The WebResources implementation caches references to JAR files. On
-//        // some platforms these references may lock the JAR files. Since web
-//        // application start is likely to have read from lots of JARs, trigger
-//        // a clean-up now.
-//        getResources().gc();
-//
-//        // Reinitializing if something went wrong
-//        if (!ok) {
-//            setState(LifecycleState.FAILED);
-//            // Send j2ee.object.failed notification
-//            if (this.getObjectName() != null) {
-//                Notification notification =
-//                        new Notification("j2ee.object.failed", this.getObjectName(), sequenceNumber.getAndIncrement());
-//                broadcaster.sendNotification(notification);
-//            }
-//        } else {
-//            setState(LifecycleState.STARTING);
-//        }
-        throw new UnsupportedOperationException();
+        if (log.isDebugEnabled()) {
+            log.debug("Starting " + getBaseName());
+        }
+
+        // Send j2ee.state.starting notification
+        if (this.getObjectName() != null) {
+            Notification notification =
+                    new Notification("j2ee.state.starting", this.getObjectName(), sequenceNumber.getAndIncrement());
+            broadcaster.sendNotification(notification);
+        }
+
+        setConfigured(false);
+        boolean ok = true;
+
+        // Currently this is effectively a NO-OP but needs to be called to
+        // ensure the NamingResources follows the correct lifecycle
+        if (namingResources != null) {
+            namingResources.start();
+        }
+
+        // Post work directory
+        postWorkDirectory();
+
+        // Add missing components as necessary
+        if (getResources() == null) { // (1) Required by Loader
+            if (log.isDebugEnabled()) {
+                log.debug("Configuring default Resources");
+            }
+
+            try {
+                setResources(new StandardRoot(this));
+            } catch (IllegalArgumentException e) {
+                log.error(sm.getString("standardContext.resourcesInit"), e);
+                ok = false;
+            }
+        }
+        if (ok) {
+            resourcesStart();
+        }
+
+        if (getLoader() == null) {
+            WebappLoader webappLoader = new WebappLoader();
+            webappLoader.setDelegate(getDelegate());
+            setLoader(webappLoader);
+        }
+
+        // An explicit cookie processor hasn't been specified; use the default
+        if (cookieProcessor == null) {
+            cookieProcessor = new Rfc6265CookieProcessor();
+        }
+
+        // Initialize character set mapper
+        getCharsetMapper();
+
+        // Reading the "catalina.useNaming" environment variable
+        String useNamingProperty = System.getProperty("catalina.useNaming");
+        if ((useNamingProperty != null) && (useNamingProperty.equals("false"))) {
+            useNaming = false;
+        }
+
+        if (ok && isUseNaming()) {
+            if (getNamingContextListener() == null) {
+                NamingContextListener ncl = new NamingContextListener();
+                ncl.setName(getNamingContextName());
+                ncl.setExceptionOnFailedWrite(getJndiExceptionOnFailedWrite());
+                addLifecycleListener(ncl);
+                setNamingContextListener(ncl);
+            }
+        }
+
+        // Standard container startup
+        if (log.isDebugEnabled()) {
+            log.debug("Processing standard container startup");
+        }
+
+
+        // Binding thread
+        ClassLoader oldCCL = bindThread();
+
+        try {
+            if (ok) {
+                // Start our subordinate components, if any
+                Loader loader = getLoader();
+                if (loader instanceof Lifecycle) {
+                    ((Lifecycle) loader).start();
+                }
+
+                // since the loader just started, the webapp classloader is now
+                // created.
+                if (loader.getClassLoader() instanceof WebappClassLoaderBase) {
+                    WebappClassLoaderBase cl = (WebappClassLoaderBase) loader.getClassLoader();
+                    cl.setClearReferencesRmiTargets(getClearReferencesRmiTargets());
+                    cl.setClearReferencesStopThreads(getClearReferencesStopThreads());
+                    cl.setClearReferencesStopTimerThreads(getClearReferencesStopTimerThreads());
+                    cl.setClearReferencesHttpClientKeepAliveThread(getClearReferencesHttpClientKeepAliveThread());
+                    cl.setClearReferencesObjectStreamClassCaches(getClearReferencesObjectStreamClassCaches());
+                    cl.setClearReferencesThreadLocals(getClearReferencesThreadLocals());
+                    cl.setSkipMemoryLeakChecksOnJvmShutdown(getSkipMemoryLeakChecksOnJvmShutdown());
+                }
+
+                // By calling unbindThread and bindThread in a row, we setup the
+                // current Thread CCL to be the webapp classloader
+                unbindThread(oldCCL);
+                oldCCL = bindThread();
+
+                // Initialize logger again. Other components might have used it
+                // too early, so it should be reset.
+                logger = null;
+                getLogger();
+
+                Realm realm = getRealmInternal();
+                if (null != realm) {
+                    if (realm instanceof Lifecycle) {
+                        ((Lifecycle) realm).start();
+                    }
+
+                    // Place the CredentialHandler into the ServletContext so
+                    // applications can have access to it. Wrap it in a "safe"
+                    // handler so application's can't modify it.
+                    CredentialHandler safeHandler = new CredentialHandler() {
+                        @Override
+                        public boolean matches(String inputCredentials, String storedCredentials) {
+                            return getRealmInternal().getCredentialHandler().matches(inputCredentials,
+                                    storedCredentials);
+                        }
+
+                        @Override
+                        public String mutate(String inputCredentials) {
+                            return getRealmInternal().getCredentialHandler().mutate(inputCredentials);
+                        }
+                    };
+                    context.setAttribute(Globals.CREDENTIAL_HANDLER, safeHandler);
+                }
+
+                // Notify our interested LifecycleListeners
+                fireLifecycleEvent(CONFIGURE_START_EVENT, null);
+
+                // Start our child containers, if not already started
+                for (Container child : findChildren()) {
+                    if (!child.getState().isAvailable()) {
+                        child.start();
+                    }
+                }
+
+                // Start the Valves in our pipeline (including the basic),
+                // if any
+                if (pipeline instanceof Lifecycle) {
+                    ((Lifecycle) pipeline).start();
+                }
+
+                // Acquire clustered manager
+                Manager contextManager = null;
+                Manager manager = getManager();
+                if (manager == null) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(sm.getString("standardContext.cluster.noManager",
+                                Boolean.valueOf((getCluster() != null)), Boolean.valueOf(distributable)));
+                    }
+                    if ((getCluster() != null) && distributable) {
+                        try {
+                            contextManager = getCluster().createManager(getName());
+                        } catch (Exception ex) {
+                            log.error(sm.getString("standardContext.cluster.managerError"), ex);
+                            ok = false;
+                        }
+                    } else {
+                        contextManager = new StandardManager();
+                    }
+                }
+
+                // Configure default manager if none was specified
+                if (contextManager != null) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(sm.getString("standardContext.manager", contextManager.getClass().getName()));
+                    }
+                    setManager(contextManager);
+                }
+
+                if (manager != null && (getCluster() != null) && distributable) {
+                    // let the cluster know that there is a context that is distributable
+                    // and that it has its own manager
+                    getCluster().registerManager(manager);
+                }
+            }
+
+            if (!getConfigured()) {
+                log.error(sm.getString("standardContext.configurationFail"));
+                ok = false;
+            }
+
+            // We put the resources into the servlet context
+            if (ok) {
+                getServletContext().setAttribute(Globals.RESOURCES_ATTR, getResources());
+
+                if (getInstanceManager() == null) {
+                    setInstanceManager(createInstanceManager());
+                }
+                getServletContext().setAttribute(InstanceManager.class.getName(), getInstanceManager());
+                InstanceManagerBindings.bind(getLoader().getClassLoader(), getInstanceManager());
+
+                // Create context attributes that will be required
+                getServletContext().setAttribute(JarScanner.class.getName(), getJarScanner());
+
+                // Make the version info available
+                getServletContext().setAttribute(Globals.WEBAPP_VERSION, getWebappVersion());
+
+                // Make the utility executor available
+                if (!Globals.IS_SECURITY_ENABLED) {
+                    getServletContext().setAttribute(ScheduledThreadPoolExecutor.class.getName(),
+                            Container.getService(this).getServer().getUtilityExecutor());
+                }
+            }
+
+            // Set up the context init params
+            mergeParameters();
+
+            // Call ServletContainerInitializers
+            for (Map.Entry<ServletContainerInitializer,Set<Class<?>>> entry : initializers.entrySet()) {
+                try {
+                    entry.getKey().onStartup(entry.getValue(), getServletContext());
+                } catch (ServletException e) {
+                    log.error(sm.getString("standardContext.sciFail"), e);
+                    ok = false;
+                    break;
+                }
+            }
+
+            // Configure and call application event listeners
+            if (ok) {
+                if (!listenerStart()) {
+                    log.error(sm.getString("standardContext.listenerFail"));
+                    ok = false;
+                }
+            }
+
+            // Check constraints for uncovered HTTP methods
+            // Needs to be after SCIs and listeners as they may programmatically
+            // change constraints
+            if (ok) {
+                checkConstraintsForUncoveredMethods(findConstraints());
+            }
+
+            try {
+                // Start manager
+                Manager manager = getManager();
+                if (manager instanceof Lifecycle) {
+                    ((Lifecycle) manager).start();
+                }
+            } catch (Exception e) {
+                log.error(sm.getString("standardContext.managerFail"), e);
+                ok = false;
+            }
+
+            // Configure and call application filters
+            if (ok) {
+                if (!filterStart()) {
+                    log.error(sm.getString("standardContext.filterFail"));
+                    ok = false;
+                }
+            }
+
+            // Load and initialize all "load on startup" servlets
+            if (ok) {
+                if (!loadOnStartup(findChildren())) {
+                    log.error(sm.getString("standardContext.servletFail"));
+                    ok = false;
+                }
+            }
+
+            // Start ContainerBackgroundProcessor thread
+            super.threadStart();
+        } finally {
+            // Unbinding thread
+            unbindThread(oldCCL);
+        }
+
+        // Set available status depending upon startup success
+        if (ok) {
+            if (log.isDebugEnabled()) {
+                log.debug("Starting completed");
+            }
+        } else {
+            log.error(sm.getString("standardContext.startFailed", getName()));
+        }
+
+        startTime = System.currentTimeMillis();
+
+        // Send j2ee.state.running notification
+        if (ok && (this.getObjectName() != null)) {
+            Notification notification =
+                    new Notification("j2ee.state.running", this.getObjectName(), sequenceNumber.getAndIncrement());
+            broadcaster.sendNotification(notification);
+        }
+
+        // The WebResources implementation caches references to JAR files. On
+        // some platforms these references may lock the JAR files. Since web
+        // application start is likely to have read from lots of JARs, trigger
+        // a clean-up now.
+        getResources().gc();
+
+        // Reinitializing if something went wrong
+        if (!ok) {
+            setState(LifecycleState.FAILED);
+            // Send j2ee.object.failed notification
+            if (this.getObjectName() != null) {
+                Notification notification =
+                        new Notification("j2ee.object.failed", this.getObjectName(), sequenceNumber.getAndIncrement());
+                broadcaster.sendNotification(notification);
+            }
+        } else {
+            setState(LifecycleState.STARTING);
+        }
     }
 
 

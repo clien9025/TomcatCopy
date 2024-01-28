@@ -29,48 +29,52 @@ public interface WebResourceSet extends Lifecycle {
      * Obtain the object that represents the resource at the given path. Note
      * the resource at that path may not exist.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The object that represents the resource at the given path
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The object that represents the resource at the given path
      */
-    WebResource getResource(String path);
+    default WebResource getResource(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the list of the names of all of the files and directories located
      * in the specified directory.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The list of resources. If path does not refer to a directory
-     *          then a zero length array will be returned.
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The list of resources. If path does not refer to a directory
+     * then a zero length array will be returned.
      */
-    String[] list(String path);
+    default String[] list(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the Set of the web applications pathnames of all of the files and
      * directories located in the specified directory. Paths representing
      * directories will end with a "/" character.
      *
-     * @param path  The path for the resource of interest relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  The Set of resources. If path does not refer to a directory
-     *          then an empty set will be returned.
+     * @param path The path for the resource of interest relative to the root
+     *             of the web application. It must start with '/'.
+     * @return The Set of resources. If path does not refer to a directory
+     * then an empty set will be returned.
      */
-    Set<String> listWebAppPaths(String path);
+    default Set<String> listWebAppPaths(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Create a new directory at the given path.
      *
-     * @param path  The path for the new resource to create relative to the root
-     *              of the web application. It must start with '/'.
-     *
-     * @return  <code>true</code> if the directory was created, otherwise
-     *          <code>false</code>
+     * @param path The path for the new resource to create relative to the root
+     *             of the web application. It must start with '/'.
+     * @return <code>true</code> if the directory was created, otherwise
+     * <code>false</code>
      */
-    boolean mkdir(String path);
+    default boolean mkdir(String path) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Create a new resource at the requested path using the provided
@@ -84,12 +88,15 @@ public interface WebResourceSet extends Lifecycle {
      * @param overwrite If <code>true</code> and the resource already exists it
      *                  will be overwritten. If <code>false</code> and the
      *                  resource already exists the write will fail.
-     *
-     * @return  <code>true</code> if and only if the new Resource is written
+     * @return <code>true</code> if and only if the new Resource is written
      */
-    boolean write(String path, InputStream is, boolean overwrite);
+    default boolean write(String path, InputStream is, boolean overwrite) {
+        throw new UnsupportedOperationException();
+    }
 
-    void setRoot(WebResourceRoot root);
+    default void setRoot(WebResourceRoot root) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Should resources returned by this resource set only be included in any
@@ -98,11 +105,15 @@ public interface WebResourceSet extends Lifecycle {
      * looking for static (non-class loader) resources.
      *
      * @return <code>true</code> if these resources should only be used for
-     *         class loader resource lookups, otherwise <code>false</code>
+     * class loader resource lookups, otherwise <code>false</code>
      */
-    boolean getClassLoaderOnly();
+    default boolean getClassLoaderOnly() {
+        throw new UnsupportedOperationException();
+    }
 
-    void setClassLoaderOnly(boolean classLoaderOnly);
+    default void setClassLoaderOnly(boolean classLoaderOnly) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Should resources returned by this resource set only be included in any
@@ -111,12 +122,16 @@ public interface WebResourceSet extends Lifecycle {
      * that are explicitly looking for class loader resources.
      *
      * @return <code>true</code> if these resources should only be used for
-     *         static (non-class loader) resource lookups, otherwise
-     *         <code>false</code>
+     * static (non-class loader) resource lookups, otherwise
+     * <code>false</code>
      */
-    boolean getStaticOnly();
+    default boolean getStaticOnly() {
+        throw new UnsupportedOperationException();
+    }
 
-    void setStaticOnly(boolean staticOnly);
+    default void setStaticOnly(boolean staticOnly) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtain the base URL for this set of resources. One of the uses of this is
@@ -125,32 +140,39 @@ public interface WebResourceSet extends Lifecycle {
      *
      * @return The base URL for this set of resources
      */
-    URL getBaseUrl();
+    default URL getBaseUrl() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Configures whether or not this set of resources is read-only.
      *
      * @param readOnly <code>true</code> if this set of resources should be
      *                 configured to be read-only
-     *
      * @throws IllegalArgumentException if an attempt is made to configure a
-     *         {@link WebResourceSet} that is hard-coded to be read-only as
-     *         writable
+     *                                  {@link WebResourceSet} that is hard-coded to be read-only as
+     *                                  writable
      */
-    void setReadOnly(boolean readOnly);
+    default void setReadOnly(boolean readOnly) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Obtains the current value of the read-only setting for this set of
      * resources.
      *
      * @return <code>true</code> if this set of resources is configured to be
-     *         read-only, otherwise <code>false</code>
+     * read-only, otherwise <code>false</code>
      */
-    boolean isReadOnly();
+    default boolean isReadOnly() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Implementations may cache some information to improve performance. This
      * method triggers the clean-up of those resources.
      */
-    void gc();
+    default void gc() {
+        throw new UnsupportedOperationException();
+    }
 }
