@@ -289,18 +289,17 @@ public class StandardEngine extends ContainerBase implements Engine {
 
     @Override
     public File getCatalinaBase() {
-//        if (service != null) {
-//            Server s = service.getServer();
-//            if (s != null) {
-//                File base = s.getCatalinaBase();
-//                if (base != null) {
-//                    return base;
-//                }
-//            }
-//        }
-//        // Fall-back
-//        return super.getCatalinaBase();
-        throw new UnsupportedOperationException();
+        if (service != null) {
+            Server s = service.getServer();
+            if (s != null) {
+                File base = s.getCatalinaBase();
+                if (base != null) {
+                    return base;
+                }
+            }
+        }
+        // Fall-back
+        return super.getCatalinaBase();
     }
 
 

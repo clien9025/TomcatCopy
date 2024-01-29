@@ -15,6 +15,7 @@ import org.apache.tomcat.util.threads.InlineExecutorService;
 import javax.management.ObjectName;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -908,9 +909,97 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         throw new UnsupportedOperationException();
     }
 
+
+    /* +++++++++++++++++++++++++ */
+
+
     // ------------------------------------------------------- Pipeline Methods
 
-    /* ++++++++++++++++++++++++++++ */
+
+    /**
+     * Convenience method, intended for use by the digester to simplify the process of adding Valves to containers. See
+     * {@link Pipeline#addValve(Valve)} for full details. Components other than the digester should use
+     * {@link #getPipeline()}.{@link #addValve(Valve)} in case a future implementation provides an alternative method
+     * for the digester to use.
+     *
+     * @param valve Valve to be added
+     *
+     * @exception IllegalArgumentException if this Container refused to accept the specified Valve
+     * @exception IllegalArgumentException if the specified Valve refuses to be associated with this Container
+     * @exception IllegalStateException    if the specified Valve is already associated with a different Container
+     */
+    public synchronized void addValve(Valve valve) {
+
+        pipeline.addValve(valve);
+    }
+
+
+    /**
+     * Execute a periodic task, such as reloading, etc. This method will be invoked inside the classloading context of
+     * this container. Unexpected throwables will be caught and logged.
+     *
+     * 执行周期性任务，例如重新加载等。该方法将在此容器的类加载上下文中调用。除此之外 throwables 将被捕获并记录。
+     */
+    @Override
+    public void backgroundProcess() {
+
+        if (!getState().isAvailable()) {
+            return;
+        }
+
+        Cluster cluster = getClusterInternal();
+        if (cluster != null) {
+            try {
+                cluster.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("containerBase.backgroundProcess.cluster", cluster), e);
+            }
+        }
+        Realm realm = getRealmInternal();
+        if (realm != null) {
+            try {
+                realm.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("containerBase.backgroundProcess.realm", realm), e);
+            }
+        }
+        Valve current = pipeline.getFirst();
+        while (current != null) {
+            try {
+                current.backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString("containerBase.backgroundProcess.valve", current), e);
+            }
+            current = current.getNext();
+        }
+        fireLifecycleEvent(PERIODIC_EVENT, null);
+    }
+
+
+    @Override
+    public File getCatalinaBase() {
+
+        if (parent == null) {
+            return null;
+        }
+
+        return parent.getCatalinaBase();
+    }
+
+
+    @Override
+    public File getCatalinaHome() {
+
+        if (parent == null) {
+            return null;
+        }
+
+        return parent.getCatalinaHome();
+    }
+
+
+    // ------------------------------------------------------ Protected Methods
+    /* +++++++++++++++++++++++++ */
 
 
 

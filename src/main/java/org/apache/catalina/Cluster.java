@@ -36,7 +36,9 @@ public interface Cluster extends Contained {
      *
      * @return The name of the cluster associated with this server
      */
-    String getClusterName();
+    default String getClusterName() {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -45,7 +47,9 @@ public interface Cluster extends Contained {
      *
      * @param clusterName The clustername to join
      */
-    void setClusterName(String clusterName);
+    default void setClusterName(String clusterName) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -53,27 +57,34 @@ public interface Cluster extends Contained {
      * sessions.
      *
      * @param name Name (key) of the application with which the manager is
-     * associated
-     *
+     *             associated
      * @return The newly created Manager instance
      */
-    Manager createManager(String name);
+    default Manager createManager(String name) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Register a manager with the cluster. If the cluster is not responsible
      * for creating a manager, then the container will at least notify the
      * cluster that this manager is participating in the cluster.
+     *
      * @param manager Manager
      */
-    void registerManager(Manager manager);
+    default void registerManager(Manager manager) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
      * Removes a manager from the cluster
+     *
      * @param manager Manager
      */
-    void removeManager(Manager manager);
+    default void removeManager(Manager manager) {
+        throw new UnsupportedOperationException();
+    }
 
 
     /**
@@ -81,5 +92,7 @@ public interface Cluster extends Contained {
      * invoked inside the classloading context of this container. Unexpected
      * throwables will be caught and logged.
      */
-    void backgroundProcess();
+    default void backgroundProcess() {
+        throw new UnsupportedOperationException();
+    }
 }

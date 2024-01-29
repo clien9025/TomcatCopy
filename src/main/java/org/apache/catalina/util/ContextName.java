@@ -116,41 +116,40 @@ public final class ContextName {
      * @param version Context version to use
      */
     public ContextName(String path, String version) {
-//        // Path should never be null, '/' or '/ROOT'
-//        if (path == null || "/".equals(path) || "/ROOT".equals(path)) {
-//            this.path = "";
-//        } else {
-//            this.path = path;
-//        }
-//
-//        // Version should never be null
-//        if (version == null) {
-//            this.version = "";
-//        } else {
-//            this.version = version;
-//        }
-//
-//        // Name is path + version
-//        if (this.version.isEmpty()) {
-//            name = this.path;
-//        } else {
-//            name = this.path + VERSION_MARKER + this.version;
-//        }
-//
-//        // Base name is converted path + version
-//        StringBuilder tmp = new StringBuilder();
-//        if (this.path.isEmpty()) {
-//            tmp.append(ROOT_NAME);
-//        } else {
-//            tmp.append(this.path.substring(1).replace('/',
-//                    FWD_SLASH_REPLACEMENT));
-//        }
-//        if (!this.version.isEmpty()) {
-//            tmp.append(VERSION_MARKER);
-//            tmp.append(this.version);
-//        }
-//        this.baseName = tmp.toString();
-        throw new UnsupportedOperationException();
+        // Path should never be null, '/' or '/ROOT'
+        if (path == null || "/".equals(path) || "/ROOT".equals(path)) {
+            this.path = "";
+        } else {
+            this.path = path;
+        }
+
+        // Version should never be null
+        if (version == null) {
+            this.version = "";
+        } else {
+            this.version = version;
+        }
+
+        // Name is path + version
+        if (this.version.isEmpty()) {
+            name = this.path;
+        } else {
+            name = this.path + VERSION_MARKER + this.version;
+        }
+
+        // Base name is converted path + version
+        StringBuilder tmp = new StringBuilder();
+        if (this.path.isEmpty()) {
+            tmp.append(ROOT_NAME);
+        } else {
+            tmp.append(this.path.substring(1).replace('/',
+                    FWD_SLASH_REPLACEMENT));
+        }
+        if (!this.version.isEmpty()) {
+            tmp.append(VERSION_MARKER);
+            tmp.append(this.version);
+        }
+        this.baseName = tmp.toString();
     }
 
     public String getBaseName() {
