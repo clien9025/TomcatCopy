@@ -324,17 +324,23 @@ public class Cache {
         return objectMaxSize;
     }
 
+    /**
+     * 强制对象最大大小限制
+     * <p>
+     * 这个方法确保了对象的最大大小不会超过根据缓存或资源总量计算出的比例限制。
+     * 如果当前设置超过了这个限制，它会将对象最大大小降低到这个限制。
+     * 这样做的目的可能是为了防止单个对象占用过多的缓存或资源，保证资源的合理分配。
+     */
     void enforceObjectMaxSizeLimit() {
-//        long limit = maxSize / OBJECT_MAX_SIZE_FACTOR;
-//        if (limit > Integer.MAX_VALUE) {
-//            return;
-//        }
-//        if (objectMaxSize > limit) {
-//            log.warn(sm.getString("cache.objectMaxSizeTooBig", Integer.valueOf(objectMaxSize / 1024),
-//                    Integer.valueOf((int) limit / 1024)));
-//            objectMaxSize = (int) limit;
-//        }
-        throw new UnsupportedOperationException();
+        long limit = maxSize / OBJECT_MAX_SIZE_FACTOR;
+        if (limit > Integer.MAX_VALUE) {
+            return;
+        }
+        if (objectMaxSize > limit) {
+            log.warn(sm.getString("cache.objectMaxSizeTooBig", Integer.valueOf(objectMaxSize / 1024),
+                    Integer.valueOf((int) limit / 1024)));
+            objectMaxSize = (int) limit;
+        }
     }
 
     public void clear() {

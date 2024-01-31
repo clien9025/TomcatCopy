@@ -4723,10 +4723,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         if (namingResources != null) {
             namingResources.start();
         }
-
+        /* 工作目录设置 */
         // Post work directory
         postWorkDirectory();
-
+        // 根据需要添加缺少的组件
         // Add missing components as necessary
         if (getResources() == null) { // (1) Required by Loader
             if (log.isDebugEnabled()) {
@@ -4749,15 +4749,15 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             webappLoader.setDelegate(getDelegate());
             setLoader(webappLoader);
         }
-
+        // 尚未指定显式 cookie 处理器；使用默认值
         // An explicit cookie processor hasn't been specified; use the default
         if (cookieProcessor == null) {
             cookieProcessor = new Rfc6265CookieProcessor();
         }
-
+        // 初始化字符集映射器
         // Initialize character set mapper
         getCharsetMapper();
-
+        // 读取“catalina.useNaming”环境变量
         // Reading the "catalina.useNaming" environment variable
         String useNamingProperty = System.getProperty("catalina.useNaming");
         if ((useNamingProperty != null) && (useNamingProperty.equals("false"))) {
@@ -4853,7 +4853,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 if (pipeline instanceof Lifecycle) {
                     ((Lifecycle) pipeline).start();
                 }
-
+                // 获取集群管理器
                 // Acquire clustered manager
                 Manager contextManager = null;
                 Manager manager = getManager();
@@ -4873,7 +4873,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                         contextManager = new StandardManager();
                     }
                 }
-
+                // 如果未指定，则配置默认管理器
                 // Configure default manager if none was specified
                 if (contextManager != null) {
                     if (log.isDebugEnabled()) {
@@ -4919,7 +4919,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
             // Set up the context init params
             mergeParameters();
-
+            // 调用 ServletContainerInitializers
             // Call ServletContainerInitializers
             for (Map.Entry<ServletContainerInitializer,Set<Class<?>>> entry : initializers.entrySet()) {
                 try {
@@ -4956,7 +4956,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 log.error(sm.getString("standardContext.managerFail"), e);
                 ok = false;
             }
-
+            // 配置和调用 应用程序过滤器
             // Configure and call application filters
             if (ok) {
                 if (!filterStart()) {
@@ -4964,7 +4964,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                     ok = false;
                 }
             }
-
+            // 加载并初始化所有 “启动时加载” servlet
             // Load and initialize all "load on startup" servlets
             if (ok) {
                 if (!loadOnStartup(findChildren())) {
@@ -5800,7 +5800,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * Set the appropriate context attribute for our work directory.
      */
     protected void postWorkDirectory() {
-
+        // 获取（或计算）工作目录路径
         // Acquire (or calculate) the work directory path
         String workDir = getWorkDir();
         if (workDir == null || workDir.length() == 0) {
@@ -5843,7 +5843,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             }
             setWorkDir(workDir);
         }
-
+        // 如果需要的话创建这个目录
         // Create this directory if necessary
         File dir = new File(workDir);
         if (!dir.isAbsolute()) {
@@ -5858,7 +5858,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         if (!dir.mkdirs() && !dir.isDirectory()) {
             log.warn(sm.getString("standardContext.workCreateFail", dir, getName()));
         }
-
+        // 设置适当的 servlet 上下文属性
         // Set the appropriate servlet context attribute
         if (context == null) {
             getServletContext();

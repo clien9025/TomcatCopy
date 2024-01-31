@@ -47,6 +47,7 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.UriUtil;
 import org.apache.tomcat.util.compat.JreCompat;
 //import org.apache.tomcat.util.http.RequestUtil;
+import org.apache.tomcat.util.http.RequestUtil;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -112,25 +113,24 @@ public class StandardRoot extends LifecycleMBeanBase implements WebResourceRoot 
     }
 
     private String[] list(String path, boolean validate) {
-//        if (validate) {
-//            path = validate(path);
-//        }
-//
-//        // Set because we don't want duplicates
-//        // LinkedHashSet to retain the order. It is the order of the
-//        // WebResourceSet that matters but it is simpler to retain the order
-//        // over all of the JARs.
-//        HashSet<String> result = new LinkedHashSet<>();
-//        for (List<WebResourceSet> list : allResources) {
-//            for (WebResourceSet webResourceSet : list) {
-//                if (!webResourceSet.getClassLoaderOnly()) {
-//                    String[] entries = webResourceSet.list(path);
-//                    result.addAll(Arrays.asList(entries));
-//                }
-//            }
-//        }
-//        return result.toArray(new String[0]);
-        throw new UnsupportedOperationException();
+        if (validate) {
+            path = validate(path);
+        }
+
+        // Set because we don't want duplicates
+        // LinkedHashSet to retain the order. It is the order of the
+        // WebResourceSet that matters but it is simpler to retain the order
+        // over all of the JARs.
+        HashSet<String> result = new LinkedHashSet<>();
+        for (List<WebResourceSet> list : allResources) {
+            for (WebResourceSet webResourceSet : list) {
+                if (!webResourceSet.getClassLoaderOnly()) {
+                    String[] entries = webResourceSet.list(path);
+                    result.addAll(Arrays.asList(entries));
+                }
+            }
+        }
+        return result.toArray(new String[0]);
     }
 
 
@@ -241,30 +241,29 @@ public class StandardRoot extends LifecycleMBeanBase implements WebResourceRoot 
      * @return the normalized path
      */
     private String validate(String path) {
-//        if (!getState().isAvailable()) {
-//            throw new IllegalStateException(sm.getString("standardRoot.checkStateNotStarted"));
-//        }
-//
-//        if (path == null || path.length() == 0 || !path.startsWith("/")) {
-//            throw new IllegalArgumentException(sm.getString("standardRoot.invalidPath", path));
-//        }
-//
-//        String result;
-//        if (File.separatorChar == '\\') {
-//            // On Windows '\\' is a separator so in case a Windows style
-//            // separator has managed to make it into the path, replace it.
-//            result = RequestUtil.normalize(path, true);
-//        } else {
-//            // On UNIX and similar systems, '\\' is a valid file name so do not
-//            // convert it to '/'
-//            result = RequestUtil.normalize(path, false);
-//        }
-//        if (result == null || result.length() == 0 || !result.startsWith("/")) {
-//            throw new IllegalArgumentException(sm.getString("standardRoot.invalidPathNormal", path, result));
-//        }
-//
-//        return result;
-        throw new UnsupportedOperationException();
+        if (!getState().isAvailable()) {
+            throw new IllegalStateException(sm.getString("standardRoot.checkStateNotStarted"));
+        }
+
+        if (path == null || path.length() == 0 || !path.startsWith("/")) {
+            throw new IllegalArgumentException(sm.getString("standardRoot.invalidPath", path));
+        }
+
+        String result;
+        if (File.separatorChar == '\\') {
+            // On Windows '\\' is a separator so in case a Windows style
+            // separator has managed to make it into the path, replace it.
+            result = RequestUtil.normalize(path, true);
+        } else {
+            // On UNIX and similar systems, '\\' is a valid file name so do not
+            // convert it to '/' 在 UNIX 和类似系统上，“\\”是有效的文件名，因此请勿将其转换为'/'
+            result = RequestUtil.normalize(path, false);
+        }
+        if (result == null || result.length() == 0 || !result.startsWith("/")) {
+            throw new IllegalArgumentException(sm.getString("standardRoot.invalidPathNormal", path, result));
+        }
+
+        return result;
     }
 
     protected final WebResource getResourceInternal(String path, boolean useClassLoaderResources) {
@@ -343,21 +342,20 @@ public class StandardRoot extends LifecycleMBeanBase implements WebResourceRoot 
     }
 
     protected WebResource[] listResources(String path, boolean validate) {
-//        if (validate) {
-//            path = validate(path);
-//        }
-//
-//        String[] resources = list(path, false);
-//        WebResource[] result = new WebResource[resources.length];
-//        for (int i = 0; i < resources.length; i++) {
-//            if (path.charAt(path.length() - 1) == '/') {
-//                result[i] = getResource(path + resources[i], false, false);
-//            } else {
-//                result[i] = getResource(path + '/' + resources[i], false, false);
-//            }
-//        }
-//        return result;
-        throw new UnsupportedOperationException();
+        if (validate) {
+            path = validate(path);
+        }
+
+        String[] resources = list(path, false);
+        WebResource[] result = new WebResource[resources.length];
+        for (int i = 0; i < resources.length; i++) {
+            if (path.charAt(path.length() - 1) == '/') {
+                result[i] = getResource(path + resources[i], false, false);
+            } else {
+                result[i] = getResource(path + '/' + resources[i], false, false);
+            }
+        }
+        return result;
     }
 
     // TODO: Should the createWebResourceSet() methods be removed to some
@@ -686,86 +684,82 @@ public class StandardRoot extends LifecycleMBeanBase implements WebResourceRoot 
 
     @Override
     protected void initInternal() throws LifecycleException {
-//        super.initInternal();
-//
-//        if (context == null) {
-//            throw new IllegalStateException(sm.getString("standardRoot.noContext"));
-//        }
-//
-//        cacheJmxName = register(cache, getObjectNameKeyProperties() + ",name=Cache");
-//
-//        registerURLStreamHandlerFactory();
-//
-//        for (List<WebResourceSet> list : allResources) {
-//            for (WebResourceSet webResourceSet : list) {
-//                webResourceSet.init();
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        super.initInternal();
+
+        if (context == null) {
+            throw new IllegalStateException(sm.getString("standardRoot.noContext"));
+        }
+
+        cacheJmxName = register(cache, getObjectNameKeyProperties() + ",name=Cache");
+
+        registerURLStreamHandlerFactory();
+
+        for (List<WebResourceSet> list : allResources) {
+            for (WebResourceSet webResourceSet : list) {
+                webResourceSet.init();
+            }
+        }
     }
 
     protected void registerURLStreamHandlerFactory() {
-//        if (!JreCompat.isGraalAvailable()) {
-//            // Ensure support for jar:war:file:/ URLs will be available (required
-//            // for resource JARs in packed WAR files).
-//            TomcatURLStreamHandlerFactory.register();
-//        }
-        throw new UnsupportedOperationException();
+        if (!JreCompat.isGraalAvailable()) {// Graal 是否可用
+            // Ensure support for jar:war:file:/ URLs will be available (required
+            // for resource JARs in packed WAR files).
+            TomcatURLStreamHandlerFactory.register();
+        }
     }
 
     @Override
     protected void startInternal() throws LifecycleException {
-//        mainResources.clear();
-//
-//        main = createMainResourceSet();
-//
-//        mainResources.add(main);
-//
-//        for (List<WebResourceSet> list : allResources) {
-//            // Skip class resources since they are started below
-//            if (list != classResources) {
-//                for (WebResourceSet webResourceSet : list) {
-//                    webResourceSet.start();
-//                }
-//            }
-//        }
-//
-//        // This has to be called after the other resources have been started
-//        // else it won't find all the matching resources
-//        processWebInfLib();
-//        // Need to start the newly found resources
-//        for (WebResourceSet classResource : classResources) {
-//            classResource.start();
-//        }
-//
-//        cache.enforceObjectMaxSizeLimit();
-//
-//        setState(LifecycleState.STARTING);
-        throw new UnsupportedOperationException();
+        mainResources.clear();
+
+        main = createMainResourceSet();
+
+        mainResources.add(main);
+
+        for (List<WebResourceSet> list : allResources) {
+            // Skip class resources since they are started below
+            if (list != classResources) {
+                for (WebResourceSet webResourceSet : list) {
+                    webResourceSet.start();
+                }
+            }
+        }
+
+        // This has to be called after the other resources have been started
+        // else it won't find all the matching resources 。必须在其他资源启动后调用此方法，否则它将找不到所有匹配的资源
+        processWebInfLib();
+        // Need to start the newly found resources
+        for (WebResourceSet classResource : classResources) {
+            classResource.start();
+        }
+
+        cache.enforceObjectMaxSizeLimit();
+
+        setState(LifecycleState.STARTING);
     }
 
     protected WebResourceSet createMainResourceSet() {
-//        String docBase = context.getDocBase();
-//
-//        WebResourceSet mainResourceSet;
-//        if (docBase == null) {
-//            mainResourceSet = new EmptyResourceSet(this);
-//        } else {
-//            File f = new File(docBase);
-//            if (!f.isAbsolute()) {
-//                f = new File(((Host) context.getParent()).getAppBaseFile(), f.getPath());
-//            }
-//            if (f.isDirectory()) {
-//                mainResourceSet = new DirResourceSet(this, "/", f.getAbsolutePath(), "/");
-//            } else if (f.isFile() && docBase.endsWith(".war")) {
-//                mainResourceSet = new WarResourceSet(this, "/", f.getAbsolutePath());
-//            } else {
-//                throw new IllegalArgumentException(sm.getString("standardRoot.startInvalidMain", f.getAbsolutePath()));
-//            }
-//        }
-//
-//        return mainResourceSet;
-        throw new UnsupportedOperationException();
+        String docBase = context.getDocBase();
+
+        WebResourceSet mainResourceSet;
+        if (docBase == null) {
+            mainResourceSet = new EmptyResourceSet(this);
+        } else {
+            File f = new File(docBase);
+            if (!f.isAbsolute()) {
+                f = new File(((Host) context.getParent()).getAppBaseFile(), f.getPath());
+            }
+            if (f.isDirectory()) {
+                mainResourceSet = new DirResourceSet(this, "/", f.getAbsolutePath(), "/");
+            } else if (f.isFile() && docBase.endsWith(".war")) {
+                mainResourceSet = new WarResourceSet(this, "/", f.getAbsolutePath());
+            } else {
+                throw new IllegalArgumentException(sm.getString("standardRoot.startInvalidMain", f.getAbsolutePath()));
+            }
+        }
+
+        return mainResourceSet;
     }
 
     @Override
