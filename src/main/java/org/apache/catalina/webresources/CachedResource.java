@@ -149,32 +149,31 @@ public class CachedResource implements WebResource {
     }
 
     protected boolean validateResources(boolean useClassLoaderResources) {
-//        long now = System.currentTimeMillis();
-//
-//        if (webResources == null) {
-//            synchronized (this) {
-//                if (webResources == null) {
-//                    webResources = root.getResourcesInternal(webAppPath, useClassLoaderResources);
-//                    nextCheck = ttl + now;
-//                    return true;
-//                }
-//            }
-//        }
-//
-//        if (now < nextCheck) {
-//            return true;
-//        }
-//
-//        // Assume resources inside WARs will not change
-//        if (root.isPackedWarFile()) {
-//            nextCheck = ttl + now;
-//            return true;
-//        } else {
-//            // At this point, always expire the entry and re-populating it is
-//            // likely to be as expensive as validating it.
-//            return false;
-//        }
-        throw new UnsupportedOperationException();
+        long now = System.currentTimeMillis();
+
+        if (webResources == null) {
+            synchronized (this) {
+                if (webResources == null) {
+                    webResources = root.getResourcesInternal(webAppPath, useClassLoaderResources);
+                    nextCheck = ttl + now;
+                    return true;
+                }
+            }
+        }
+
+        if (now < nextCheck) {
+            return true;
+        }
+
+        // Assume resources inside WARs will not change
+        if (root.isPackedWarFile()) {
+            nextCheck = ttl + now;
+            return true;
+        } else {
+            // At this point, always expire the entry and re-populating it is
+            // likely to be as expensive as validating it.
+            return false;
+        }
     }
 
     protected long getNextCheck() {
@@ -389,17 +388,18 @@ public class CachedResource implements WebResource {
     // Assume that the cache entry will always include the content unless the
     // resource content is larger than objectMaxSizeBytes. This isn't always the
     // case but it makes tracking the current cache size easier.
+    // 假设缓存条目将始终包含该内容，除非资源内容大于 objectMaxSizeBytes。情况并非总是如此，但它使跟踪当前缓存大小变得更容易。
     long getSize() {
-//        long result = CACHE_ENTRY_SIZE;
-//        // Longer paths use a noticeable amount of memory so account for this in
-//        // the cache size. The fixed component of a String instance's memory
-//        // usage is accounted for in the 500 bytes above.
-//        result += getWebappPath().length() * 2;
-//        if (getContentLength() <= objectMaxSizeBytes) {
-//            result += getContentLength();
-//        }
-//        return result;
-        throw new UnsupportedOperationException();
+        long result = CACHE_ENTRY_SIZE;
+        // Longer paths use a noticeable amount of memory so account for this in
+        // the cache size. The fixed component of a String instance's memory
+        // usage is accounted for in the 500 bytes above.
+        // 较长的路径会使用大量内存，因此请在缓存大小中考虑这一点。 String 实例内存使用的固定部分占上述 500 字节。
+        result += getWebappPath().length() * 2;
+        if (getContentLength() <= objectMaxSizeBytes) {
+            result += getContentLength();
+        }
+        return result;
     }
 
 

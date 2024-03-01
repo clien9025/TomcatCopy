@@ -131,6 +131,7 @@ import org.apache.tomcat.util.http.Rfc6265CookieProcessor;
 import org.apache.tomcat.util.scan.StandardJarScanner;
 //import org.apache.tomcat.util.security.PrivilegedGetTccl;
 //import org.apache.tomcat.util.security.PrivilegedSetTccl;
+import org.apache.tomcat.util.security.PrivilegedGetTccl;
 import org.apache.tomcat.util.security.PrivilegedSetTccl;
 import org.apache.tomcat.util.threads.ScheduledThreadPoolExecutor;
 
@@ -5530,47 +5531,46 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     @Override
     public ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
-//        Loader loader = getLoader();
-//        ClassLoader webApplicationClassLoader = null;
-//        if (loader != null) {
-//            webApplicationClassLoader = loader.getClassLoader();
-//        }
-//
-//        Thread currentThread = Thread.currentThread();
-//        if (originalClassLoader == null) {
-//            if (usePrivilegedAction) {
-//                PrivilegedAction<ClassLoader> pa = new PrivilegedGetTccl(currentThread);
-//                originalClassLoader = AccessController.doPrivileged(pa);
-//            } else {
-//                originalClassLoader = currentThread.getContextClassLoader();
-//            }
-//        }
-//
-//        if (webApplicationClassLoader == null || webApplicationClassLoader == originalClassLoader) {
-//            // Not possible or not necessary to switch class loaders. Return
-//            // null to indicate this.
-//            return null;
-//        }
-//
-//        ThreadBindingListener threadBindingListener = getThreadBindingListener();
-//
-//        if (usePrivilegedAction) {
-//            PrivilegedAction<Void> pa = new PrivilegedSetTccl(currentThread, webApplicationClassLoader);
-//            AccessController.doPrivileged(pa);
-//        } else {
-//            currentThread.setContextClassLoader(webApplicationClassLoader);
-//        }
-//        if (threadBindingListener != null) {
-//            try {
-//                threadBindingListener.bind();
-//            } catch (Throwable t) {
-//                ExceptionUtils.handleThrowable(t);
-//                log.error(sm.getString("standardContext.threadBindingListenerError", getName()), t);
-//            }
-//        }
-//
-//        return originalClassLoader;
-        throw new UnsupportedOperationException();
+        Loader loader = getLoader();
+        ClassLoader webApplicationClassLoader = null;
+        if (loader != null) {
+            webApplicationClassLoader = loader.getClassLoader();
+        }
+
+        Thread currentThread = Thread.currentThread();
+        if (originalClassLoader == null) {
+            if (usePrivilegedAction) {
+                PrivilegedAction<ClassLoader> pa = new PrivilegedGetTccl(currentThread);
+                originalClassLoader = AccessController.doPrivileged(pa);
+            } else {
+                originalClassLoader = currentThread.getContextClassLoader();
+            }
+        }
+
+        if (webApplicationClassLoader == null || webApplicationClassLoader == originalClassLoader) {
+            // Not possible or not necessary to switch class loaders. Return
+            // null to indicate this.不可能或没有必要切换类加载器。返回 null 来表明这一点。
+            return null;
+        }
+
+        ThreadBindingListener threadBindingListener = getThreadBindingListener();
+
+        if (usePrivilegedAction) {
+            PrivilegedAction<Void> pa = new PrivilegedSetTccl(currentThread, webApplicationClassLoader);
+            AccessController.doPrivileged(pa);
+        } else {
+            currentThread.setContextClassLoader(webApplicationClassLoader);
+        }
+        if (threadBindingListener != null) {
+            try {
+                threadBindingListener.bind();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(sm.getString("standardContext.threadBindingListenerError", getName()), t);
+            }
+        }
+
+        return originalClassLoader;
     }
 
     /**

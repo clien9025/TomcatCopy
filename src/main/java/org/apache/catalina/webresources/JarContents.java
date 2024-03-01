@@ -93,7 +93,6 @@ public final class JarContents {
      *
      * @param content  Wrapping String.
      * @param startPos First character in the range.
-     *
      * @return hashcode of the range.
      */
     private int hashcode(String content, int startPos, int hashPrime) {
@@ -116,28 +115,31 @@ public final class JarContents {
 
     /**
      * Method that identifies whether a given path <b>MIGHT</b> be in this jar. Uses the Bloom filter mechanism.
+     * <p>
+     * 在web应用或资源缓存的上下文中，使用布隆过滤器可以快速决定是否需要进一步查找资源的实际存在，从而提高效率。
+     * 如果mightContainResource返回false，则可以确定资源绝对不在缓存中，避免了不必要的查找操作。
+     * 如果返回true，则可能需要进一步的查找来确认资源是否真的存在。这种方法特别适用于资源查找操作较为昂贵或资源数量庞大的场景。
      *
      * @param path       Requested path. Sometimes starts with "/WEB-INF/classes".
      * @param webappRoot The value of the webapp location, which can be stripped from the path. Typically is
-     *                       "/WEB-INF/classes".
-     *
+     *                   "/WEB-INF/classes".
      * @return Whether the prefix of the path is known to be in this jar.
      */
     public boolean mightContainResource(String path, String webappRoot) {
-//        int startPos = 0;
-//        if (path.startsWith(webappRoot)) {
-//            startPos = webappRoot.length();
-//        }
-//
-//        if (path.charAt(startPos) == '/') {
-//            // ignore leading slash
-//            startPos++;
-//        }
-//
-//        // calculate the hash lazily and return a boolean value for this path
-//        return (bits1.get(hashcode(path, startPos, HASH_PRIME_1) % TABLE_SIZE) &&
-//                bits2.get(hashcode(path, startPos, HASH_PRIME_2) % TABLE_SIZE));
-        throw new UnsupportedOperationException();
+        int startPos = 0;
+        if (path.startsWith(webappRoot)) {
+            startPos = webappRoot.length();
+        }
+
+        if (path.charAt(startPos) == '/') {
+            // ignore leading slash
+            startPos++;
+        }
+
+        // calculate the hash lazily and return a boolean value for this path
+        // 延迟计算哈希并返回该路径的布尔值
+        return (bits1.get(hashcode(path, startPos, HASH_PRIME_1) % TABLE_SIZE) &&
+                bits2.get(hashcode(path, startPos, HASH_PRIME_2) % TABLE_SIZE));
     }
 
 }

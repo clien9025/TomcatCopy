@@ -256,7 +256,8 @@ public class StandardRoot extends LifecycleMBeanBase implements WebResourceRoot 
             result = RequestUtil.normalize(path, true);
         } else {
             // On UNIX and similar systems, '\\' is a valid file name so do not
-            // convert it to '/' 在 UNIX 和类似系统上，“\\”是有效的文件名，因此请勿将其转换为'/'
+            // convert it to '/'
+            // 在 UNIX 和类似系统上，“\\”是有效的文件名，因此请勿将其转换为'/'
             result = RequestUtil.normalize(path, false);
         }
         if (result == null || result.length() == 0 || !result.startsWith("/")) {
@@ -305,35 +306,33 @@ public class StandardRoot extends LifecycleMBeanBase implements WebResourceRoot 
     }
 
     private WebResource[] getResources(String path, boolean useClassLoaderResources) {
-//        path = validate(path);
-//
-//        if (isCachingAllowed()) {
-//            return cache.getResources(path, useClassLoaderResources);
-//        } else {
-//            return getResourcesInternal(path, useClassLoaderResources);
-//        }
-        throw new UnsupportedOperationException();
+        path = validate(path);
+
+        if (isCachingAllowed()) {
+            return cache.getResources(path, useClassLoaderResources);
+        } else {
+            return getResourcesInternal(path, useClassLoaderResources);
+        }
     }
 
     protected WebResource[] getResourcesInternal(String path, boolean useClassLoaderResources) {
-//        List<WebResource> result = new ArrayList<>();
-//        for (List<WebResourceSet> list : allResources) {
-//            for (WebResourceSet webResourceSet : list) {
-//                if (useClassLoaderResources || !webResourceSet.getClassLoaderOnly()) {
-//                    WebResource webResource = webResourceSet.getResource(path);
-//                    if (webResource.exists()) {
-//                        result.add(webResource);
-//                    }
-//                }
-//            }
-//        }
-//
-//        if (result.size() == 0) {
-//            result.add(main.getResource(path));
-//        }
-//
-//        return result.toArray(new WebResource[0]);
-        throw new UnsupportedOperationException();
+        List<WebResource> result = new ArrayList<>();
+        for (List<WebResourceSet> list : allResources) {
+            for (WebResourceSet webResourceSet : list) {
+                if (useClassLoaderResources || !webResourceSet.getClassLoaderOnly()) {
+                    WebResource webResource = webResourceSet.getResource(path);
+                    if (webResource.exists()) {
+                        result.add(webResource);
+                    }
+                }
+            }
+        }
+
+        if (result.size() == 0) {
+            result.add(main.getResource(path));
+        }
+
+        return result.toArray(new WebResource[0]);
     }
 
     @Override

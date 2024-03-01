@@ -1,9 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.catalina.core;
 
-import jakarta.servlet.*;
-import jakarta.servlet.descriptor.JspConfigDescriptor;
-import org.apache.catalina.security.SecurityUtil;
-import org.apache.tomcat.util.ExceptionUtils;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -13,16 +25,38 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.EventListener;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
+
+import org.apache.catalina.Globals;
+import org.apache.catalina.security.SecurityUtil;
+import org.apache.tomcat.util.ExceptionUtils;
+
+
 /**
- * @author zhanyang
+ * Facade object which masks the internal <code>ApplicationContext</code> object from the web application.
+ *
+ * @author Remy Maucherat
  */
 public class ApplicationContextFacade implements ServletContext {
 
-    private final ApplicationContext context;
-
+    // ---------------------------------------------------------- Attributes
     /**
      * Cache Class object used for reflection.
      */
@@ -35,145 +69,709 @@ public class ApplicationContextFacade implements ServletContext {
     private final Map<String,Method> objectCache;
 
 
+    // ----------------------------------------------------------- Constructors
 
     /**
-     * Cache method object.
+     * Construct a new instance of this class, associated with the specified Context instance.
+     *
+     * @param context The associated Context instance
      */
-//    private final Map<String, Method> objectCache;
-
-//    private void initClassCache() {
-//        Class<?>[] clazz = new Class[] { String.class };
-//        classCache.put("getContext", clazz);
-//        classCache.put("getMimeType", clazz);
-//        classCache.put("getResourcePaths", clazz);
-//        classCache.put("getResource", clazz);
-//        classCache.put("getResourceAsStream", clazz);
-//        classCache.put("getRequestDispatcher", clazz);
-//        classCache.put("getNamedDispatcher", clazz);
-//        classCache.put("getServlet", clazz);
-//        classCache.put("setInitParameter", new Class[] { String.class, String.class });
-//        classCache.put("createServlet", new Class[] { Class.class });
-//        classCache.put("addServlet", new Class[] { String.class, String.class });
-//        classCache.put("createFilter", new Class[] { Class.class });
-//        classCache.put("addFilter", new Class[] { String.class, String.class });
-//        classCache.put("createListener", new Class[] { Class.class });
-//        classCache.put("addListener", clazz);
-//        classCache.put("getFilterRegistration", clazz);
-//        classCache.put("getServletRegistration", clazz);
-//        classCache.put("getInitParameter", clazz);
-//        classCache.put("setAttribute", new Class[] { String.class, Object.class });
-//        classCache.put("removeAttribute", clazz);
-//        classCache.put("getRealPath", clazz);
-//        classCache.put("getAttribute", clazz);
-//        classCache.put("log", clazz);
-//        classCache.put("setSessionTrackingModes", new Class[] { Set.class });
-//        classCache.put("addJspFile", new Class[] { String.class, String.class });
-//        classCache.put("declareRoles", new Class[] { String[].class });
-//        classCache.put("setSessionTimeout", new Class[] { int.class });
-//        classCache.put("setRequestCharacterEncoding", new Class[] { String.class });
-//        classCache.put("setResponseCharacterEncoding", new Class[] { String.class });
-//    }
-
     public ApplicationContextFacade(ApplicationContext context) {
-        // todo 这个 super(); 方法进不去？
         super();
         this.context = context;
 
         classCache = new HashMap<>();
         objectCache = new ConcurrentHashMap<>();
-//        initClassCache();
+        initClassCache();
     }
+
+
+    private void initClassCache() {
+        Class<?>[] clazz = new Class[] { String.class };
+        classCache.put("getContext", clazz);
+        classCache.put("getMimeType", clazz);
+        classCache.put("getResourcePaths", clazz);
+        classCache.put("getResource", clazz);
+        classCache.put("getResourceAsStream", clazz);
+        classCache.put("getRequestDispatcher", clazz);
+        classCache.put("getNamedDispatcher", clazz);
+        classCache.put("getServlet", clazz);
+        classCache.put("setInitParameter", new Class[] { String.class, String.class });
+        classCache.put("createServlet", new Class[] { Class.class });
+        classCache.put("addServlet", new Class[] { String.class, String.class });
+        classCache.put("createFilter", new Class[] { Class.class });
+        classCache.put("addFilter", new Class[] { String.class, String.class });
+        classCache.put("createListener", new Class[] { Class.class });
+        classCache.put("addListener", clazz);
+        classCache.put("getFilterRegistration", clazz);
+        classCache.put("getServletRegistration", clazz);
+        classCache.put("getInitParameter", clazz);
+        classCache.put("setAttribute", new Class[] { String.class, Object.class });
+        classCache.put("removeAttribute", clazz);
+        classCache.put("getRealPath", clazz);
+        classCache.put("getAttribute", clazz);
+        classCache.put("log", clazz);
+        classCache.put("setSessionTrackingModes", new Class[] { Set.class });
+        classCache.put("addJspFile", new Class[] { String.class, String.class });
+        classCache.put("declareRoles", new Class[] { String[].class });
+        classCache.put("setSessionTimeout", new Class[] { int.class });
+        classCache.put("setRequestCharacterEncoding", new Class[] { String.class });
+        classCache.put("setResponseCharacterEncoding", new Class[] { String.class });
+    }
+
+
+    // ----------------------------------------------------- Instance Variables
+
+
+    /**
+     * Wrapped application context.
+     */
+    private final ApplicationContext context;
+
+
+    // ------------------------------------------------- ServletContext Methods
+
+
+    @Override
+    public ServletContext getContext(String uripath) {
+        ServletContext theContext = null;
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            theContext = (ServletContext) doPrivileged("getContext", new Object[] { uripath });
+        } else {
+            theContext = context.getContext(uripath);
+        }
+        if ((theContext != null) && (theContext instanceof ApplicationContext)) {
+            theContext = ((ApplicationContext) theContext).getFacade();
+        }
+        return theContext;
+    }
+
+
+    @Override
+    public int getMajorVersion() {
+        return context.getMajorVersion();
+    }
+
+
+    @Override
+    public int getMinorVersion() {
+        return context.getMinorVersion();
+    }
+
+
+    @Override
+    public String getMimeType(String file) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return (String) doPrivileged("getMimeType", new Object[] { file });
+        } else {
+            return context.getMimeType(file);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Set<String> getResourcePaths(String path) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Set<String>) doPrivileged("getResourcePaths", new Object[] { path });
+        } else {
+            return context.getResourcePaths(path);
+        }
+    }
+
+
+    @Override
+    public URL getResource(String path) throws MalformedURLException {
+        if (Globals.IS_SECURITY_ENABLED) {
+            try {
+                // 本地方法
+                return (URL) invokeMethod(context, "getResource", new Object[] { path });
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                if (t instanceof MalformedURLException) {
+                    throw (MalformedURLException) t;
+                }
+                return null;
+            }
+        } else {
+            return context.getResource(path);
+        }
+    }
+
+
+    @Override
+    public InputStream getResourceAsStream(String path) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (InputStream) doPrivileged("getResourceAsStream", new Object[] { path });
+        } else {
+            return context.getResourceAsStream(path);
+        }
+    }
+
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(final String path) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (RequestDispatcher) doPrivileged("getRequestDispatcher", new Object[] { path });
+        } else {
+            return context.getRequestDispatcher(path);
+        }
+    }
+
+
+    @Override
+    public RequestDispatcher getNamedDispatcher(String name) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (RequestDispatcher) doPrivileged("getNamedDispatcher", new Object[] { name });
+        } else {
+            return context.getNamedDispatcher(name);
+        }
+    }
+
+
+    @Override
+    public void log(String msg) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("log", new Object[] { msg });
+        } else {
+            context.log(msg);
+        }
+    }
+
+
+    @Override
+    public void log(String message, Throwable throwable) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("log", new Class[] { String.class, Throwable.class }, new Object[] { message, throwable });
+        } else {
+            context.log(message, throwable);
+        }
+    }
+
+
+    @Override
+    public String getRealPath(String path) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getRealPath", new Object[] { path });
+        } else {
+            return context.getRealPath(path);
+        }
+    }
+
+
+    @Override
+    public String getServerInfo() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getServerInfo", null);
+        } else {
+            return context.getServerInfo();
+        }
+    }
+
+
+    @Override
+    public String getInitParameter(String name) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getInitParameter", new Object[] { name });
+        } else {
+            return context.getInitParameter(name);
+        }
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Enumeration<String> getInitParameterNames() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Enumeration<String>) doPrivileged("getInitParameterNames", null);
+        } else {
+            return context.getInitParameterNames();
+        }
+    }
+
+
+    @Override
+    public Object getAttribute(String name) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return doPrivileged("getAttribute", new Object[] { name });
+        } else {
+            return context.getAttribute(name);
+        }
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Enumeration<String> getAttributeNames() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Enumeration<String>) doPrivileged("getAttributeNames", null);
+        } else {
+            return context.getAttributeNames();
+        }
+    }
+
+
+    @Override
+    public void setAttribute(String name, Object object) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("setAttribute", new Object[] { name, object });
+        } else {
+            context.setAttribute(name, object);
+        }
+    }
+
+
+    @Override
+    public void removeAttribute(String name) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("removeAttribute", new Object[] { name });
+        } else {
+            context.removeAttribute(name);
+        }
+    }
+
+
+    @Override
+    public String getServletContextName() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getServletContextName", null);
+        } else {
+            return context.getServletContextName();
+        }
+    }
+
 
     @Override
     public String getContextPath() {
         if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
             return (String) doPrivileged("getContextPath", null);
         } else {
             return context.getContextPath();
         }
     }
 
+
     @Override
-    public ServletContext getContext(String uripath) {
-//        return null;
-        throw new UnsupportedOperationException();
+    public FilterRegistration.Dynamic addFilter(String filterName, String className) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (FilterRegistration.Dynamic) doPrivileged("addFilter", new Object[] { filterName, className });
+        } else {
+            return context.addFilter(filterName, className);
+        }
+    }
+
+
+    @Override
+    public FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (FilterRegistration.Dynamic) doPrivileged("addFilter", new Class[] { String.class, Filter.class },
+                    new Object[] { filterName, filter });
+        } else {
+            return context.addFilter(filterName, filter);
+        }
+    }
+
+
+    @Override
+    public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (FilterRegistration.Dynamic) doPrivileged("addFilter", new Class[] { String.class, Class.class },
+                    new Object[] { filterName, filterClass });
+        } else {
+            return context.addFilter(filterName, filterClass);
+        }
     }
 
     @Override
-    public int getMajorVersion() {
-//        return 0;
-        throw new UnsupportedOperationException();
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public <T extends Filter> T createFilter(Class<T> c) throws ServletException {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            try {
+                // 本地方法
+                return (T) invokeMethod(context, "createFilter", new Object[] { c });
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                if (t instanceof ServletException) {
+                    throw (ServletException) t;
+                }
+                return null;
+            }
+        } else {
+            return context.createFilter(c);
+        }
+    }
+
+
+    @Override
+    public FilterRegistration getFilterRegistration(String filterName) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (FilterRegistration) doPrivileged("getFilterRegistration", new Object[] { filterName });
+        } else {
+            return context.getFilterRegistration(filterName);
+        }
+    }
+
+
+    @Override
+    public ServletRegistration.Dynamic addServlet(String servletName, String className) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (ServletRegistration.Dynamic) doPrivileged("addServlet", new Object[] { servletName, className });
+        } else {
+            return context.addServlet(servletName, className);
+        }
+    }
+
+
+    @Override
+    public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (ServletRegistration.Dynamic) doPrivileged("addServlet", new Class[] { String.class, Servlet.class },
+                    new Object[] { servletName, servlet });
+        } else {
+            return context.addServlet(servletName, servlet);
+        }
+    }
+
+
+    @Override
+    public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (ServletRegistration.Dynamic) doPrivileged("addServlet", new Class[] { String.class, Class.class },
+                    new Object[] { servletName, servletClass });
+        } else {
+            return context.addServlet(servletName, servletClass);
+        }
+    }
+
+
+    @Override
+    public Dynamic addJspFile(String jspName, String jspFile) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (ServletRegistration.Dynamic) doPrivileged("addJspFile", new Object[] { jspName, jspFile });
+        } else {
+            return context.addJspFile(jspName, jspFile);
+        }
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public <T extends Servlet> T createServlet(Class<T> c) throws ServletException {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            try {
+                // 本地方法
+                return (T) invokeMethod(context, "createServlet", new Object[] { c });
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                if (t instanceof ServletException) {
+                    throw (ServletException) t;
+                }
+                return null;
+            }
+        } else {
+            return context.createServlet(c);
+        }
+    }
+
+
+    @Override
+    public ServletRegistration getServletRegistration(String servletName) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (ServletRegistration) doPrivileged("getServletRegistration", new Object[] { servletName });
+        } else {
+            return context.getServletRegistration(servletName);
+        }
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Set<SessionTrackingMode>) doPrivileged("getDefaultSessionTrackingModes", null);
+        } else {
+            return context.getDefaultSessionTrackingModes();
+        }
     }
 
     @Override
-    public int getMinorVersion() {
-//        return 0;
-        throw new UnsupportedOperationException();
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Set<SessionTrackingMode> getEffectiveSessionTrackingModes() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Set<SessionTrackingMode>) doPrivileged("getEffectiveSessionTrackingModes", null);
+        } else {
+            return context.getEffectiveSessionTrackingModes();
+        }
     }
+
+
+    @Override
+    public SessionCookieConfig getSessionCookieConfig() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (SessionCookieConfig) doPrivileged("getSessionCookieConfig", null);
+        } else {
+            return context.getSessionCookieConfig();
+        }
+    }
+
+
+    @Override
+    public void setSessionTrackingModes(Set<SessionTrackingMode> sessionTrackingModes) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("setSessionTrackingModes", new Object[] { sessionTrackingModes });
+        } else {
+            context.setSessionTrackingModes(sessionTrackingModes);
+        }
+    }
+
+
+    @Override
+    public boolean setInitParameter(String name, String value) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return ((Boolean) doPrivileged("setInitParameter", new Object[] { name, value })).booleanValue();
+        } else {
+            return context.setInitParameter(name, value);
+        }
+    }
+
+
+    @Override
+    public void addListener(Class<? extends EventListener> listenerClass) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("addListener", new Class[] { Class.class }, new Object[] { listenerClass });
+        } else {
+            context.addListener(listenerClass);
+        }
+    }
+
+
+    @Override
+    public void addListener(String className) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("addListener", new Object[] { className });
+        } else {
+            context.addListener(className);
+        }
+    }
+
+
+    @Override
+    public <T extends EventListener> void addListener(T t) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("addListener", new Class[] { EventListener.class }, new Object[] { t });
+        } else {
+            context.addListener(t);
+        }
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public <T extends EventListener> T createListener(Class<T> c) throws ServletException {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            try {
+                // 本地方法
+                return (T) invokeMethod(context, "createListener", new Object[] { c });
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                if (t instanceof ServletException) {
+                    throw (ServletException) t;
+                }
+                return null;
+            }
+        } else {
+            return context.createListener(c);
+        }
+    }
+
+
+    @Override
+    public void declareRoles(String... roleNames) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("declareRoles", new Object[] { roleNames });
+        } else {
+            context.declareRoles(roleNames);
+        }
+    }
+
+
+    @Override
+    public ClassLoader getClassLoader() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (ClassLoader) doPrivileged("getClassLoader", null);
+        } else {
+            return context.getClassLoader();
+        }
+    }
+
 
     @Override
     public int getEffectiveMajorVersion() {
-//        return 0;
-        throw new UnsupportedOperationException();
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return ((Integer) doPrivileged("getEffectiveMajorVersion", null)).intValue();
+        } else {
+            return context.getEffectiveMajorVersion();
+        }
     }
+
 
     @Override
     public int getEffectiveMinorVersion() {
-//        return 0;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getMimeType(String file) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<String> getResourcePaths(String path) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public URL getResource(String path) throws MalformedURLException {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public InputStream getResourceAsStream(String path) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestDispatcher getRequestDispatcher(String path) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RequestDispatcher getNamedDispatcher(String name) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void log(String msg) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            doPrivileged("log", new Object[] { msg });
+            // 本地方法
+            return ((Integer) doPrivileged("getEffectiveMinorVersion", null)).intValue();
         } else {
-            context.log(msg);
+            return context.getEffectiveMinorVersion();
         }
-        throw new UnsupportedOperationException();
-
     }
+
 
     @Override
-    public void log(String message, Throwable throwable) {
-        throw new UnsupportedOperationException();
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Map<String,? extends FilterRegistration> getFilterRegistrations() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Map<String,? extends FilterRegistration>) doPrivileged("getFilterRegistrations", null);
+        } else {
+            return context.getFilterRegistrations();
+        }
     }
+
+
+    @Override
+    public JspConfigDescriptor getJspConfigDescriptor() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (JspConfigDescriptor) doPrivileged("getJspConfigDescriptor", null);
+        } else {
+            return context.getJspConfigDescriptor();
+        }
+    }
+
+
+    @Override
+    @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
+    public Map<String,? extends ServletRegistration> getServletRegistrations() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (Map<String,? extends ServletRegistration>) doPrivileged("getServletRegistrations", null);
+        } else {
+            return context.getServletRegistrations();
+        }
+    }
+
+
+    @Override
+    public String getVirtualServerName() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getVirtualServerName", null);
+        } else {
+            return context.getVirtualServerName();
+        }
+    }
+
+
+    @Override
+    public int getSessionTimeout() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return ((Integer) doPrivileged("getSessionTimeout", null)).intValue();
+        } else {
+            return context.getSessionTimeout();
+        }
+    }
+
+
+    @Override
+    public void setSessionTimeout(int sessionTimeout) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("setSessionTimeout", new Object[] { Integer.valueOf(sessionTimeout) });
+        } else {
+            context.setSessionTimeout(sessionTimeout);
+        }
+    }
+
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getRequestCharacterEncoding", null);
+        } else {
+            return context.getRequestCharacterEncoding();
+        }
+    }
+
+
+    @Override
+    public void setRequestCharacterEncoding(String encoding) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("setRequestCharacterEncoding", new Object[] { encoding });
+        } else {
+            context.setRequestCharacterEncoding(encoding);
+        }
+    }
+
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            return (String) doPrivileged("getResponseCharacterEncoding", null);
+        } else {
+            return context.getResponseCharacterEncoding();
+        }
+    }
+
+
+    @Override
+    public void setResponseCharacterEncoding(String encoding) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // 本地方法
+            doPrivileged("setResponseCharacterEncoding", new Object[] { encoding });
+        } else {
+            context.setResponseCharacterEncoding(encoding);
+        }
+    }
+
 
     /**
      * Use reflection to invoke the requested method. Cache the method object to speed up the process
@@ -182,14 +780,15 @@ public class ApplicationContextFacade implements ServletContext {
      * @param params     The arguments passed to the called method.
      */
     private Object doPrivileged(final String methodName, final Object[] params) {
-//        try {
-//            return invokeMethod(context, methodName, params);
-//        } catch (Throwable t) {
-//            ExceptionUtils.handleThrowable(t);
-//            throw new RuntimeException(t.getMessage(), t);
-//        }
-        throw new UnsupportedOperationException();
+        try {
+            // 本地方法
+            return invokeMethod(context, methodName, params);
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            throw new RuntimeException(t.getMessage(), t);
+        }
     }
+
 
     /**
      * Use reflection to invoke the requested method. Cache the method object to speed up the process
@@ -201,21 +800,49 @@ public class ApplicationContextFacade implements ServletContext {
     private Object invokeMethod(ApplicationContext appContext, final String methodName, Object[] params)
             throws Throwable {
 
-//        try {
-//            Method method = objectCache.get(methodName);
-//            if (method == null) {
-//                method = appContext.getClass().getMethod(methodName, classCache.get(methodName));
-//                objectCache.put(methodName, method);
-//            }
-//
-//            return executeMethod(method, appContext, params);
-//        } catch (Exception ex) {
-//            handleException(ex);
-//            return null;
-//        } finally {
-//            params = null;
-//        }
-        throw new UnsupportedOperationException();
+        try {
+            Method method = objectCache.get(methodName);
+            if (method == null) {
+                // appContext.getClass().getMethod() JDK 方法
+                method = appContext.getClass().getMethod(methodName, classCache.get(methodName));
+                objectCache.put(methodName, method);
+            }
+            // 本地方法
+            return executeMethod(method, appContext, params);
+        } catch (Exception ex) {
+            handleException(ex);
+            return null;
+        } finally {
+            params = null;
+        }
+    }
+
+    /**
+     * Use reflection to invoke the requested method. Cache the method object to speed up the process
+     *
+     * @param methodName The method to invoke.
+     * @param clazz      The class where the method is.
+     * @param params     The arguments passed to the called method.
+     */
+    private Object doPrivileged(final String methodName, final Class<?>[] clazz, Object[] params) {
+
+        try {
+            // JDK 方法
+            Method method = context.getClass().getMethod(methodName, clazz);
+            // 本地方法
+            return executeMethod(method, context, params);
+        } catch (Exception ex) {
+            try {
+                // 本地方法
+                handleException(ex);
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                throw new RuntimeException(t.getMessage());
+            }
+            return null;
+        } finally {
+            params = null;
+        }
     }
 
 
@@ -229,13 +856,15 @@ public class ApplicationContextFacade implements ServletContext {
     private Object executeMethod(final Method method, final ApplicationContext context, final Object[] params)
             throws PrivilegedActionException, IllegalAccessException, InvocationTargetException {
 
-//        if (SecurityUtil.isPackageProtectionEnabled()) {
-//            return AccessController.doPrivileged(new PrivilegedExecuteMethod(method, context, params));
-//        } else {
-//            return method.invoke(context, params);
-//        }
-        throw new UnsupportedOperationException();
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            // JDK 方法
+            return AccessController.doPrivileged(new PrivilegedExecuteMethod(method, context, params));
+        } else {
+            // JDK 方法
+            return method.invoke(context, params);
+        }
     }
+
 
     /**
      * Throw the real exception.
@@ -244,260 +873,24 @@ public class ApplicationContextFacade implements ServletContext {
      */
     private void handleException(Exception ex) throws Throwable {
 
-//        Throwable realException;
-//
-//        if (ex instanceof PrivilegedActionException) {
-//            ex = ((PrivilegedActionException) ex).getException();
-//        }
-//
-//        if (ex instanceof InvocationTargetException) {
-//            realException = ex.getCause();
-//            if (realException == null) {
-//                realException = ex;
-//            }
-//        } else {
-//            realException = ex;
-//        }
-//
-//        throw realException;
-        throw new UnsupportedOperationException();
+        Throwable realException;
+
+        if (ex instanceof PrivilegedActionException) {
+            ex = ((PrivilegedActionException) ex).getException();
+        }
+
+        if (ex instanceof InvocationTargetException) {
+            realException = ex.getCause();
+            if (realException == null) {
+                realException = ex;
+            }
+        } else {
+            realException = ex;
+        }
+
+        throw realException;
     }
 
-    @Override
-    public String getRealPath(String path) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getServerInfo() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getInitParameter(String name) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Enumeration<String> getInitParameterNames() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean setInitParameter(String name, String value) {
-//        return false;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object getAttribute(String name) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Enumeration<String> getAttributeNames() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setAttribute(String name, Object object) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removeAttribute(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getServletContextName() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServletRegistration.Dynamic addServlet(String servletName, String className) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServletRegistration.Dynamic addJspFile(String servletName, String jspFile) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServletRegistration getServletRegistration(String servletName) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Map<String, ? extends ServletRegistration> getServletRegistrations() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FilterRegistration.Dynamic addFilter(String filterName, String className) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FilterRegistration getFilterRegistration(String filterName) {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SessionCookieConfig getSessionCookieConfig() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setSessionTrackingModes(Set<SessionTrackingMode> sessionTrackingModes) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<SessionTrackingMode> getEffectiveSessionTrackingModes() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addListener(String className) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends EventListener> void addListener(T t) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addListener(Class<? extends EventListener> listenerClass) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends EventListener> T createListener(Class<T> clazz) throws ServletException {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public JspConfigDescriptor getJspConfigDescriptor() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ClassLoader getClassLoader() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void declareRoles(String... roleNames) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getVirtualServerName() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getSessionTimeout() {
-//        return 0;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setSessionTimeout(int sessionTimeout) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getRequestCharacterEncoding() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setRequestCharacterEncoding(String encoding) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getResponseCharacterEncoding() {
-//        return null;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setResponseCharacterEncoding(String encoding) {
-        throw new UnsupportedOperationException();
-    }
 
     private static class PrivilegedExecuteMethod implements PrivilegedExceptionAction<Object> {
 

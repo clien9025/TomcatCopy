@@ -576,8 +576,10 @@ public class ApplicationContext implements ServletContext {
         ServletContextAttributeEvent event = new ServletContextAttributeEvent(context.getServletContext(), name, value);
         for (Object obj : listeners) {
             if (!(obj instanceof ServletContextAttributeListener)) {
+                // 如果不是,使用 continue; 跳过当前迭代，不执行任何与该对象相关的事件通知和处理逻辑。
                 continue;
             }
+            // 如果是，将对象转型为 ServletContextAttributeListener，然后执行相关的事件处理逻辑，
             ServletContextAttributeListener listener = (ServletContextAttributeListener) obj;
             try {
                 context.fireContainerEvent("beforeContextAttributeRemoved", listener);

@@ -199,81 +199,88 @@ public abstract class AbstractArchiveResourceSet extends AbstractResourceSet {
 
     @Override
     public final WebResource getResource(String path) {
-//        checkPath(path);
-//        String webAppMount = getWebAppMount();
-//        WebResourceRoot root = getRoot();
-//
-//        /*
-//         * If jarContents reports that this resource definitely does not contain the path, we can end this method and
-//         * move on to the next jar.
-//         */
-//        if (jarContents != null && !jarContents.mightContainResource(path, webAppMount)) {
-//            return new EmptyResource(root, path);
-//        }
-//
-//        /*
-//         * Implementation notes
-//         *
-//         * The path parameter passed into this method always starts with '/'.
-//         *
-//         * The path parameter passed into this method may or may not end with a '/'. JarFile.getEntry() will return a
-//         * matching directory entry whether or not the name ends in a '/'. However, if the entry is requested without
-//         * the '/' subsequent calls to JarEntry.isDirectory() will return false.
-//         *
-//         * Paths in JARs never start with '/'. Leading '/' need to be removed before any JarFile.getEntry() call.
-//         */
-//
-//        // If the JAR has been mounted below the web application root, return
-//        // an empty resource for requests outside of the mount point.
-//
-//        if (path.startsWith(webAppMount)) {
-//            String pathInJar = getInternalPath() + path.substring(webAppMount.length());
-//            // Always strip off the leading '/' to get the JAR path
-//            if (pathInJar.length() > 0 && pathInJar.charAt(0) == '/') {
-//                pathInJar = pathInJar.substring(1);
-//            }
-//            if (pathInJar.equals("")) {
-//                // Special case
-//                // This is a directory resource so the path must end with /
-//                if (!path.endsWith("/")) {
-//                    path = path + "/";
-//                }
-//                return new JarResourceRoot(root, new File(getBase()), baseUrlString, path);
-//            } else {
-//                JarEntry jarEntry = null;
-//                if (isMultiRelease()) {
-//                    // Calls JarFile.getJarEntry() which is multi-release aware
-//                    jarEntry = getArchiveEntry(pathInJar);
-//                } else {
-//                    Map<String, JarEntry> jarEntries = getArchiveEntries(true);
-//                    if (!(pathInJar.charAt(pathInJar.length() - 1) == '/')) {
-//                        if (jarEntries == null) {
-//                            jarEntry = getArchiveEntry(pathInJar + '/');
-//                        } else {
-//                            jarEntry = jarEntries.get(pathInJar + '/');
-//                        }
-//                        if (jarEntry != null) {
-//                            path = path + '/';
-//                        }
-//                    }
-//                    if (jarEntry == null) {
-//                        if (jarEntries == null) {
-//                            jarEntry = getArchiveEntry(pathInJar);
-//                        } else {
-//                            jarEntry = jarEntries.get(pathInJar);
-//                        }
-//                    }
-//                }
-//                if (jarEntry == null) {
-//                    return new EmptyResource(root, path);
-//                } else {
-//                    return createArchiveResource(jarEntry, path, getManifest());
-//                }
-//            }
-//        } else {
-//            return new EmptyResource(root, path);
-//        }
-        throw new UnsupportedOperationException();
+        checkPath(path);
+        String webAppMount = getWebAppMount();
+        WebResourceRoot root = getRoot();
+
+        /*
+         * If jarContents reports that this resource definitely does not contain the path, we can end this method and
+         * move on to the next jar.
+         * 如果 jarContents 报告该资源肯定不包含路径，我们可以结束该方法并继续处理下一个 jar。
+         */
+        if (jarContents != null && !jarContents.mightContainResource(path, webAppMount)) {
+            return new EmptyResource(root, path);
+        }
+
+        /*
+         * Implementation notes
+         *
+         * The path parameter passed into this method always starts with '/'.
+         *
+         * The path parameter passed into this method may or may not end with a '/'. JarFile.getEntry() will return a
+         * matching directory entry whether or not the name ends in a '/'. However, if the entry is requested without
+         * the '/' subsequent calls to JarEntry.isDirectory() will return false.
+         *
+         * Paths in JARs never start with '/'. Leading '/' need to be removed before any JarFile.getEntry() call.
+         *
+         * 实现注意事项 传入此方法的路径参数始终以 '/' 开头。传递到此方法的路径参数可能会也可能不会以 '/' 结尾。
+         * JarFile.getEntry() 将返回匹配的目录条目，无论名称是否以 '/' 结尾。
+         * 但是，如果请求的条目没有 '/'，则对 JarEntry.isDirectory() 的后续调用将返回 false。 JAR 中的路径永远不会以 '/' 开头。
+         * 在任何 JarFile.getEntry() 调用之前需要删除前导 '/' 。
+         */
+
+        // If the JAR has been mounted below the web application root, return
+        // an empty resource for requests outside of the mount point.
+
+        if (path.startsWith(webAppMount)) {
+            String pathInJar = getInternalPath() + path.substring(webAppMount.length());
+            // Always strip off the leading '/' to get the JAR path
+            if (pathInJar.length() > 0 && pathInJar.charAt(0) == '/') {
+                pathInJar = pathInJar.substring(1);
+            }
+            if (pathInJar.equals("")) {
+                // Special case
+                // This is a directory resource so the path must end with /
+                // 特殊情况这是一个目录资源，因此路径必须以 / 结尾
+                if (!path.endsWith("/")) {
+                    path = path + "/";
+                }
+                return new JarResourceRoot(root, new File(getBase()), baseUrlString, path);
+            } else {
+                JarEntry jarEntry = null;
+                if (isMultiRelease()) {
+                    // Calls JarFile.getJarEntry() which is multi-release aware
+                    // getArchiveEntry() 获取存档条目
+                    jarEntry = getArchiveEntry(pathInJar);
+                } else {
+                    Map<String, JarEntry> jarEntries = getArchiveEntries(true);
+                    if (!(pathInJar.charAt(pathInJar.length() - 1) == '/')) {
+                        if (jarEntries == null) {
+                            jarEntry = getArchiveEntry(pathInJar + '/');
+                        } else {
+                            jarEntry = jarEntries.get(pathInJar + '/');
+                        }
+                        if (jarEntry != null) {
+                            path = path + '/';
+                        }
+                    }
+                    if (jarEntry == null) {
+                        if (jarEntries == null) {
+                            jarEntry = getArchiveEntry(pathInJar);
+                        } else {
+                            jarEntry = jarEntries.get(pathInJar);
+                        }
+                    }
+                }
+                if (jarEntry == null) {
+                    return new EmptyResource(root, path);
+                } else {
+                    return createArchiveResource(jarEntry, path, getManifest());
+                }
+            }
+        } else {
+            return new EmptyResource(root, path);
+        }
     }
 
     protected abstract boolean isMultiRelease();
@@ -297,27 +304,25 @@ public abstract class AbstractArchiveResourceSet extends AbstractResourceSet {
 
     @SuppressWarnings("deprecation")
     protected JarFile openJarFile() throws IOException {
-//        synchronized (archiveLock) {
-//            if (archive == null) {
-//                archive = new JarFile(new File(getBase()), true, ZipFile.OPEN_READ, Runtime.version());
-//                WebResourceRoot root = getRoot();
-//                if (root.getArchiveIndexStrategyEnum().getUsesBloom() ||
-//                        root.getContext() != null && root.getContext().getUseBloomFilterForArchives()) {
-//                    jarContents = new JarContents(archive);
-//                    retainBloomFilterForArchives = root.getArchiveIndexStrategyEnum().getRetain();
-//                }
-//            }
-//            archiveUseCount++;
-//            return archive;
-//        }
-        throw new UnsupportedOperationException();
+        synchronized (archiveLock) {
+            if (archive == null) {
+                archive = new JarFile(new File(getBase()), true, ZipFile.OPEN_READ, Runtime.version());
+                WebResourceRoot root = getRoot();
+                if (root.getArchiveIndexStrategyEnum().getUsesBloom() ||
+                        root.getContext() != null && root.getContext().getUseBloomFilterForArchives()) {
+                    jarContents = new JarContents(archive);
+                    retainBloomFilterForArchives = root.getArchiveIndexStrategyEnum().getRetain();
+                }
+            }
+            archiveUseCount++;
+            return archive;
+        }
     }
 
     protected void closeJarFile() {
-//        synchronized (archiveLock) {
-//            archiveUseCount--;
-//        }
-        throw new UnsupportedOperationException();
+        synchronized (archiveLock) {
+            archiveUseCount--;
+        }
     }
 
     @Override

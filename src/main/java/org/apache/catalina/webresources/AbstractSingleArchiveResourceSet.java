@@ -63,74 +63,71 @@ public abstract class AbstractSingleArchiveResourceSet extends AbstractArchiveRe
 
     @Override
     protected Map<String, JarEntry> getArchiveEntries(boolean single) {
-//        synchronized (archiveLock) {
-//            if (archiveEntries == null && !single) {
-//                JarFile jarFile = null;
-//                archiveEntries = new HashMap<>();
-//                try {
-//                    jarFile = openJarFile();
-//                    Enumeration<JarEntry> entries = jarFile.entries();
-//                    while (entries.hasMoreElements()) {
-//                        JarEntry entry = entries.nextElement();
-//                        archiveEntries.put(entry.getName(), entry);
-//                    }
-//                } catch (IOException ioe) {
-//                    // Should never happen
-//                    archiveEntries = null;
-//                    throw new IllegalStateException(ioe);
-//                } finally {
-//                    if (jarFile != null) {
-//                        closeJarFile();
-//                    }
-//                }
-//            }
-//            return archiveEntries;
-//        }
-        throw new UnsupportedOperationException();
+        synchronized (archiveLock) {
+            if (archiveEntries == null && !single) {
+                JarFile jarFile = null;
+                archiveEntries = new HashMap<>();
+                try {
+                    jarFile = openJarFile();
+                    Enumeration<JarEntry> entries = jarFile.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        archiveEntries.put(entry.getName(), entry);
+                    }
+                } catch (IOException ioe) {
+                    // Should never happen
+                    archiveEntries = null;
+                    throw new IllegalStateException(ioe);
+                } finally {
+                    if (jarFile != null) {
+                        closeJarFile();
+                    }
+                }
+            }
+            return archiveEntries;
+        }
     }
 
 
     @Override
     protected JarEntry getArchiveEntry(String pathInArchive) {
-//        JarFile jarFile = null;
-//        try {
-//            jarFile = openJarFile();
-//            return jarFile.getJarEntry(pathInArchive);
-//        } catch (IOException ioe) {
-//            // Should never happen
-//            throw new IllegalStateException(ioe);
-//        } finally {
-//            if (jarFile != null) {
-//                closeJarFile();
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        JarFile jarFile = null;
+        try {
+            jarFile = openJarFile();
+            return jarFile.getJarEntry(pathInArchive);
+        } catch (IOException ioe) {
+            // Should never happen
+            throw new IllegalStateException(ioe);
+        } finally {
+            if (jarFile != null) {
+                closeJarFile();
+            }
+        }
     }
 
 
     @Override
     protected boolean isMultiRelease() {
-//        if (multiRelease == null) {
-//            synchronized (archiveLock) {
-//                if (multiRelease == null) {
-//                    JarFile jarFile = null;
-//                    try {
-//                        jarFile = openJarFile();
-//                        multiRelease = Boolean.valueOf(jarFile.isMultiRelease());
-//                    } catch (IOException ioe) {
-//                        // Should never happen
-//                        throw new IllegalStateException(ioe);
-//                    } finally {
-//                        if (jarFile != null) {
-//                            closeJarFile();
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        return multiRelease.booleanValue();
-        throw new UnsupportedOperationException();
+        if (multiRelease == null) {
+            synchronized (archiveLock) {
+                if (multiRelease == null) {
+                    JarFile jarFile = null;
+                    try {
+                        jarFile = openJarFile();
+                        multiRelease = Boolean.valueOf(jarFile.isMultiRelease());
+                    } catch (IOException ioe) {
+                        // Should never happen
+                        throw new IllegalStateException(ioe);
+                    } finally {
+                        if (jarFile != null) {
+                            closeJarFile();
+                        }
+                    }
+                }
+            }
+        }
+
+        return multiRelease.booleanValue();
     }
 
 

@@ -78,18 +78,17 @@ public class WebAnnotationSet {
      * @param context The context which will have its annotations processed
      */
     protected static void loadApplicationListenerAnnotations(Context context) {
-//        String[] applicationListeners = context.findApplicationListeners();
-//        for (String className : applicationListeners) {
-//            Class<?> clazz = Introspection.loadClass(context, className);
-//            if (clazz == null) {
-//                continue;
-//            }
-//
-//            loadClassAnnotation(context, clazz);
-//            loadFieldsAnnotation(context, clazz);
-//            loadMethodsAnnotation(context, clazz);
-//        }
-        throw new UnsupportedOperationException();
+        String[] applicationListeners = context.findApplicationListeners();
+        for (String className : applicationListeners) {
+            Class<?> clazz = Introspection.loadClass(context, className);
+            if (clazz == null) {
+                continue;
+            }
+
+            loadClassAnnotation(context, clazz);
+            loadFieldsAnnotation(context, clazz);
+            loadMethodsAnnotation(context, clazz);
+        }
     }
 
 
@@ -99,18 +98,17 @@ public class WebAnnotationSet {
      * @param context The context which will have its annotations processed
      */
     protected static void loadApplicationFilterAnnotations(Context context) {
-//        FilterDef[] filterDefs = context.findFilterDefs();
-//        for (FilterDef filterDef : filterDefs) {
-//            Class<?> clazz = Introspection.loadClass(context, filterDef.getFilterClass());
-//            if (clazz == null) {
-//                continue;
-//            }
-//
-//            loadClassAnnotation(context, clazz);
-//            loadFieldsAnnotation(context, clazz);
-//            loadMethodsAnnotation(context, clazz);
-//        }
-        throw new UnsupportedOperationException();
+        FilterDef[] filterDefs = context.findFilterDefs();
+        for (FilterDef filterDef : filterDefs) {
+            Class<?> clazz = Introspection.loadClass(context, filterDef.getFilterClass());
+            if (clazz == null) {
+                continue;
+            }
+
+            loadClassAnnotation(context, clazz);
+            loadFieldsAnnotation(context, clazz);
+            loadMethodsAnnotation(context, clazz);
+        }
     }
 
 
@@ -121,43 +119,42 @@ public class WebAnnotationSet {
      */
     protected static void loadApplicationServletAnnotations(Context context) {
 
-//        Container[] children = context.findChildren();
-//        for (Container child : children) {
-//            if (child instanceof Wrapper) {
-//
-//                Wrapper wrapper = (Wrapper) child;
-//                if (wrapper.getServletClass() == null) {
-//                    continue;
-//                }
-//
-//                Class<?> clazz = Introspection.loadClass(context, wrapper.getServletClass());
-//                if (clazz == null) {
-//                    continue;
-//                }
-//
-//                loadClassAnnotation(context, clazz);
-//                loadFieldsAnnotation(context, clazz);
-//                loadMethodsAnnotation(context, clazz);
-//
-//                /* Process RunAs annotation which can be only on servlets.
-//                 * Ref JSR 250, equivalent to the run-as element in
-//                 * the deployment descriptor
-//                 */
-//                RunAs runAs = clazz.getAnnotation(RunAs.class);
-//                if (runAs != null) {
-//                    wrapper.setRunAs(runAs.value());
-//                }
-//
-//                // Process ServletSecurity annotation
-//                ServletSecurity servletSecurity = clazz.getAnnotation(ServletSecurity.class);
-//                if (servletSecurity != null) {
-//                    context.addServletSecurity(
-//                            new ApplicationServletRegistration(wrapper, context),
-//                            new ServletSecurityElement(servletSecurity));
-//                }
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        Container[] children = context.findChildren();
+        for (Container child : children) {
+            if (child instanceof Wrapper) {
+
+                Wrapper wrapper = (Wrapper) child;
+                if (wrapper.getServletClass() == null) {
+                    continue;
+                }
+
+                Class<?> clazz = Introspection.loadClass(context, wrapper.getServletClass());
+                if (clazz == null) {
+                    continue;
+                }
+
+                loadClassAnnotation(context, clazz);
+                loadFieldsAnnotation(context, clazz);
+                loadMethodsAnnotation(context, clazz);
+
+                /* Process RunAs annotation which can be only on servlets.
+                 * Ref JSR 250, equivalent to the run-as element in
+                 * the deployment descriptor
+                 */
+                RunAs runAs = clazz.getAnnotation(RunAs.class);
+                if (runAs != null) {
+                    wrapper.setRunAs(runAs.value());
+                }
+
+                // Process ServletSecurity annotation
+                ServletSecurity servletSecurity = clazz.getAnnotation(ServletSecurity.class);
+                if (servletSecurity != null) {
+                    context.addServletSecurity(
+                            new ApplicationServletRegistration(wrapper, context),
+                            new ServletSecurityElement(servletSecurity));
+                }
+            }
+        }
     }
 
 
@@ -169,103 +166,102 @@ public class WebAnnotationSet {
      */
     protected static void loadClassAnnotation(Context context,
                                               Class<?> clazz) {
-//        /* Process Resource annotation.
-//         * Ref JSR 250
-//         */
-//        Resource resourceAnnotation = clazz.getAnnotation(Resource.class);
-//        if (resourceAnnotation != null) {
-//            addResource(context, resourceAnnotation);
-//        }
-//        /* Process Resources annotation.
-//         * Ref JSR 250
-//         */
-//        Resources resourcesAnnotation = clazz.getAnnotation(Resources.class);
-//        if (resourcesAnnotation != null && resourcesAnnotation.value() != null) {
-//            for (Resource resource : resourcesAnnotation.value()) {
-//                addResource(context, resource);
-//            }
-//        }
-//        /* Process EJB annotation.
-//         * Ref JSR 224, equivalent to the ejb-ref or ejb-local-ref
-//         * element in the deployment descriptor.
-//        {
-//            EJB annotation = clazz.getAnnotation(EJB.class);
-//            if (annotation != null) {
-//
-//                if ((annotation.mappedName().length() == 0)
-//                        || annotation.mappedName().equals("Local")) {
-//
-//                    ContextLocalEjb ejb = new ContextLocalEjb();
-//
-//                    ejb.setName(annotation.name());
-//                    ejb.setType(annotation.beanInterface().getCanonicalName());
-//                    ejb.setDescription(annotation.description());
-//
-//                    ejb.setHome(annotation.beanName());
-//
-//                    context.getNamingResources().addLocalEjb(ejb);
-//
-//                } else if (annotation.mappedName().equals("Remote")) {
-//
-//                    ContextEjb ejb = new ContextEjb();
-//
-//                    ejb.setName(annotation.name());
-//                    ejb.setType(annotation.beanInterface().getCanonicalName());
-//                    ejb.setDescription(annotation.description());
-//
-//                    ejb.setHome(annotation.beanName());
-//
-//                    context.getNamingResources().addEjb(ejb);
-//
-//                }
-//            }
-//        }
-//        */
-//        /* Process WebServiceRef annotation.
-//         * Ref JSR 224, equivalent to the service-ref element in
-//         * the deployment descriptor.
-//         * The service-ref registration is not implemented
-//        {
-//            WebServiceRef annotation = clazz
-//                    .getAnnotation(WebServiceRef.class);
-//            if (annotation != null) {
-//                ContextService service = new ContextService();
-//
-//                service.setName(annotation.name());
-//                service.setWsdlfile(annotation.wsdlLocation());
-//
-//                service.setType(annotation.type().getCanonicalName());
-//
-//                if (annotation.value() == null)
-//                    service.setServiceinterface(annotation.type()
-//                            .getCanonicalName());
-//
-//                if (annotation.type().getCanonicalName().equals("Service"))
-//                    service.setServiceinterface(annotation.type()
-//                            .getCanonicalName());
-//
-//                if (annotation.value().getCanonicalName().equals("Endpoint"))
-//                    service.setServiceendpoint(annotation.type()
-//                            .getCanonicalName());
-//
-//                service.setPortlink(annotation.type().getCanonicalName());
-//
-//                context.getNamingResources().addService(service);
-//            }
-//        }
-//        */
-//
-//        /* Process DeclareRoles annotation.
-//         * Ref JSR 250, equivalent to the security-role element in
-//         * the deployment descriptor
-//         */
-//        DeclareRoles declareRolesAnnotation = clazz.getAnnotation(DeclareRoles.class);
-//        if (declareRolesAnnotation != null && declareRolesAnnotation.value() != null) {
-//            for (String role : declareRolesAnnotation.value()) {
-//                context.addSecurityRole(role);
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        /* Process Resource annotation.
+         * Ref JSR 250
+         */
+        Resource resourceAnnotation = clazz.getAnnotation(Resource.class);
+        if (resourceAnnotation != null) {
+            addResource(context, resourceAnnotation);
+        }
+        /* Process Resources annotation.
+         * Ref JSR 250
+         */
+        Resources resourcesAnnotation = clazz.getAnnotation(Resources.class);
+        if (resourcesAnnotation != null && resourcesAnnotation.value() != null) {
+            for (Resource resource : resourcesAnnotation.value()) {
+                addResource(context, resource);
+            }
+        }
+        /* Process EJB annotation.
+         * Ref JSR 224, equivalent to the ejb-ref or ejb-local-ref
+         * element in the deployment descriptor.
+        {
+            EJB annotation = clazz.getAnnotation(EJB.class);
+            if (annotation != null) {
+
+                if ((annotation.mappedName().length() == 0)
+                        || annotation.mappedName().equals("Local")) {
+
+                    ContextLocalEjb ejb = new ContextLocalEjb();
+
+                    ejb.setName(annotation.name());
+                    ejb.setType(annotation.beanInterface().getCanonicalName());
+                    ejb.setDescription(annotation.description());
+
+                    ejb.setHome(annotation.beanName());
+
+                    context.getNamingResources().addLocalEjb(ejb);
+
+                } else if (annotation.mappedName().equals("Remote")) {
+
+                    ContextEjb ejb = new ContextEjb();
+
+                    ejb.setName(annotation.name());
+                    ejb.setType(annotation.beanInterface().getCanonicalName());
+                    ejb.setDescription(annotation.description());
+
+                    ejb.setHome(annotation.beanName());
+
+                    context.getNamingResources().addEjb(ejb);
+
+                }
+            }
+        }
+        */
+        /* Process WebServiceRef annotation.
+         * Ref JSR 224, equivalent to the service-ref element in
+         * the deployment descriptor.
+         * The service-ref registration is not implemented
+        {
+            WebServiceRef annotation = clazz
+                    .getAnnotation(WebServiceRef.class);
+            if (annotation != null) {
+                ContextService service = new ContextService();
+
+                service.setName(annotation.name());
+                service.setWsdlfile(annotation.wsdlLocation());
+
+                service.setType(annotation.type().getCanonicalName());
+
+                if (annotation.value() == null)
+                    service.setServiceinterface(annotation.type()
+                            .getCanonicalName());
+
+                if (annotation.type().getCanonicalName().equals("Service"))
+                    service.setServiceinterface(annotation.type()
+                            .getCanonicalName());
+
+                if (annotation.value().getCanonicalName().equals("Endpoint"))
+                    service.setServiceendpoint(annotation.type()
+                            .getCanonicalName());
+
+                service.setPortlink(annotation.type().getCanonicalName());
+
+                context.getNamingResources().addService(service);
+            }
+        }
+        */
+
+        /* Process DeclareRoles annotation.
+         * Ref JSR 250, equivalent to the security-role element in
+         * the deployment descriptor
+         */
+        DeclareRoles declareRolesAnnotation = clazz.getAnnotation(DeclareRoles.class);
+        if (declareRolesAnnotation != null && declareRolesAnnotation.value() != null) {
+            for (String role : declareRolesAnnotation.value()) {
+                context.addSecurityRole(role);
+            }
+        }
     }
 
 
@@ -282,7 +278,6 @@ public class WebAnnotationSet {
 //                }
 //            }
 //        }
-        throw new UnsupportedOperationException();
     }
 
 
