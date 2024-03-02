@@ -266,18 +266,18 @@ public class WebAnnotationSet {
 
 
     protected static void loadFieldsAnnotation(Context context, Class<?> clazz) {
-//        // Initialize the annotations
-//        Field[] fields = Introspection.getDeclaredFields(clazz);
-//        if (fields != null && fields.length > 0) {
-//            for (Field field : fields) {
-//                Resource annotation = field.getAnnotation(Resource.class);
-//                if (annotation != null) {
-//                    String defaultName = clazz.getName() + SEPARATOR + field.getName();
-//                    Class<?> defaultType = field.getType();
-//                    addResource(context, annotation, defaultName, defaultType);
-//                }
-//            }
-//        }
+        // Initialize the annotations
+        Field[] fields = Introspection.getDeclaredFields(clazz);
+        if (fields != null && fields.length > 0) {
+            for (Field field : fields) {
+                Resource annotation = field.getAnnotation(Resource.class);
+                if (annotation != null) {
+                    String defaultName = clazz.getName() + SEPARATOR + field.getName();
+                    Class<?> defaultType = field.getType();
+                    addResource(context, annotation, defaultName, defaultType);
+                }
+            }
+        }
     }
 
 

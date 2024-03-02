@@ -110,7 +110,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     /**
      * The child Containers belonging to this Container, keyed by name.
      */
-    protected final HashMap<String, Container> children = new HashMap<>();
+    protected final HashMap<String,Container> children = new HashMap<>();
 
 
     /**
@@ -120,44 +120,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
 
     /**
-     * The Pipeline object with which this Container is associated.
+     * The future allowing control of the background processor.
      */
-    protected final Pipeline pipeline = new StandardPipeline(this);
-
-    /**
-     * Lock used to control access to the Realm.
-     * 锁用于控制对 Realm 的访问
-     */
-    private final ReadWriteLock realmLock = new ReentrantReadWriteLock();
-
-    /**
-     * The Realm with which this Container is associated.
-     */
-    private volatile Realm realm = null;
-
-    /**
-     * The string manager for this package.
-     */
-    protected static final StringManager sm = StringManager.getManager(ContainerBase.class);
-    /**
-     * The human-readable name of this Container.
-     */
-    protected String name = null;
-
-    /**
-     * The parent Container to which this Container is a child.
-     */
-    protected Container parent = null;
-
-    /**
-     * The property change support for this component.
-     */
-    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
-
-    /**
-     * Will children be started automatically when they are added.
-     */
-    protected boolean startChildren = true;
+    protected ScheduledFuture<?> backgroundProcessorFuture;
+    protected ScheduledFuture<?> monitorFuture;
 
     /**
      * The container event listeners for this Container. Implemented as a CopyOnWriteArrayList since listeners may
@@ -167,25 +133,16 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     protected final List<ContainerListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
-     * The parent class loader to be configured when we install a Loader.
-     */
-    protected ClassLoader parentClassLoader = null;
-
-    /**
-     * The number of threads available to process start and stop events for any children associated with this container.
-     */
-    private int startStopThreads = 1;
-    protected ExecutorService startStopExecutor;
-
-    /**
      * The Logger implementation with which this Container is associated.
      */
     protected Log logger = null;
+
 
     /**
      * Associated logger name.
      */
     protected String logName = null;
+
 
     /**
      * The cluster with which this Container is associated.
@@ -195,14 +152,74 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
 
     /**
-     * The future allowing control of the background processor.
+     * The human-readable name of this Container.
      */
-    protected ScheduledFuture<?> backgroundProcessorFuture;
-    protected ScheduledFuture<?> monitorFuture;
+    protected String name = null;
+
+
+    /**
+     * The parent Container to which this Container is a child.
+     */
+    protected Container parent = null;
+
+
+    /**
+     * The parent class loader to be configured when we install a Loader.
+     */
+    protected ClassLoader parentClassLoader = null;
+
+
+    /**
+     * The Pipeline object with which this Container is associated.
+     */
+    protected final Pipeline pipeline = new StandardPipeline(this);
+
+
+    /**
+     * The Realm with which this Container is associated.
+     */
+    private volatile Realm realm = null;
+
+
+    /**
+     * Lock used to control access to the Realm.
+     */
+    private final ReadWriteLock realmLock = new ReentrantReadWriteLock();
+
+
+    /**
+     * The string manager for this package.
+     */
+    protected static final StringManager sm = StringManager.getManager(ContainerBase.class);
+
+
+    /**
+     * Will children be started automatically when they are added.
+     */
+    protected boolean startChildren = true;
+
+    /**
+     * The property change support for this component.
+     */
+    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
+
+
+    /**
+     * The access log to use for requests normally handled by this container that have been handled earlier in the
+     * processing chain.
+     */
+    protected volatile AccessLog accessLog = null;
+    private volatile boolean accessLogScanComplete = false;
+
+
+    /**
+     * The number of threads available to process start and stop events for any children associated with this container.
+     */
+    private int startStopThreads = 1;
+    protected ExecutorService startStopExecutor;
 
 
     // ------------------------------------------------------------- Properties
-
     /**
      * Return the Logger for this Container.
      */
@@ -443,6 +460,141 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     public String getName() {
         return name;
     }
+
+
+    /**
+     * Get the delay between the invocation of the backgroundProcess method on this container and its children. Child
+     * containers will not be invoked if their delay value is not negative (which would mean they are using their own
+     * thread). Setting this to a positive value will cause a thread to be spawn. After waiting the specified amount of
+     * time, the thread will invoke the executePeriodic method on this container and all its children.
+     */
+    @Override
+    public int getBackgroundProcessorDelay() {
+        return backgroundProcessorDelay;
+    }
+
+
+    /**
+     * Return the Cluster with which this Container is associated. If there is no associated Cluster, return the Cluster
+     * associated with our parent Container (if any); otherwise return <code>null</code>.
+     */
+    @Override
+    public Cluster getCluster() {
+        Lock readLock = clusterLock.readLock();
+        readLock.lock();
+        try {
+            if (cluster != null) {
+                return cluster;
+            }
+
+            if (parent != null) {
+                return parent.getCluster();
+            }
+
+            return null;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+
+    /**
+     * Set the Cluster with which this Container is associated.
+     *
+     * @param cluster The newly associated Cluster
+     */
+    @Override
+    public void setCluster(Cluster cluster) {
+
+        Cluster oldCluster = null;
+        Lock writeLock = clusterLock.writeLock();
+        writeLock.lock();
+        try {
+            // Change components if necessary
+            oldCluster = this.cluster;
+            if (oldCluster == cluster) {
+                return;
+            }
+            this.cluster = cluster;
+
+            // Stop the old component if necessary
+            if (getState().isAvailable() && (oldCluster instanceof Lifecycle)) {
+                try {
+                    ((Lifecycle) oldCluster).stop();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("containerBase.cluster.stop"), e);
+                }
+            }
+
+            // Start the new component if necessary
+            if (cluster != null) {
+                cluster.setContainer(this);
+            }
+
+            if (getState().isAvailable() && (cluster instanceof Lifecycle)) {
+                try {
+                    ((Lifecycle) cluster).start();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("containerBase.cluster.start"), e);
+                }
+            }
+        } finally {
+            writeLock.unlock();
+        }
+
+        // Report this property change to interested listeners
+        support.firePropertyChange("cluster", oldCluster, cluster);
+    }
+
+
+
+    /**
+     * Return if children of this container will be started automatically when they are added to this container.
+     *
+     * @return <code>true</code> if the children will be started
+     */
+    public boolean getStartChildren() {
+        return startChildren;
+    }
+
+
+    /**
+     * Set if children of this container will be started automatically when they are added to this container.
+     *
+     * @param startChildren New value of the startChildren flag
+     */
+    public void setStartChildren(boolean startChildren) {
+
+        boolean oldStartChildren = this.startChildren;
+        this.startChildren = startChildren;
+        support.firePropertyChange("startChildren", oldStartChildren, this.startChildren);
+    }
+
+
+
+    /**
+     * Return the parent class loader (if any) for this web application. This call is meaningful only
+     * <strong>after</strong> a Loader has been configured.
+     */
+    @Override
+    public ClassLoader getParentClassLoader() {
+        if (parentClassLoader != null) {
+            return parentClassLoader;
+        }
+        if (parent != null) {
+            return parent.getParentClassLoader();
+        }
+        return ClassLoader.getSystemClassLoader();
+    }
+
+
+
+
+
+
+
+
+    // ------------------------------------------------------ Container Methods
 
 
     /* ++++++++++++++++++++++++++++ */
