@@ -381,7 +381,6 @@ public final class Response {
         addHeader(name, value, null);
     }
 
-    // todo watch this
     public void addHeader(String name, String value, Charset charset) {
         char cc = name.charAt(0);
         if (cc == 'C' || cc == 'c') {
