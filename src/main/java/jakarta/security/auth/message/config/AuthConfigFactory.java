@@ -63,4 +63,121 @@ public abstract class AuthConfigFactory {
     public AuthConfigFactory() {
     }
 
+    public static AuthConfigFactory getFactory() {
+        checkPermission(getFactorySecurityPermission);
+        if (factory != null) {
+            return factory;
+        }
+
+        synchronized (AuthConfigFactory.class) {
+            if (factory == null) {
+                final String className = getFactoryClassName();
+                try {
+                    factory = AccessController.doPrivileged((PrivilegedExceptionAction<AuthConfigFactory>) () -> {
+                        // Load this class with the same class loader as used for
+                        // this class. Note that the Thread context class loader
+                        // should not be used since that would trigger a memory leak
+                        // in container environments.
+                        if (className.equals("org.apache.catalina.authenticator.jaspic.AuthConfigFactoryImpl")) {
+                            return new org.apache.catalina.authenticator.jaspic.AuthConfigFactoryImpl();
+                        } else {
+                            Class<?> clazz = Class.forName(className);
+                            return (AuthConfigFactory) clazz.getConstructor().newInstance();
+                        }
+                    });
+                } catch (PrivilegedActionException e) {
+                    Exception inner = e.getException();
+                    if (inner instanceof InstantiationException) {
+                        throw new SecurityException("AuthConfigFactory error:" + inner.getCause().getMessage(),
+                                inner.getCause());
+                    } else {
+                        throw new SecurityException("AuthConfigFactory error: " + inner, inner);
+                    }
+                }
+            }
+        }
+
+        return factory;
+    }
+
+    public static synchronized void setFactory(AuthConfigFactory factory) {
+        checkPermission(setFactorySecurityPermission);
+        AuthConfigFactory.factory = factory;
+    }
+
+    public abstract AuthConfigProvider getConfigProvider(String layer, String appContext,
+                                                         RegistrationListener listener);
+
+    public abstract String registerConfigProvider(String className, Map<String,String> properties, String layer,
+                                                  String appContext, String description);
+
+    public abstract String registerConfigProvider(AuthConfigProvider provider, String layer, String appContext,
+                                                  String description);
+
+    public abstract boolean removeRegistration(String registrationID);
+
+    public abstract String[] detachListener(RegistrationListener listener, String layer, String appContext);
+
+    public abstract String[] getRegistrationIDs(AuthConfigProvider provider);
+
+    public abstract RegistrationContext getRegistrationContext(String registrationID);
+
+    public abstract void refresh();
+
+    /**
+     * Convenience method for registering a {@link ServerAuthModule} that should have the same effect as calling
+     * {@link #registerConfigProvider(AuthConfigProvider, String, String, String)} with the implementation providing the
+     * appropriate {@link AuthConfigProvider} generated from the provided context.
+     *
+     * @param serverAuthModule The {@link ServerAuthModule} to register
+     * @param context          The associated application context
+     *
+     * @return A string identifier for the created registration
+     *
+     * @since Authentication 3.0
+     */
+    public abstract String registerServerAuthModule(ServerAuthModule serverAuthModule, Object context);
+
+    /**
+     * Convenience method for deregistering a {@link ServerAuthModule} that should have the same effect as calling
+     * {@link AuthConfigFactory#removeRegistration(String)}.
+     *
+     * @param context The associated application context
+     *
+     * @since Authentication 3.0
+     */
+    public abstract void removeServerAuthModule(Object context);
+
+    /**
+     * @deprecated Following JEP 411
+     */
+    @Deprecated(forRemoval = true)
+    private static void checkPermission(Permission permission) {
+        SecurityManager securityManager = System.getSecurityManager();
+        if (securityManager != null) {
+            securityManager.checkPermission(permission);
+        }
+    }
+
+    private static String getFactoryClassName() {
+        String className = AccessController
+                .doPrivileged((PrivilegedAction<String>) () -> Security.getProperty(DEFAULT_FACTORY_SECURITY_PROPERTY));
+
+        if (className != null) {
+            return className;
+        }
+
+        return DEFAULT_JASPI_AUTHCONFIGFACTORYIMPL;
+    }
+
+    public interface RegistrationContext {
+
+        String getMessageLayer();
+
+        String getAppContext();
+
+        String getDescription();
+
+        boolean isPersistent();
+    }
 }

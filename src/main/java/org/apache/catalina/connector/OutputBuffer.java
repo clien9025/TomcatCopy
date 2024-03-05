@@ -606,12 +606,281 @@ public class OutputBuffer extends Writer {
 
     // -------------------- BufferedOutputStream compatibility
 
+    public long getContentWritten() {
+        return bytesWritten + charsWritten;
+    }
+
+    /**
+     * Has this buffer been used at all?
+     *
+     * @return true if no chars or bytes have been added to the buffer since the last call to {@link #recycle()}
+     */
+    public boolean isNew() {
+        return (bytesWritten == 0) && (charsWritten == 0);
+    }
 
 
-    // todo 额外的
+    public void setBufferSize(int size) {
+        if (size > bb.capacity()) {
+            bb = ByteBuffer.allocate(size);
+            clear(bb);
+        }
+    }
+
+
+    public void reset() {
+        reset(false);
+    }
+
+    public void reset(boolean resetWriterStreamFlags) {
+        clear(bb);
+        clear(cb);
+        bytesWritten = 0;
+        charsWritten = 0;
+        if (resetWriterStreamFlags) {
+            if (conv != null) {
+                conv.recycle();
+            }
+            conv = null;
+        }
+        initial = true;
+    }
+
+
+    public int getBufferSize() {
+        return bb.capacity();
+    }
+
+
+    /*
+     * All the non-blocking write state information is held in the Response so it is visible / accessible to all the
+     * code that needs it.
+     */
+
+    public boolean isReady() {
+        return coyoteResponse.isReady();
+    }
+
+
+    public void setWriteListener(WriteListener listener) {
+        coyoteResponse.setWriteListener(listener);
+    }
+
+
+    public boolean isBlocking() {
+        return coyoteResponse.getWriteListener() == null;
+    }
+
+    public void checkRegisterForWrite() {
+        coyoteResponse.checkRegisterForWrite();
+    }
+
+    /**
+     * Add data to the buffer.
+     *
+     * @param src Bytes array
+     * @param off Offset
+     * @param len Length
+     *
+     * @throws IOException Writing overflow data to the output channel failed
+     */
+    public void append(byte src[], int off, int len) throws IOException {
+        if (bb.remaining() == 0) {
+            appendByteArray(src, off, len);
+        } else {
+            int n = transfer(src, off, len, bb);
+            len = len - n;
+            off = off + n;
+            if (len > 0 && isFull(bb)) {
+                flushByteBuffer();
+                appendByteArray(src, off, len);
+            }
+        }
+    }
+
+    /**
+     * Add data to the buffer.
+     *
+     * @param src Char array
+     * @param off Offset
+     * @param len Length
+     *
+     * @throws IOException Writing overflow data to the output channel failed
+     */
+    public void append(char src[], int off, int len) throws IOException {
+        // if we have limit and we're below
+        if (len <= cb.capacity() - cb.limit()) {
+            transfer(src, off, len, cb);
+            return;
+        }
+
+        // Optimization:
+        // If len-avail < length ( i.e. after we fill the buffer with
+        // what we can, the remaining will fit in the buffer ) we'll just
+        // copy the first part, flush, then copy the second part - 1 write
+        // and still have some space for more. We'll still have 2 writes, but
+        // we write more on the first.
+        if (len + cb.limit() < 2 * cb.capacity()) {
+            /*
+             * If the request length exceeds the size of the output buffer, flush the output buffer and then write the
+             * data directly. We can't avoid 2 writes, but we can write more on the second
+             */
+            int n = transfer(src, off, len, cb);
+
+            flushCharBuffer();
+
+            transfer(src, off + n, len - n, cb);
+        } else {
+            // long write - flush the buffer and write the rest
+            // directly from source
+            flushCharBuffer();
+
+            realWriteChars(CharBuffer.wrap(src, off, len));
+        }
+    }
+
+
+    public void append(ByteBuffer from) throws IOException {
+        if (bb.remaining() == 0) {
+            appendByteBuffer(from);
+        } else {
+            transfer(from, bb);
+            if (from.hasRemaining() && isFull(bb)) {
+                flushByteBuffer();
+                appendByteBuffer(from);
+            }
+        }
+    }
+
+    private void appendByteArray(byte src[], int off, int len) throws IOException {
+        if (len == 0) {
+            return;
+        }
+
+        int limit = bb.capacity();
+        while (len > limit) {
+            realWriteBytes(ByteBuffer.wrap(src, off, limit));
+            len = len - limit;
+            off = off + limit;
+        }
+
+        if (len > 0) {
+            transfer(src, off, len, bb);
+        }
+    }
+
+    private void appendByteBuffer(ByteBuffer from) throws IOException {
+        if (from.remaining() == 0) {
+            return;
+        }
+
+        int limit = bb.capacity();
+        int fromLimit = from.limit();
+        while (from.remaining() > limit) {
+            from.limit(from.position() + limit);
+            realWriteBytes(from.slice());
+            from.position(from.limit());
+            from.limit(fromLimit);
+        }
+
+        if (from.remaining() > 0) {
+            transfer(from, bb);
+        }
+    }
+
+    private void flushByteBuffer() throws IOException {
+        realWriteBytes(bb.slice());
+        clear(bb);
+    }
+
+    private void flushCharBuffer() throws IOException {
+        realWriteChars(cb.slice());
+        clear(cb);
+    }
+
+    private void transfer(byte b, ByteBuffer to) {
+        toWriteMode(to);
+        to.put(b);
+        toReadMode(to);
+    }
+
+    private void transfer(char b, CharBuffer to) {
+        toWriteMode(to);
+        to.put(b);
+        toReadMode(to);
+    }
+
+    private int transfer(byte[] buf, int off, int len, ByteBuffer to) {
+        toWriteMode(to);
+        int max = Math.min(len, to.remaining());
+        if (max > 0) {
+            to.put(buf, off, max);
+        }
+        toReadMode(to);
+        return max;
+    }
+
+    private int transfer(char[] buf, int off, int len, CharBuffer to) {
+        toWriteMode(to);
+        int max = Math.min(len, to.remaining());
+        if (max > 0) {
+            to.put(buf, off, max);
+        }
+        toReadMode(to);
+        return max;
+    }
+
+    private int transfer(String s, int off, int len, CharBuffer to) {
+        toWriteMode(to);
+        int max = Math.min(len, to.remaining());
+        if (max > 0) {
+            to.put(s, off, off + max);
+        }
+        toReadMode(to);
+        return max;
+    }
+
+    private void transfer(ByteBuffer from, ByteBuffer to) {
+        toWriteMode(to);
+        int max = Math.min(from.remaining(), to.remaining());
+        if (max > 0) {
+            int fromLimit = from.limit();
+            from.limit(from.position() + max);
+            to.put(from);
+            from.limit(fromLimit);
+        }
+        toReadMode(to);
+    }
+
     private void clear(Buffer buffer) {
-//        buffer.rewind().limit(0);
-        throw new UnsupportedOperationException();
+        buffer.rewind().limit(0);
+    }
+
+    private boolean isFull(Buffer buffer) {
+        return buffer.limit() == buffer.capacity();
+    }
+
+    private void toReadMode(Buffer buffer) {
+        buffer.limit(buffer.position()).reset();
+    }
+
+    private void toWriteMode(Buffer buffer) {
+        buffer.mark().position(buffer.limit()).limit(buffer.capacity());
+    }
+
+
+    private static class PrivilegedCreateConverter implements PrivilegedExceptionAction<C2BConverter> {
+
+        private final Charset charset;
+
+        PrivilegedCreateConverter(Charset charset) {
+            this.charset = charset;
+        }
+
+        @Override
+        public C2BConverter run() throws IOException {
+            return new C2BConverter(charset);
+        }
     }
 
 }

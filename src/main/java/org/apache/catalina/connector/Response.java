@@ -71,7 +71,7 @@ import org.apache.tomcat.util.security.Escape;
  * @author Remy Maucherat
  * @author Craig R. McClanahan
  */
-public class Response/* implements HttpServletResponse*/ {
+public class Response implements HttpServletResponse {
 
     private static final Log log = LogFactory.getLog(Response.class);
     protected static final StringManager sm = StringManager.getManager(Response.class);
@@ -119,8 +119,7 @@ public class Response/* implements HttpServletResponse*/ {
      * @return the Context within which this Request is being processed.
      */
     public Context getContext() {
-//        return request.getContext();
-        throw new UnsupportedOperationException();
+        return request.getContext();
     }
 
 
@@ -195,5 +194,1592 @@ public class Response/* implements HttpServletResponse*/ {
 
     // --------------------------------------------------------- Public Methods
 
+    /**
+     * Release all object references, and initialize instance variables, in preparation for reuse of this object.
+     */
+    public void recycle() {
 
+        cookies.clear();
+        outputBuffer.recycle();
+        usingOutputStream = false;
+        usingWriter = false;
+        appCommitted = false;
+        included = false;
+        isCharacterEncodingSet = false;
+
+        applicationResponse = null;
+        if (getRequest().getDiscardFacades()) {
+            if (facade != null) {
+                facade.clear();
+                facade = null;
+            }
+            if (outputStream != null) {
+                outputStream.clear();
+                outputStream = null;
+            }
+            if (writer != null) {
+                writer.clear();
+                writer = null;
+            }
+        } else if (writer != null) {
+            writer.recycle();
+        }
+
+    }
+
+
+    public List<Cookie> getCookies() {
+        return cookies;
+    }
+
+
+    // ------------------------------------------------------- Response Methods
+
+    /**
+     * @return the number of bytes the application has actually written to the output stream. This excludes chunking,
+     * compression, etc. as well as headers.
+     */
+    public long getContentWritten() {
+        return outputBuffer.getContentWritten();
+    }
+
+
+    /**
+     * @param flush if <code>true</code> will perform a buffer flush first
+     * @return the number of bytes the actually written to the socket. This includes chunking, compression, etc. but
+     * excludes headers.
+     */
+    public long getBytesWritten(boolean flush) {
+        if (flush) {
+            try {
+                outputBuffer.flush();
+            } catch (IOException ioe) {
+                // Ignore - the client has probably closed the connection
+            }
+        }
+        return getCoyoteResponse().getBytesWritten(flush);
+    }
+
+    /**
+     * Set the application commit flag.
+     *
+     * @param appCommitted The new application committed flag value
+     */
+    public void setAppCommitted(boolean appCommitted) {
+        this.appCommitted = appCommitted;
+    }
+
+
+    /**
+     * Application commit flag accessor.
+     *
+     * @return <code>true</code> if the application has committed the response
+     */
+    public boolean isAppCommitted() {
+        return this.appCommitted || isCommitted() || isSuspended() ||
+                ((getContentLength() > 0) && (getContentWritten() >= getContentLength()));
+    }
+
+
+    /**
+     * The request with which this response is associated.
+     */
+    protected Request request = null;
+
+    /**
+     * @return the Request with which this Response is associated.
+     */
+    public Request getRequest() {
+        return this.request;
+    }
+
+    /**
+     * Set the Request with which this Response is associated.
+     *
+     * @param request The new associated request
+     */
+    public void setRequest(Request request) {
+        this.request = request;
+    }
+
+
+    /**
+     * The facade associated with this response.
+     */
+    protected ResponseFacade facade = null;
+
+
+    /**
+     * @return the <code>ServletResponse</code> for which this object is the facade.
+     */
+    public HttpServletResponse getResponse() {
+        if (facade == null) {
+            facade = new ResponseFacade(this);
+        }
+        if (applicationResponse == null) {
+            applicationResponse = facade;
+        }
+        return applicationResponse;
+    }
+
+
+    /**
+     * Set a wrapped HttpServletResponse to pass to the application. Components wishing to wrap the response should
+     * obtain the response via {@link #getResponse()}, wrap it and then call this method with the wrapped response.
+     *
+     * @param applicationResponse The wrapped response to pass to the application
+     */
+    public void setResponse(HttpServletResponse applicationResponse) {
+        // Check the wrapper wraps this request
+        ServletResponse r = applicationResponse;
+        while (r instanceof HttpServletResponseWrapper) {
+            r = ((HttpServletResponseWrapper) r).getResponse();
+        }
+        if (r != facade) {
+            throw new IllegalArgumentException(sm.getString("response.illegalWrap"));
+        }
+        this.applicationResponse = applicationResponse;
+    }
+
+
+    /**
+     * Set the suspended flag.
+     *
+     * @param suspended The new suspended flag value
+     */
+    public void setSuspended(boolean suspended) {
+        outputBuffer.setSuspended(suspended);
+    }
+
+
+    /**
+     * Suspended flag accessor.
+     *
+     * @return <code>true</code> if the response is suspended
+     */
+    public boolean isSuspended() {
+        return outputBuffer.isSuspended();
+    }
+
+
+    /**
+     * Closed flag accessor.
+     *
+     * @return <code>true</code> if the response has been closed
+     */
+    public boolean isClosed() {
+        return outputBuffer.isClosed();
+    }
+
+
+    /**
+     * Set the error flag.
+     *
+     * @return <code>false</code> if the error flag was already set
+     * @deprecated This method will be changed to return void in Tomcat 11 onwards
+     */
+    @Deprecated
+    public boolean setError() {
+        return getCoyoteResponse().setError();
+    }
+
+
+    /**
+     * Error flag accessor.
+     *
+     * @return <code>true</code> if the response has encountered an error
+     */
+    public boolean isError() {
+        return getCoyoteResponse().isError();
+    }
+
+
+    public boolean isErrorReportRequired() {
+        return getCoyoteResponse().isErrorReportRequired();
+    }
+
+
+    public boolean setErrorReported() {
+        return getCoyoteResponse().setErrorReported();
+    }
+
+
+    /**
+     * Perform whatever actions are required to flush and close the output stream or writer, in a single operation.
+     *
+     * @throws IOException if an input/output error occurs
+     */
+    public void finishResponse() throws IOException {
+        // Writing leftover bytes
+        outputBuffer.close();
+    }
+
+
+    /**
+     * @return the content length that was set or calculated for this Response.
+     */
+    public int getContentLength() {
+        return getCoyoteResponse().getContentLength();
+    }
+
+
+    /**
+     * @return the content type that was set or calculated for this response, or <code>null</code> if no content type
+     * was set.
+     */
+    @Override
+    public String getContentType() {
+        return getCoyoteResponse().getContentType();
+    }
+
+
+    /**
+     * Return a PrintWriter that can be used to render error messages, regardless of whether a stream or writer has
+     * already been acquired.
+     *
+     * @return Writer which can be used for error reports. If the response is not an error report returned using
+     * sendError or triggered by an unexpected exception thrown during the servlet processing (and only in
+     * that case), null will be returned if the response stream has already been used.
+     * @throws IOException if an input/output error occurs
+     */
+    public PrintWriter getReporter() throws IOException {
+        if (outputBuffer.isNew()) {
+            outputBuffer.checkConverter();
+            if (writer == null) {
+                writer = new CoyoteWriter(outputBuffer);
+            }
+            return writer;
+        } else {
+            return null;
+        }
+    }
+
+
+    // ------------------------------------------------ ServletResponse Methods
+
+
+    /**
+     * Flush the buffer and commit this response.
+     *
+     * @throws IOException if an input/output error occurs
+     */
+    @Override
+    public void flushBuffer() throws IOException {
+        outputBuffer.flush();
+    }
+
+
+    /**
+     * @return the actual buffer size used for this Response.
+     */
+    @Override
+    public int getBufferSize() {
+        return outputBuffer.getBufferSize();
+    }
+
+
+    /**
+     * @return the character encoding used for this Response.
+     */
+    @Override
+    public String getCharacterEncoding() {
+        String charset = getCoyoteResponse().getCharacterEncoding();
+        if (charset != null) {
+            return charset;
+        }
+
+        Context context = getContext();
+        String result = null;
+        if (context != null) {
+            result = context.getResponseCharacterEncoding();
+        }
+
+        if (result == null) {
+            result = org.apache.coyote.Constants.DEFAULT_BODY_CHARSET.name();
+        }
+
+        return result;
+    }
+
+
+    /**
+     * @return the servlet output stream associated with this Response.
+     * @throws IllegalStateException if <code>getWriter</code> has already been called for this response
+     * @throws IOException           if an input/output error occurs
+     */
+    @Override
+    public ServletOutputStream getOutputStream() throws IOException {
+
+        if (usingWriter) {
+            throw new IllegalStateException(sm.getString("coyoteResponse.getOutputStream.ise"));
+        }
+
+        usingOutputStream = true;
+        if (outputStream == null) {
+            outputStream = new CoyoteOutputStream(outputBuffer);
+        }
+        return outputStream;
+
+    }
+
+
+    /**
+     * @return the Locale assigned to this response.
+     */
+    @Override
+    public Locale getLocale() {
+        return getCoyoteResponse().getLocale();
+    }
+
+
+    /**
+     * @return the writer associated with this Response.
+     * @throws IllegalStateException if <code>getOutputStream</code> has already been called for this response
+     * @throws IOException           if an input/output error occurs
+     */
+    @Override
+    public PrintWriter getWriter() throws IOException {
+
+        if (usingOutputStream) {
+            throw new IllegalStateException(sm.getString("coyoteResponse.getWriter.ise"));
+        }
+
+        if (request.getConnector().getEnforceEncodingInGetWriter()) {
+            /*
+             * If the response's character encoding has not been specified as described in
+             * <code>getCharacterEncoding</code> (i.e., the method just returns the default value
+             * <code>ISO-8859-1</code>), <code>getWriter</code> updates it to <code>ISO-8859-1</code> (with the effect
+             * that a subsequent call to getContentType() will include a charset=ISO-8859-1 component which will also be
+             * reflected in the Content-Type response header, thereby satisfying the Servlet spec requirement that
+             * containers must communicate the character encoding used for the servlet response's writer to the client).
+             */
+            setCharacterEncoding(getCharacterEncoding());
+        }
+
+        usingWriter = true;
+        outputBuffer.checkConverter();
+        if (writer == null) {
+            writer = new CoyoteWriter(outputBuffer);
+        }
+        return writer;
+    }
+
+
+    /**
+     * Has the output of this response already been committed?
+     *
+     * @return <code>true</code> if the response has been committed
+     */
+    @Override
+    public boolean isCommitted() {
+        return getCoyoteResponse().isCommitted();
+    }
+
+
+    /**
+     * Clear any content written to the buffer.
+     *
+     * @throws IllegalStateException if this response has already been committed
+     */
+    @Override
+    public void reset() {
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        getCoyoteResponse().reset();
+        outputBuffer.reset();
+        usingOutputStream = false;
+        usingWriter = false;
+        isCharacterEncodingSet = false;
+    }
+
+
+    /**
+     * Reset the data buffer but not any status or header information.
+     *
+     * @throws IllegalStateException if the response has already been committed
+     */
+    @Override
+    public void resetBuffer() {
+        resetBuffer(false);
+    }
+
+
+    /**
+     * Reset the data buffer and the using Writer/Stream flags but not any status or header information.
+     *
+     * @param resetWriterStreamFlags <code>true</code> if the internal <code>usingWriter</code>,
+     *                               <code>usingOutputStream</code>, <code>isCharacterEncodingSet</code> flags
+     *                               should also be reset
+     * @throws IllegalStateException if the response has already been committed
+     */
+    public void resetBuffer(boolean resetWriterStreamFlags) {
+
+        if (isCommitted()) {
+            throw new IllegalStateException(sm.getString("coyoteResponse.resetBuffer.ise"));
+        }
+
+        outputBuffer.reset(resetWriterStreamFlags);
+
+        if (resetWriterStreamFlags) {
+            usingOutputStream = false;
+            usingWriter = false;
+            isCharacterEncodingSet = false;
+        }
+
+    }
+
+
+    /**
+     * Set the buffer size to be used for this Response.
+     *
+     * @param size The new buffer size
+     * @throws IllegalStateException if this method is called after output has been committed for this response
+     */
+    @Override
+    public void setBufferSize(int size) {
+
+        if (isCommitted() || !outputBuffer.isNew()) {
+            throw new IllegalStateException(sm.getString("coyoteResponse.setBufferSize.ise"));
+        }
+
+        outputBuffer.setBufferSize(size);
+
+    }
+
+
+    /**
+     * Set the content length (in bytes) for this Response.
+     *
+     * @param length The new content length
+     */
+    @Override
+    public void setContentLength(int length) {
+
+        setContentLengthLong(length);
+    }
+
+
+    @Override
+    public void setContentLengthLong(long length) {
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        getCoyoteResponse().setContentLength(length);
+    }
+
+
+    /**
+     * Set the content type for this Response.
+     *
+     * @param type The new content type
+     */
+    @Override
+    public void setContentType(String type) {
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        if (type == null) {
+            getCoyoteResponse().setContentType(null);
+            try {
+                getCoyoteResponse().setCharacterEncoding(null);
+            } catch (UnsupportedEncodingException e) {
+                // Can never happen when calling with null
+            }
+            isCharacterEncodingSet = false;
+            return;
+        }
+
+        String[] m = MEDIA_TYPE_CACHE.parse(type);
+        if (m == null) {
+            // Invalid - Assume no charset and just pass through whatever
+            // the user provided.
+            getCoyoteResponse().setContentTypeNoCharset(type);
+            return;
+        }
+
+
+        if (m[1] == null) {
+            // No charset and we know value is valid as cache lookup was
+            // successful
+            // Pass-through user provided value in case user-agent is buggy and
+            // requires specific format
+            getCoyoteResponse().setContentTypeNoCharset(type);
+        } else {
+            // There is a charset so have to rebuild content-type without it
+            getCoyoteResponse().setContentTypeNoCharset(m[0]);
+
+            // Ignore charset if getWriter() has already been called
+            if (!usingWriter) {
+                try {
+                    getCoyoteResponse().setCharacterEncoding(m[1]);
+                } catch (UnsupportedEncodingException e) {
+                    log.warn(sm.getString("coyoteResponse.encoding.invalid", m[1]), e);
+                }
+
+                isCharacterEncodingSet = true;
+            }
+        }
+    }
+
+
+    /**
+     * Overrides the name of the character encoding used in the body of the request. This method must be called prior to
+     * reading request parameters or reading input using getReader().
+     *
+     * @param encoding String containing the name of the character encoding.
+     */
+    @Override
+    public void setCharacterEncoding(String encoding) {
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        // Ignore any call made after the getWriter has been invoked
+        // The default should be used
+        if (usingWriter) {
+            return;
+        }
+
+        try {
+            getCoyoteResponse().setCharacterEncoding(encoding);
+        } catch (UnsupportedEncodingException e) {
+            log.warn(sm.getString("coyoteResponse.encoding.invalid", encoding), e);
+            return;
+        }
+        if (encoding == null) {
+            isCharacterEncodingSet = false;
+        } else {
+            isCharacterEncodingSet = true;
+        }
+    }
+
+
+    /**
+     * Set the Locale that is appropriate for this response, including setting the appropriate character encoding.
+     *
+     * @param locale The new locale
+     */
+    @Override
+    public void setLocale(Locale locale) {
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        getCoyoteResponse().setLocale(locale);
+
+        // Ignore any call made after the getWriter has been invoked.
+        // The default should be used
+        if (usingWriter) {
+            return;
+        }
+
+        if (isCharacterEncodingSet) {
+            return;
+        }
+
+        if (locale == null) {
+            try {
+                getCoyoteResponse().setCharacterEncoding(null);
+            } catch (UnsupportedEncodingException e) {
+                // Impossible when calling with null
+            }
+        } else {
+            // In some error handling scenarios, the context is unknown
+            // (e.g. a 404 when a ROOT context is not present)
+            Context context = getContext();
+            if (context != null) {
+                String charset = context.getCharset(locale);
+                if (charset != null) {
+                    try {
+                        getCoyoteResponse().setCharacterEncoding(charset);
+                    } catch (UnsupportedEncodingException e) {
+                        log.warn(sm.getString("coyoteResponse.encoding.invalid", charset), e);
+                    }
+                }
+            }
+        }
+    }
+
+
+    // --------------------------------------------------- HttpResponse Methods
+
+
+    @Override
+    public String getHeader(String name) {
+        return getCoyoteResponse().getMimeHeaders().getHeader(name);
+    }
+
+
+    @Override
+    public Collection<String> getHeaderNames() {
+        MimeHeaders headers = getCoyoteResponse().getMimeHeaders();
+        int n = headers.size();
+        List<String> result = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            result.add(headers.getName(i).toString());
+        }
+        return result;
+
+    }
+
+
+    @Override
+    public Collection<String> getHeaders(String name) {
+        Enumeration<String> enumeration = getCoyoteResponse().getMimeHeaders().values(name);
+        Set<String> result = new LinkedHashSet<>();
+        while (enumeration.hasMoreElements()) {
+            result.add(enumeration.nextElement());
+        }
+        return result;
+    }
+
+
+    /**
+     * @return the error message that was set with <code>sendError()</code> for this Response.
+     */
+    public String getMessage() {
+        return getCoyoteResponse().getMessage();
+    }
+
+
+    @Override
+    public int getStatus() {
+        return getCoyoteResponse().getStatus();
+    }
+
+
+    // -------------------------------------------- HttpServletResponse Methods
+
+    /**
+     * Add the specified Cookie to those that will be included with this Response.
+     *
+     * @param cookie Cookie to be added
+     */
+    @Override
+    public void addCookie(final Cookie cookie) {
+
+        // Ignore any call from an included servlet
+        if (included || isCommitted()) {
+            return;
+        }
+
+        cookies.add(cookie);
+
+        String header = generateCookieString(cookie);
+        // if we reached here, no exception, cookie is valid
+        addHeader("Set-Cookie", header, getContext().getCookieProcessor().getCharset());
+    }
+
+    /**
+     * Special method for adding a session cookie as we should be overriding any previous.
+     *
+     * @param cookie The new session cookie to add the response
+     */
+    public void addSessionCookieInternal(final Cookie cookie) {
+        if (isCommitted()) {
+            return;
+        }
+
+        String name = cookie.getName();
+        final String headername = "Set-Cookie";
+        final String startsWith = name + "=";
+        String header = generateCookieString(cookie);
+        boolean set = false;
+        MimeHeaders headers = getCoyoteResponse().getMimeHeaders();
+        int n = headers.size();
+        for (int i = 0; i < n; i++) {
+            if (headers.getName(i).toString().equals(headername)) {
+                if (headers.getValue(i).toString().startsWith(startsWith)) {
+                    headers.getValue(i).setString(header);
+                    set = true;
+                }
+            }
+        }
+        if (!set) {
+            addHeader(headername, header);
+        }
+
+    }
+
+    public String generateCookieString(final Cookie cookie) {
+        // Web application code can receive a IllegalArgumentException
+        // from the generateHeader() invocation
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return AccessController
+                    .doPrivileged(new PrivilegedGenerateCookieString(getContext(), cookie, request.getRequest()));
+        } else {
+            return getContext().getCookieProcessor().generateHeader(cookie, request.getRequest());
+        }
+    }
+
+
+    /**
+     * Add the specified date header to the specified value.
+     *
+     * @param name  Name of the header to set
+     * @param value Date value to be set
+     */
+    @Override
+    public void addDateHeader(String name, long value) {
+
+        if (name == null || name.length() == 0) {
+            return;
+        }
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        addHeader(name, FastHttpDateFormat.formatDate(value));
+    }
+
+
+    /**
+     * Add the specified header to the specified value.
+     *
+     * @param name  Name of the header to set
+     * @param value Value to be set
+     */
+    @Override
+    public void addHeader(String name, String value) {
+        addHeader(name, value, null);
+    }
+
+
+    private void addHeader(String name, String value, Charset charset) {
+
+        if (name == null || name.length() == 0 || value == null) {
+            return;
+        }
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        char cc = name.charAt(0);
+        if (cc == 'C' || cc == 'c') {
+            if (checkSpecialHeader(name, value)) {
+                return;
+            }
+        }
+
+        getCoyoteResponse().addHeader(name, value, charset);
+    }
+
+
+    /**
+     * An extended version of this exists in {@link org.apache.coyote.Response}. This check is required here to ensure
+     * that the usingWriter check in {@link #setContentType(String)} is applied since usingWriter is not visible to
+     * {@link org.apache.coyote.Response} Called from set/addHeader.
+     *
+     * @return <code>true</code> if the header is special, no need to set the header.
+     */
+    private boolean checkSpecialHeader(String name, String value) {
+        if (name.equalsIgnoreCase("Content-Type")) {
+            setContentType(value);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Add the specified integer header to the specified value.
+     *
+     * @param name  Name of the header to set
+     * @param value Integer value to be set
+     */
+    @Override
+    public void addIntHeader(String name, int value) {
+
+        if (name == null || name.length() == 0) {
+            return;
+        }
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        addHeader(name, "" + value);
+
+    }
+
+
+    /**
+     * Has the specified header been set already in this response?
+     *
+     * @param name Name of the header to check
+     * @return <code>true</code> if the header has been set
+     */
+    @Override
+    public boolean containsHeader(String name) {
+        // Need special handling for Content-Type and Content-Length due to
+        // special handling of these in coyoteResponse
+        char cc = name.charAt(0);
+        if (cc == 'C' || cc == 'c') {
+            if (name.equalsIgnoreCase("Content-Type")) {
+                // Will return null if this has not been set
+                return (getCoyoteResponse().getContentType() != null);
+            }
+            if (name.equalsIgnoreCase("Content-Length")) {
+                // -1 means not known and is not sent to client
+                return (getCoyoteResponse().getContentLengthLong() != -1);
+            }
+        }
+
+        return getCoyoteResponse().containsHeader(name);
+    }
+
+
+    @Override
+    public void setTrailerFields(Supplier<Map<String, String>> supplier) {
+        getCoyoteResponse().setTrailerFields(supplier);
+    }
+
+
+    @Override
+    public Supplier<Map<String, String>> getTrailerFields() {
+        return getCoyoteResponse().getTrailerFields();
+    }
+
+
+    /**
+     * Encode the session identifier associated with this response into the specified redirect URL, if necessary.
+     *
+     * @param url URL to be encoded
+     * @return <code>true</code> if the URL was encoded
+     */
+    @Override
+    public String encodeRedirectURL(String url) {
+        if (isEncodeable(toAbsolute(url))) {
+            return toEncoded(url, request.getSessionInternal().getIdInternal());
+        } else {
+            return url;
+        }
+    }
+
+
+    /**
+     * Encode the session identifier associated with this response into the specified URL, if necessary.
+     *
+     * @param url URL to be encoded
+     * @return <code>true</code> if the URL was encoded
+     */
+    @Override
+    public String encodeURL(String url) {
+
+        String absolute;
+        try {
+            absolute = toAbsolute(url);
+        } catch (IllegalArgumentException iae) {
+            // Relative URL
+            return url;
+        }
+
+        if (isEncodeable(absolute)) {
+            // W3c spec clearly said
+            if (url.equalsIgnoreCase("")) {
+                url = absolute;
+            } else if (url.equals(absolute) && !hasPath(url)) {
+                url += '/';
+            }
+            return toEncoded(url, request.getSessionInternal().getIdInternal());
+        } else {
+            return url;
+        }
+
+    }
+
+
+    /**
+     * Send an acknowledgement of a request.
+     *
+     * @param continueResponseTiming Indicates when the request for the ACK originated so it can be compared with the
+     *                               configured timing for ACK responses.
+     * @throws IOException if an input/output error occurs
+     */
+    public void sendAcknowledgement(ContinueResponseTiming continueResponseTiming) throws IOException {
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        getCoyoteResponse().action(ActionCode.ACK, continueResponseTiming);
+    }
+
+
+    /**
+     * Send an error response with the specified status and a default message.
+     *
+     * @param status HTTP status code to send
+     * @throws IllegalStateException if this response has already been committed
+     * @throws IOException           if an input/output error occurs
+     */
+    @Override
+    public void sendError(int status) throws IOException {
+        sendError(status, null);
+    }
+
+
+    /**
+     * Send an error response with the specified status and message.
+     *
+     * @param status  HTTP status code to send
+     * @param message Corresponding message to send
+     * @throws IllegalStateException if this response has already been committed
+     * @throws IOException           if an input/output error occurs
+     */
+    @Override
+    public void sendError(int status, String message) throws IOException {
+
+        if (isCommitted()) {
+            throw new IllegalStateException(sm.getString("coyoteResponse.sendError.ise"));
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        setError();
+
+        getCoyoteResponse().setStatus(status);
+        getCoyoteResponse().setMessage(message);
+
+        // Clear any data content that has been buffered
+        resetBuffer();
+
+        // Cause the response to be finished (from the application perspective)
+        setSuspended(true);
+    }
+
+
+    @Override
+    public void sendRedirect(String location) throws IOException {
+        sendRedirect(location, SC_FOUND);
+    }
+
+
+    /**
+     * Internal method that allows a redirect to be sent with a status other than {@link HttpServletResponse#SC_FOUND}
+     * (302). No attempt is made to validate the status code.
+     *
+     * @param location Location URL to redirect to
+     * @param status   HTTP status code that will be sent
+     * @throws IOException an IO exception occurred
+     */
+    public void sendRedirect(String location, int status) throws IOException {
+        if (isCommitted()) {
+            throw new IllegalStateException(sm.getString("coyoteResponse.sendRedirect.ise"));
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        // Clear any data content that has been buffered
+        resetBuffer(true);
+
+        // Generate a temporary redirect to the specified location
+        try {
+            Context context = getContext();
+            // If no ROOT context is defined, the context can be null.
+            // In this case, the default Tomcat values are assumed, but without
+            // reference to org.apache.catalina.STRICT_SERVLET_COMPLIANCE.
+            String locationUri;
+            // Relative redirects require HTTP/1.1 or later
+            if (getRequest().getCoyoteRequest().getSupportsRelativeRedirects() &&
+                    (context == null || context.getUseRelativeRedirects())) {
+                locationUri = location;
+            } else {
+                locationUri = toAbsolute(location);
+            }
+            setStatus(status);
+            setHeader("Location", locationUri);
+            if (context != null && context.getSendRedirectBody()) {
+                PrintWriter writer = getWriter();
+                writer.print(sm.getString("coyoteResponse.sendRedirect.note", Escape.htmlElementContent(locationUri)));
+                flushBuffer();
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn(sm.getString("response.sendRedirectFail", location), e);
+            setStatus(SC_NOT_FOUND);
+        }
+
+        // Cause the response to be finished (from the application perspective)
+        setSuspended(true);
+    }
+
+
+    /**
+     * Set the specified date header to the specified value.
+     *
+     * @param name  Name of the header to set
+     * @param value Date value to be set
+     */
+    @Override
+    public void setDateHeader(String name, long value) {
+
+        if (name == null || name.length() == 0) {
+            return;
+        }
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        setHeader(name, FastHttpDateFormat.formatDate(value));
+    }
+
+
+    /**
+     * Set the specified header to the specified value.
+     *
+     * @param name  Name of the header to set
+     * @param value Value to be set
+     */
+    @Override
+    public void setHeader(String name, String value) {
+
+        if (name == null || name.length() == 0 || value == null) {
+            return;
+        }
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        char cc = name.charAt(0);
+        if (cc == 'C' || cc == 'c') {
+            if (checkSpecialHeader(name, value)) {
+                return;
+            }
+        }
+
+        getCoyoteResponse().setHeader(name, value);
+    }
+
+
+    /**
+     * Set the specified integer header to the specified value.
+     *
+     * @param name  Name of the header to set
+     * @param value Integer value to be set
+     */
+    @Override
+    public void setIntHeader(String name, int value) {
+
+        if (name == null || name.length() == 0) {
+            return;
+        }
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        setHeader(name, "" + value);
+
+    }
+
+
+    /**
+     * Set the HTTP status to be returned with this response.
+     *
+     * @param status The new HTTP status
+     */
+    @Override
+    public void setStatus(int status) {
+
+        if (isCommitted()) {
+            return;
+        }
+
+        // Ignore any call from an included servlet
+        if (included) {
+            return;
+        }
+
+        getCoyoteResponse().setStatus(status);
+    }
+
+
+    // ------------------------------------------------------ Protected Methods
+
+    /**
+     * Return <code>true</code> if the specified URL should be encoded with a session identifier. This will be true if
+     * all of the following conditions are met:
+     * <ul>
+     * <li>The request we are responding to asked for a valid session
+     * <li>The requested session ID was not received via a cookie
+     * <li>The specified URL points back to somewhere within the web application that is responding to this request
+     * </ul>
+     *
+     * @param location Absolute URL to be validated
+     * @return <code>true</code> if the URL should be encoded
+     */
+    protected boolean isEncodeable(final String location) {
+
+        if (location == null) {
+            return false;
+        }
+
+        // Is this an intra-document reference?
+        if (location.startsWith("#")) {
+            return false;
+        }
+
+        // Are we in a valid session that is not using cookies?
+        final Request hreq = request;
+        final Session session = hreq.getSessionInternal(false);
+        if (session == null) {
+            return false;
+        }
+        if (hreq.isRequestedSessionIdFromCookie()) {
+            return false;
+        }
+
+        // Is URL encoding permitted
+        if (!hreq.getServletContext().getEffectiveSessionTrackingModes().contains(SessionTrackingMode.URL)) {
+            return false;
+        }
+
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            Boolean result =
+                    AccessController.doPrivileged(new PrivilegedDoIsEncodable(getContext(), hreq, session, location));
+            return result.booleanValue();
+        } else {
+            return doIsEncodeable(getContext(), hreq, session, location);
+        }
+    }
+
+
+    private static boolean doIsEncodeable(Context context, Request hreq, Session session, String location) {
+        // Is this a valid absolute URL?
+        URL url = null;
+        try {
+            URI uri = new URI(location);
+            url = uri.toURL();
+        } catch (MalformedURLException | URISyntaxException | IllegalArgumentException e) {
+            return false;
+        }
+
+        // Does this URL match down to (and including) the context path?
+        if (!hreq.getScheme().equalsIgnoreCase(url.getProtocol())) {
+            return false;
+        }
+        if (!hreq.getServerName().equalsIgnoreCase(url.getHost())) {
+            return false;
+        }
+        int serverPort = hreq.getServerPort();
+        if (serverPort == -1) {
+            if ("https".equals(hreq.getScheme())) {
+                serverPort = 443;
+            } else {
+                serverPort = 80;
+            }
+        }
+        int urlPort = url.getPort();
+        if (urlPort == -1) {
+            if ("https".equals(url.getProtocol())) {
+                urlPort = 443;
+            } else {
+                urlPort = 80;
+            }
+        }
+        if (serverPort != urlPort) {
+            return false;
+        }
+
+        String contextPath = context.getPath();
+        if (contextPath != null) {
+            String file = url.getFile();
+            if (!file.startsWith(contextPath)) {
+                return false;
+            }
+            String tok = ";" + SessionConfig.getSessionUriParamName(context) + "=" + session.getIdInternal();
+            if (file.indexOf(tok, contextPath.length()) >= 0) {
+                return false;
+            }
+        }
+
+        // This URL belongs to our web application, so it is encodeable
+        return true;
+
+    }
+
+
+    /**
+     * Convert (if necessary) and return the absolute URL that represents the resource referenced by this possibly
+     * relative URL. If this URL is already absolute, return it unchanged.
+     * <p>
+     * 将相对URL转换为绝对URL。如果提供的location已经是绝对的，那么它会被原样返回。
+     * 这个方法主要用于处理HTTP重定向时确保重定向的URL是绝对的，遵循HTTP标准。
+     * <p>
+     * 实现逻辑：
+     * <p>
+     * 处理以“//”开头的URL：如果location以两个斜杠开头（即协议相对URL），
+     * 方法会在前面添加当前请求的协议（如http或https），使其成为完整的URL。
+     * <p>
+     * 处理以“/”开头或没有方案的URL：如果location以一个斜杠开头或者没有指定方案（如http://），方法会构造一个完整的URL，
+     * 包括协议、服务器名、端口（如果非标准端口）、以及相对路径。如果location不以斜杠开头，还会处理请求的URI，以确保相对路径正确。
+     * <p>
+     * 处理已经是绝对URL的情况：如果location已经包含了方案，它将被原样返回。
+     *
+     * @param location URL to be (possibly) converted and then returned
+     * @return the encoded URL
+     * @throws IllegalArgumentException if a MalformedURLException is thrown when converting the relative URL to an
+     *                                  absolute one
+     */
+    protected String toAbsolute(String location) {
+
+        if (location == null) {
+            return location;
+        }
+
+        boolean leadingSlash = location.startsWith("/");
+
+        if (location.startsWith("//")) {
+            // Scheme relative
+            redirectURLCC.recycle();
+            // Add the scheme
+            String scheme = request.getScheme();
+            try {
+                redirectURLCC.append(scheme, 0, scheme.length());
+                redirectURLCC.append(':');
+                redirectURLCC.append(location, 0, location.length());
+                return redirectURLCC.toString();
+            } catch (IOException e) {
+                throw new IllegalArgumentException(location, e);
+            }
+
+        } else if (leadingSlash || !UriUtil.hasScheme(location)) {
+
+            redirectURLCC.recycle();
+
+            String scheme = request.getScheme();
+            String name = request.getServerName();
+            int port = request.getServerPort();
+
+            try {
+                redirectURLCC.append(scheme, 0, scheme.length());
+                redirectURLCC.append("://", 0, 3);
+                redirectURLCC.append(name, 0, name.length());
+                if ((scheme.equals("http") && port != 80) || (scheme.equals("https") && port != 443)) {
+                    redirectURLCC.append(':');
+                    String portS = port + "";
+                    redirectURLCC.append(portS, 0, portS.length());
+                }
+                if (!leadingSlash) {
+                    String relativePath = request.getDecodedRequestURI();
+                    int pos = relativePath.lastIndexOf('/');
+                    CharChunk encodedURI = null;
+                    if (SecurityUtil.isPackageProtectionEnabled()) {
+                        try {
+                            encodedURI = AccessController
+                                    .doPrivileged(new PrivilegedEncodeUrl(urlEncoder, relativePath, pos));
+                        } catch (PrivilegedActionException pae) {
+                            throw new IllegalArgumentException(location, pae.getException());
+                        }
+                    } else {
+                        encodedURI = urlEncoder.encodeURL(relativePath, 0, pos);
+                    }
+                    redirectURLCC.append(encodedURI);
+                    encodedURI.recycle();
+                    redirectURLCC.append('/');
+                }
+                redirectURLCC.append(location, 0, location.length());
+
+                normalize(redirectURLCC);
+            } catch (IOException e) {
+                throw new IllegalArgumentException(location, e);
+            }
+
+            return redirectURLCC.toString();
+
+        } else {
+
+            return location;
+
+        }
+
+    }
+
+    /**
+     * Removes /./ and /../ sequences from absolute URLs. Code borrowed heavily from CoyoteAdapter.normalize()
+     * <p>
+     * 规范化绝对URL，移除其中的.和..路径，以及处理查询字符串和片段标识符（如果存在）。这主要用于安全性考虑，防止目录遍历攻击。
+     * <p>
+     * 实现逻辑：
+     * <p>
+     * 移除查询字符串和片段标识符：首先，如果URL中包含查询字符串（?）或片段标识符（#），它们会被暂时移除以简化后续的规范化处理。
+     * <p>
+     * 移除/./和/../序列：然后，方法遍历URL的路径部分，移除所有的/./序列和/../序列。对于/../，它不仅移除该序列，
+     * 还移除其前面的父目录，以防止目录遍历。这一过程考虑了URL的特定结构，即避免修改协议和主机名部分。
+     * <p>
+     * 恢复查询字符串和片段标识符：如果之前移除了查询字符串或片段标识符，最后会将它们添加回规范化后的URL。
+     *
+     * @param cc the char chunk containing the chars to normalize
+     */
+    private void normalize(CharChunk cc) {
+        // Strip query string and/or fragment first as doing it this way makes
+        // the normalization logic a lot simpler
+        int truncate = cc.indexOf('?');
+        if (truncate == -1) {
+            truncate = cc.indexOf('#');
+        }
+        char[] truncateCC = null;
+        if (truncate > -1) {
+            truncateCC = Arrays.copyOfRange(cc.getBuffer(), cc.getStart() + truncate, cc.getEnd());
+            cc.setEnd(cc.getStart() + truncate);
+        }
+
+        if (cc.endsWith("/.") || cc.endsWith("/..")) {
+            try {
+                cc.append('/');
+            } catch (IOException e) {
+                throw new IllegalArgumentException(cc.toString(), e);
+            }
+        }
+
+        char[] c = cc.getChars();
+        int start = cc.getStart();
+        int end = cc.getEnd();
+        int index = 0;
+        int startIndex = 0;
+
+        // Advance past the first three / characters (should place index just
+        // scheme://host[:port]
+
+        for (int i = 0; i < 3; i++) {
+            startIndex = cc.indexOf('/', startIndex + 1);
+        }
+
+        // Remove /./
+        index = startIndex;
+        while (true) {
+            index = cc.indexOf("/./", 0, 3, index);
+            if (index < 0) {
+                break;
+            }
+            copyChars(c, start + index, start + index + 2, end - start - index - 2);
+            end = end - 2;
+            cc.setEnd(end);
+        }
+
+        // Remove /../
+        index = startIndex;
+        int pos;
+        while (true) {
+            index = cc.indexOf("/../", 0, 4, index);
+            if (index < 0) {
+                break;
+            }
+            // Can't go above the server root
+            if (index == startIndex) {
+                throw new IllegalArgumentException();
+            }
+            int index2 = -1;
+            for (pos = start + index - 1; (pos >= 0) && (index2 < 0); pos--) {
+                if (c[pos] == (byte) '/') {
+                    index2 = pos;
+                }
+            }
+            copyChars(c, start + index2, start + index + 3, end - start - index - 3);
+            end = end + index2 - index - 3;
+            cc.setEnd(end);
+            index = index2;
+        }
+
+        // Add the query string and/or fragment (if present) back in
+        if (truncateCC != null) {
+            try {
+                cc.append(truncateCC, 0, truncateCC.length);
+            } catch (IOException ioe) {
+                throw new IllegalArgumentException(ioe);
+            }
+        }
+    }
+
+    private void copyChars(char[] c, int dest, int src, int len) {
+        System.arraycopy(c, src, c, dest, len);
+    }
+
+
+    /**
+     * Determine if an absolute URL has a path component.
+     *
+     * @param uri the URL that will be checked
+     * @return <code>true</code> if the URL has a path
+     */
+    private boolean hasPath(String uri) {
+        int pos = uri.indexOf("://");
+        if (pos < 0) {
+            return false;
+        }
+        pos = uri.indexOf('/', pos + 3);
+        if (pos < 0) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Return the specified URL with the specified session identifier suitably encoded.
+     *
+     * @param url       URL to be encoded with the session id
+     * @param sessionId Session id to be included in the encoded URL
+     * @return the encoded URL
+     */
+    protected String toEncoded(String url, String sessionId) {
+        if (url == null || sessionId == null) {
+            return url;
+        }
+
+        String path = url;
+        String query = "";
+        String anchor = "";
+        int question = url.indexOf('?');
+        if (question >= 0) {
+            path = url.substring(0, question);
+            query = url.substring(question);
+        }
+        int pound = path.indexOf('#');
+        if (pound >= 0) {
+            anchor = path.substring(pound);
+            path = path.substring(0, pound);
+        }
+        StringBuilder sb = new StringBuilder(path);
+        if (sb.length() > 0) { // jsessionid can't be first.
+            sb.append(';');
+            sb.append(SessionConfig.getSessionUriParamName(request.getContext()));
+            sb.append('=');
+            sb.append(sessionId);
+        }
+        sb.append(anchor);
+        sb.append(query);
+        return sb.toString();
+    }
+
+
+    private static class PrivilegedGenerateCookieString implements PrivilegedAction<String> {
+
+        private final Context context;
+        private final Cookie cookie;
+        private final HttpServletRequest request;
+
+        PrivilegedGenerateCookieString(Context context, Cookie cookie, HttpServletRequest request) {
+            this.context = context;
+            this.cookie = cookie;
+            this.request = request;
+        }
+
+        @Override
+        public String run() {
+            return context.getCookieProcessor().generateHeader(cookie, request);
+        }
+    }
+
+
+    private static class PrivilegedDoIsEncodable implements PrivilegedAction<Boolean> {
+
+        private final Context context;
+        private final Request hreq;
+        private final Session session;
+        private final String location;
+
+        PrivilegedDoIsEncodable(Context context, Request hreq, Session session, String location) {
+            this.context = context;
+            this.hreq = hreq;
+            this.session = session;
+            this.location = location;
+        }
+
+        @Override
+        public Boolean run() {
+            return Boolean.valueOf(doIsEncodeable(context, hreq, session, location));
+        }
+    }
+
+
+    private static class PrivilegedEncodeUrl implements PrivilegedExceptionAction<CharChunk> {
+
+        private final UEncoder urlEncoder;
+        private final String relativePath;
+        private final int end;
+
+        PrivilegedEncodeUrl(UEncoder urlEncoder, String relativePath, int end) {
+            this.urlEncoder = urlEncoder;
+            this.relativePath = relativePath;
+            this.end = end;
+        }
+
+        @Override
+        public CharChunk run() throws IOException {
+            return urlEncoder.encodeURL(relativePath, 0, end);
+        }
+    }
 }

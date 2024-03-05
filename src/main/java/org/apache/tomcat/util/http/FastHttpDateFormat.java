@@ -84,7 +84,24 @@ public final class FastHttpDateFormat {
      */
     private static final Map<String,Long> parseCache = new ConcurrentHashMap<>(CACHE_SIZE);
 
+
     // --------------------------------------------------------- Public Methods
+
+
+    /**
+     * Get the current date in HTTP format.
+     *
+     * @return the HTTP date
+     */
+    public static String getCurrentDate() {
+        long now = System.currentTimeMillis();
+        // Handle case where time moves backwards (e.g. system time corrected)
+        if (Math.abs(now - currentDateGenerated) > 1000) {
+            currentDate = FORMAT_RFC5322.format(new Date(now));
+            currentDateGenerated = now;
+        }
+        return currentDate;
+    }
 
 
     /**
@@ -107,7 +124,32 @@ public final class FastHttpDateFormat {
     }
 
 
+    /**
+     * Try to parse the given date as an HTTP date.
+     *
+     * @param value The HTTP date
+     *
+     * @return the date as a long or <code>-1</code> if the value cannot be parsed
+     */
+    public static long parseDate(String value) {
 
+        Long cachedDate = parseCache.get(value);
+        if (cachedDate != null) {
+            return cachedDate.longValue();
+        }
+
+        long date = -1;
+        for (int i = 0; (date == -1) && (i < httpParseFormats.length); i++) {
+            try {
+                date = httpParseFormats[i].parse(value).getTime();
+                updateParseCache(value, Long.valueOf(date));
+            } catch (ParseException e) {
+                // Ignore
+            }
+        }
+
+        return date;
+    }
 
 
     /**
@@ -122,4 +164,20 @@ public final class FastHttpDateFormat {
         }
         formatCache.put(key, value);
     }
+
+
+    /**
+     * Update cache.
+     */
+    private static void updateParseCache(String key, Long value) {
+        if (value == null) {
+            return;
+        }
+        if (parseCache.size() > CACHE_SIZE) {
+            parseCache.clear();
+        }
+        parseCache.put(key, value);
+    }
+
+
 }
