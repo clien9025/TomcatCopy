@@ -2911,11 +2911,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     public void addFilterDef(FilterDef filterDef) {
 
-//        synchronized (filterDefs) {
-//            filterDefs.put(filterDef.getFilterName(), filterDef);
-//        }
-//        fireContainerEvent("addFilterDef", filterDef);
-        throw new UnsupportedOperationException();
+        synchronized (filterDefs) {
+            filterDefs.put(filterDef.getFilterName(), filterDef);
+        }
+        fireContainerEvent("addFilterDef", filterDef);
 
     }
 

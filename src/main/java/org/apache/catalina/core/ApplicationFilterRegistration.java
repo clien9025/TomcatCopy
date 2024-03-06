@@ -81,30 +81,29 @@ public class ApplicationFilterRegistration implements FilterRegistration.Dynamic
     public void addMappingForUrlPatterns(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter,
                                          String... urlPatterns) {
 
-//        FilterMap filterMap = new FilterMap();
-//
-//        filterMap.setFilterName(filterDef.getFilterName());
-//
-//        if (dispatcherTypes != null) {
-//            for (DispatcherType dispatcherType : dispatcherTypes) {
-//                filterMap.setDispatcher(dispatcherType.name());
-//            }
-//        }
-//
-//        if (urlPatterns != null) {
-//            // % decoded (if necessary) using UTF-8
-//            for (String urlPattern : urlPatterns) {
-//                filterMap.addURLPattern(urlPattern);
-//            }
-//
-//            if (isMatchAfter) {
-//                context.addFilterMap(filterMap);
-//            } else {
-//                context.addFilterMapBefore(filterMap);
-//            }
-//        }
-//        // else error?
-        throw new UnsupportedOperationException();
+        FilterMap filterMap = new FilterMap();
+
+        filterMap.setFilterName(filterDef.getFilterName());
+
+        if (dispatcherTypes != null) {
+            for (DispatcherType dispatcherType : dispatcherTypes) {
+                filterMap.setDispatcher(dispatcherType.name());
+            }
+        }
+
+        if (urlPatterns != null) {
+            // % decoded (if necessary) using UTF-8
+            for (String urlPattern : urlPatterns) {
+                filterMap.addURLPattern(urlPattern);
+            }
+
+            if (isMatchAfter) {
+                context.addFilterMap(filterMap);
+            } else {
+                context.addFilterMapBefore(filterMap);
+            }
+        }
+        // else error?
 
     }
 
