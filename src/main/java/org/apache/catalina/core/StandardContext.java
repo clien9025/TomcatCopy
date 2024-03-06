@@ -5032,54 +5032,51 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
     @Override
     public InstanceManager createInstanceManager() {
-//        javax.naming.Context context = null;
-//        if (isUseNaming() && getNamingContextListener() != null) {
-//            context = getNamingContextListener().getEnvContext();
-//        }
-//        Map<String,Map<String,String>> injectionMap =
-//                buildInjectionMap(getIgnoreAnnotations() ? new NamingResourcesImpl() : getNamingResources());
-//        return new DefaultInstanceManager(context, injectionMap, this, this.getClass().getClassLoader());
-        throw new UnsupportedOperationException();
+        javax.naming.Context context = null;
+        if (isUseNaming() && getNamingContextListener() != null) {
+            context = getNamingContextListener().getEnvContext();
+        }
+        Map<String,Map<String,String>> injectionMap =
+                buildInjectionMap(getIgnoreAnnotations() ? new NamingResourcesImpl() : getNamingResources());
+        return new DefaultInstanceManager(context, injectionMap, this, this.getClass().getClassLoader());
     }
 
     private Map<String,Map<String,String>> buildInjectionMap(NamingResourcesImpl namingResources) {
-//        Map<String,Map<String,String>> injectionMap = new HashMap<>();
-//        for (Injectable resource : namingResources.findLocalEjbs()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        for (Injectable resource : namingResources.findEjbs()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        for (Injectable resource : namingResources.findEnvironments()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        for (Injectable resource : namingResources.findMessageDestinationRefs()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        for (Injectable resource : namingResources.findResourceEnvRefs()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        for (Injectable resource : namingResources.findResources()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        for (Injectable resource : namingResources.findServices()) {
-//            addInjectionTarget(resource, injectionMap);
-//        }
-//        return injectionMap;
-        throw new UnsupportedOperationException();
+        Map<String,Map<String,String>> injectionMap = new HashMap<>();
+        for (Injectable resource : namingResources.findLocalEjbs()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        for (Injectable resource : namingResources.findEjbs()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        for (Injectable resource : namingResources.findEnvironments()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        for (Injectable resource : namingResources.findMessageDestinationRefs()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        for (Injectable resource : namingResources.findResourceEnvRefs()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        for (Injectable resource : namingResources.findResources()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        for (Injectable resource : namingResources.findServices()) {
+            addInjectionTarget(resource, injectionMap);
+        }
+        return injectionMap;
     }
 
     private void addInjectionTarget(Injectable resource, Map<String,Map<String,String>> injectionMap) {
-//        List<InjectionTarget> injectionTargets = resource.getInjectionTargets();
-//        if (injectionTargets != null && injectionTargets.size() > 0) {
-//            String jndiName = resource.getName();
-//            for (InjectionTarget injectionTarget : injectionTargets) {
-//                String clazz = injectionTarget.getTargetClass();
-//                injectionMap.computeIfAbsent(clazz, k -> new HashMap<>()).put(injectionTarget.getTargetName(),
-//                        jndiName);
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        List<InjectionTarget> injectionTargets = resource.getInjectionTargets();
+        if (injectionTargets != null && injectionTargets.size() > 0) {
+            String jndiName = resource.getName();
+            for (InjectionTarget injectionTarget : injectionTargets) {
+                String clazz = injectionTarget.getTargetClass();
+                injectionMap.computeIfAbsent(clazz, k -> new HashMap<>()).put(injectionTarget.getTargetName(),
+                        jndiName);
+            }
+        }
     }
 
 
@@ -5089,27 +5086,26 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * the application parameters appropriately.
      */
     private void mergeParameters() {
-//        Map<String,String> mergedParams = new HashMap<>();
-//
-//        String names[] = findParameters();
-//        for (String s : names) {
-//            mergedParams.put(s, findParameter(s));
-//        }
-//
-//        ApplicationParameter params[] = findApplicationParameters();
-//        for (ApplicationParameter param : params) {
-//            if (param.getOverride()) {
-//                mergedParams.computeIfAbsent(param.getName(), k -> param.getValue());
-//            } else {
-//                mergedParams.put(param.getName(), param.getValue());
-//            }
-//        }
-//
-//        ServletContext sc = getServletContext();
-//        for (Map.Entry<String,String> entry : mergedParams.entrySet()) {
-//            sc.setInitParameter(entry.getKey(), entry.getValue());
-//        }
-        throw new UnsupportedOperationException();
+        Map<String,String> mergedParams = new HashMap<>();
+
+        String names[] = findParameters();
+        for (String s : names) {
+            mergedParams.put(s, findParameter(s));
+        }
+
+        ApplicationParameter params[] = findApplicationParameters();
+        for (ApplicationParameter param : params) {
+            if (param.getOverride()) {
+                mergedParams.computeIfAbsent(param.getName(), k -> param.getValue());
+            } else {
+                mergedParams.put(param.getName(), param.getValue());
+            }
+        }
+
+        ServletContext sc = getServletContext();
+        for (Map.Entry<String,String> entry : mergedParams.entrySet()) {
+            sc.setInitParameter(entry.getKey(), entry.getValue());
+        }
 
     }
 

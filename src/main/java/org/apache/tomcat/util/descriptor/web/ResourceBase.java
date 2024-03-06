@@ -137,9 +137,8 @@ public class ResourceBase implements Serializable, Injectable {
 
     @Override
     public void addInjectionTarget(String injectionTargetName, String jndiName) {
-//        InjectionTarget target = new InjectionTarget(injectionTargetName, jndiName);
-//        injectionTargets.add(target);
-        throw new UnsupportedOperationException();
+        InjectionTarget target = new InjectionTarget(injectionTargetName, jndiName);
+        injectionTargets.add(target);
     }
 
     @Override
