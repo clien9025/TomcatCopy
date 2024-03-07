@@ -2795,36 +2795,35 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     @Override
     public void addChild(Container child) {
 
-//        // Global JspServlet
-//        Wrapper oldJspServlet = null;
-//
-//        if (!(child instanceof Wrapper)) {
-//            throw new IllegalArgumentException(sm.getString("standardContext.notWrapper"));
-//        }
-//
-//        boolean isJspServlet = "jsp".equals(child.getName());
-//
-//        // Allow webapp to override JspServlet inherited from global web.xml.
-//        if (isJspServlet) {
-//            oldJspServlet = (Wrapper) findChild("jsp");
-//            if (oldJspServlet != null) {
-//                removeChild(oldJspServlet);
-//            }
-//        }
-//
-//        super.addChild(child);
-//
-//        if (isJspServlet && oldJspServlet != null) {
-//            /*
-//             * The webapp-specific JspServlet inherits all the mappings specified in the global web.xml, and may add
-//             * additional ones.
-//             */
-//            String[] jspMappings = oldJspServlet.findMappings();
-//            for (int i = 0; jspMappings != null && i < jspMappings.length; i++) {
-//                addServletMappingDecoded(jspMappings[i], child.getName());
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        // Global JspServlet
+        Wrapper oldJspServlet = null;
+
+        if (!(child instanceof Wrapper)) {
+            throw new IllegalArgumentException(sm.getString("standardContext.notWrapper"));
+        }
+
+        boolean isJspServlet = "jsp".equals(child.getName());
+
+        // Allow webapp to override JspServlet inherited from global web.xml.
+        if (isJspServlet) {
+            oldJspServlet = (Wrapper) findChild("jsp");
+            if (oldJspServlet != null) {
+                removeChild(oldJspServlet);
+            }
+        }
+
+        super.addChild(child);
+
+        if (isJspServlet && oldJspServlet != null) {
+            /*
+             * The webapp-specific JspServlet inherits all the mappings specified in the global web.xml, and may add
+             * additional ones.
+             */
+            String[] jspMappings = oldJspServlet.findMappings();
+            for (int i = 0; jspMappings != null && i < jspMappings.length; i++) {
+                addServletMappingDecoded(jspMappings[i], child.getName());
+            }
+        }
     }
 
 

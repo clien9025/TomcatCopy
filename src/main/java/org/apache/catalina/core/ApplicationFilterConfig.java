@@ -250,23 +250,22 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     }
 
     private void initFilter() throws ServletException {
-//        if (context instanceof StandardContext && context.getSwallowOutput()) {
-//            try {
-//                SystemLogHandler.startCapture();
-//                filter.init(this);
-//            } finally {
-//                String capturedlog = SystemLogHandler.stopCapture();
-//                if (capturedlog != null && capturedlog.length() > 0) {
-//                    getServletContext().log(capturedlog);
-//                }
-//            }
-//        } else {
-//            filter.init(this);
-//        }
-//
-//        // Expose filter via JMX
-//        registerJMX();
-        throw new UnsupportedOperationException();
+        if (context instanceof StandardContext && context.getSwallowOutput()) {
+            try {
+                SystemLogHandler.startCapture();
+                filter.init(this);
+            } finally {
+                String capturedlog = SystemLogHandler.stopCapture();
+                if (capturedlog != null && capturedlog.length() > 0) {
+                    getServletContext().log(capturedlog);
+                }
+            }
+        } else {
+            filter.init(this);
+        }
+
+        // Expose filter via JMX
+        registerJMX();
     }
 
     /**
@@ -319,37 +318,36 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     // -------------------------------------------------------- Private Methods
 
     private void registerJMX() {
-//        String parentName = context.getName();
-//        if (!parentName.startsWith("/")) {
-//            parentName = "/" + parentName;
-//        }
-//
-//        String hostName = context.getParent().getName();
-//        hostName = (hostName == null) ? "DEFAULT" : hostName;
-//
-//        // domain == engine name
-//        String domain = context.getParent().getParent().getName();
-//
-//        String webMod = "//" + hostName + parentName;
-//        String onameStr = null;
-//        String filterName = filterDef.getFilterName();
-//        if (Util.objectNameValueNeedsQuote(filterName)) {
-//            filterName = ObjectName.quote(filterName);
-//        }
-//        if (context instanceof StandardContext) {
-//            StandardContext standardContext = (StandardContext) context;
-//            onameStr = domain + ":j2eeType=Filter,WebModule=" + webMod + ",name=" + filterName + ",J2EEApplication=" +
-//                    standardContext.getJ2EEApplication() + ",J2EEServer=" + standardContext.getJ2EEServer();
-//        } else {
-//            onameStr = domain + ":j2eeType=Filter,name=" + filterName + ",WebModule=" + webMod;
-//        }
-//        try {
-//            oname = new ObjectName(onameStr);
-//            Registry.getRegistry(null, null).registerComponent(this, oname, null);
-//        } catch (Exception ex) {
-//            log.warn(sm.getString("applicationFilterConfig.jmxRegisterFail", getFilterClass(), getFilterName()), ex);
-//        }
-        throw new UnsupportedOperationException();
+        String parentName = context.getName();
+        if (!parentName.startsWith("/")) {
+            parentName = "/" + parentName;
+        }
+
+        String hostName = context.getParent().getName();
+        hostName = (hostName == null) ? "DEFAULT" : hostName;
+
+        // domain == engine name
+        String domain = context.getParent().getParent().getName();
+
+        String webMod = "//" + hostName + parentName;
+        String onameStr = null;
+        String filterName = filterDef.getFilterName();
+        if (Util.objectNameValueNeedsQuote(filterName)) {
+            filterName = ObjectName.quote(filterName);
+        }
+        if (context instanceof StandardContext) {
+            StandardContext standardContext = (StandardContext) context;
+            onameStr = domain + ":j2eeType=Filter,WebModule=" + webMod + ",name=" + filterName + ",J2EEApplication=" +
+                    standardContext.getJ2EEApplication() + ",J2EEServer=" + standardContext.getJ2EEServer();
+        } else {
+            onameStr = domain + ":j2eeType=Filter,name=" + filterName + ",WebModule=" + webMod;
+        }
+        try {
+            oname = new ObjectName(onameStr);
+            Registry.getRegistry(null, null).registerComponent(this, oname, null);
+        } catch (Exception ex) {
+            log.warn(sm.getString("applicationFilterConfig.jmxRegisterFail", getFilterClass(), getFilterName()), ex);
+        }
     }
 
 

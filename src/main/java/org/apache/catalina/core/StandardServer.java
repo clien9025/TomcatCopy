@@ -1,5 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.catalina.core;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.security.AccessControlException;
+import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Server;
@@ -17,19 +56,13 @@ import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.TaskThreadFactory;
 
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.naming.Context;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.Random;
-import java.util.concurrent.*;
 
+/**
+ * Standard implementation of the <b>Server</b> interface, available for use (but not required) when deploying and
+ * starting Catalina.
+ *
+ * @author Craig R. McClanahan
+ */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     private static final Log log = LogFactory.getLog(StandardServer.class);
@@ -111,11 +144,9 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     private String shutdown = "SHUTDOWN";
 
+
     /**
      * The property change support for this component.
-     * 这行代码创建了一个PropertyChangeSupport实例。这个实例是一个工具，
-     * 用来帮助任何对象（通常是Java Bean）管理它的属性变更监听器（Property Change Listeners）。
-     * 任何时候该对象的属性被改变，都可以通过这个support对象来通知所有感兴趣的监听器。
      */
     final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
@@ -174,8 +205,6 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * The lifecycle event period in seconds.
      */
     private int periodicEventDelay = 10;
-
-//----------------------------------------------------------------------------------------------------------
 
 
     // ------------------------------------------------------------- Properties
@@ -374,19 +403,12 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     /**
      * Handles the special values.
-     * <p>
-     * 为了确保在并发或多线程编程环境中，有一个合理的线程数量用于处理任务。当方法的输入参数 utilityThreads 为正数时，它直接返回这个值。
-     * 当 utilityThreads 为零或负数时，它根据系统的可用处理器数量进行调整，但保证至少返回2，这可能是出于性能考虑，
-     * 确保即使在处理器较少的系统上也能保持一定的并发处理能力。
      */
     private static int getUtilityThreadsInternal(int utilityThreads) {
         int result = utilityThreads;
         if (result <= 0) {
-            // 调用 Runtime.getRuntime().availableProcessors() 获取当前系统的可用处理器（核心）数量。
-            // 将此数量与 result 的值相加。这意味着如果 utilityThreads 是负数或零，它将基于系统的处理器数量进行调整。
             result = Runtime.getRuntime().availableProcessors() + result;
             if (result < 2) {
-                // 如果经过调整后的 result 值仍然小于 2，则将 result 设置为 2。这是为了确保至少有两个线
                 result = 2;
             }
         }
@@ -396,40 +418,28 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     @Override
     public void setUtilityThreads(int utilityThreads) {
-//        // Use local copies to ensure thread safety
-//        int oldUtilityThreads = this.utilityThreads;
-//        if (getUtilityThreadsInternal(utilityThreads) < getUtilityThreadsInternal(oldUtilityThreads)) {
-//            return;
-//        }
-//        this.utilityThreads = utilityThreads;
-//        synchronized (utilityExecutorLock) {
-//            if (oldUtilityThreads != utilityThreads && utilityExecutor != null) {
-//                reconfigureUtilityExecutor(getUtilityThreadsInternal(utilityThreads));
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        // Use local copies to ensure thread safety
+        int oldUtilityThreads = this.utilityThreads;
+        if (getUtilityThreadsInternal(utilityThreads) < getUtilityThreadsInternal(oldUtilityThreads)) {
+            return;
+        }
+        this.utilityThreads = utilityThreads;
+        synchronized (utilityExecutorLock) {
+            if (oldUtilityThreads != utilityThreads && utilityExecutor != null) {
+                reconfigureUtilityExecutor(getUtilityThreadsInternal(utilityThreads));
+            }
+        }
     }
 
 
-    /**
+    /*
      * Callers must be holding utilityExecutorLock
-     * <p>
-     * 用于配置或重新配置一个 ScheduledThreadPoolExecutor 实例。该方法接受一个整数参数 threads，表示线程池的大小。
      */
     private void reconfigureUtilityExecutor(int threads) {
         // The ScheduledThreadPoolExecutor doesn't use MaximumPoolSize, only CorePoolSize is available
-        /* 检查现有执行器 */
-        // 首先，方法检查 utilityExecutor（一个 ScheduledThreadPoolExecutor 实例）是否已经存在
-        // 如果 utilityExecutor 已经存在，它将使用 setCorePoolSize(threads) 方法来设置核心线程池的大小为 threads
         if (utilityExecutor != null) {
             utilityExecutor.setCorePoolSize(threads);
         } else {
-            // 如果 utilityExecutor 不存在，则创建一个新的 ScheduledThreadPoolExecutor 实例。
-            // 这个新的实例使用提供的 threads 值作为其核心线程池大小，并配置了一些额外的属性
-            // 1. 一个自定义的线程工厂 TaskThreadFactory，用于创建新线程
-            // 2. 设置线程保持活跃的时间为10秒
-            // 3. 设置移除取消任务的策略为 true
-            // 4. 设置在执行器关闭后不执行已延迟的任务的策略为 false
             ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(threads,
                     new TaskThreadFactory("Catalina-utility-", utilityThreadsAsDaemon, Thread.MIN_PRIORITY));
             scheduledThreadPoolExecutor.setKeepAliveTime(10, TimeUnit.SECONDS);
@@ -478,13 +488,12 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         this.periodicEventDelay = periodicEventDelay;
     }
 
+
     // --------------------------------------------------------- Server Methods
 
 
     /**
      * Add a new Service to the set of defined Services.
-     * <p>
-     * 将新的服务器添加到已经定义的服务器集
      *
      * @param service The Service to be added
      */
@@ -493,79 +502,263 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         service.setServer(this);
 
-        // 新建一个 Object 对象当锁，每一个 StandardServer 对象只有这么一个实例 servicesLock
-        // private final Object servicesLock = new Object();
         synchronized (servicesLock) {
-            /* 将传入的 service 放入到原来的服务器集合里面 */
-            // private Service[] services = new Service[0];
             Service results[] = new Service[services.length + 1];
             System.arraycopy(services, 0, results, 0, services.length);
             results[services.length] = service;
             services = results;
 
-            // 如果 LifecycleState 枚举类产生的实例里面的 available 属性是 true 时
             if (getState().isAvailable()) {
-//                try {
-//                    service.start();
-//                } catch (LifecycleException e) {
-//                    // Ignore
-//                }
-                throw new UnsupportedOperationException();
+                try {
+                    service.start();
+                } catch (LifecycleException e) {
+                    // Ignore
+                }
             }
 
             // Report this property change to interested listeners
-            /* 这行代码使用PropertyChangeSupport对象触发一个属性变更事件。
-            它通知所有注册的监听器，名为"service"的属性已经从null变成了service对象的新值。
-            这是在某个服务被添加到系统时常见的操作，可能表示服务的状态或配置发生了变化。 */
             support.firePropertyChange("service", null, service);
+        }
+
+    }
+
+    public void stopAwait() {
+        stopAwait = true;
+        Thread t = awaitThread;
+        if (t != null) {
+            ServerSocket s = awaitSocket;
+            if (s != null) {
+                awaitSocket = null;
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    // Ignored
+                }
+            }
+            t.interrupt();
+            try {
+                t.join(1000);
+            } catch (InterruptedException e) {
+                // Ignored
+            }
+        }
+    }
+
+    /**
+     * Wait until a proper shutdown command is received, then return. This keeps the main thread alive - the thread pool
+     * listening for http connections is daemon threads.
+     */
+    @Override
+    public void await() {
+        // Negative values - don't wait on port - tomcat is embedded or we just don't like ports
+        if (getPortWithOffset() == -2) {
+            // undocumented yet - for embedding apps that are around, alive.
+            return;
+        }
+        Thread currentThread = Thread.currentThread();
+        if (getPortWithOffset() == -1) {
+            try {
+                awaitThread = currentThread;
+                while (!stopAwait) {
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException ex) {
+                        // continue and check the flag
+                    }
+                }
+            } finally {
+                awaitThread = null;
+            }
+            return;
+        }
+
+        // Set up a server socket to wait on
+        try {
+            awaitSocket = new ServerSocket(getPortWithOffset(), 1, InetAddress.getByName(address));
+        } catch (IOException e) {
+            log.error(sm.getString("standardServer.awaitSocket.fail", address, String.valueOf(getPortWithOffset()),
+                    String.valueOf(getPort()), String.valueOf(getPortOffset())), e);
+            return;
+        }
+
+        try {
+            awaitThread = currentThread;
+
+            // Loop waiting for a connection and a valid command
+            while (!stopAwait) {
+                ServerSocket serverSocket = awaitSocket;
+                if (serverSocket == null) {
+                    break;
+                }
+
+                // Wait for the next connection
+                Socket socket = null;
+                StringBuilder command = new StringBuilder();
+                try {
+                    InputStream stream;
+                    long acceptStartTime = System.currentTimeMillis();
+                    try {
+                        socket = serverSocket.accept();
+                        socket.setSoTimeout(10 * 1000); // Ten seconds
+                        stream = socket.getInputStream();
+                    } catch (SocketTimeoutException ste) {
+                        // This should never happen but bug 56684 suggests that
+                        // it does.
+                        log.warn(sm.getString("standardServer.accept.timeout",
+                                Long.valueOf(System.currentTimeMillis() - acceptStartTime)), ste);
+                        continue;
+                    } catch (AccessControlException ace) {
+                        log.warn(sm.getString("standardServer.accept.security"), ace);
+                        continue;
+                    } catch (IOException e) {
+                        if (stopAwait) {
+                            // Wait was aborted with socket.close()
+                            break;
+                        }
+                        log.error(sm.getString("standardServer.accept.error"), e);
+                        break;
+                    }
+
+                    // Read a set of characters from the socket
+                    int expected = 1024; // Cut off to avoid DoS attack
+                    while (expected < shutdown.length()) {
+                        if (random == null) {
+                            random = new Random();
+                        }
+                        expected += random.nextInt() % 1024;
+                    }
+                    while (expected > 0) {
+                        int ch = -1;
+                        try {
+                            ch = stream.read();
+                        } catch (IOException e) {
+                            log.warn(sm.getString("standardServer.accept.readError"), e);
+                            ch = -1;
+                        }
+                        // Control character or EOF (-1) terminates loop
+                        if (ch < 32 || ch == 127) {
+                            break;
+                        }
+                        command.append((char) ch);
+                        expected--;
+                    }
+                } finally {
+                    // Close the socket now that we are done with it
+                    try {
+                        if (socket != null) {
+                            socket.close();
+                        }
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                }
+
+                // Match against our command string
+                boolean match = command.toString().equals(shutdown);
+                if (match) {
+                    log.info(sm.getString("standardServer.shutdownViaPort"));
+                    break;
+                } else {
+                    log.warn(sm.getString("standardServer.invalidShutdownCommand", command.toString()));
+                }
+            }
+        } finally {
+            ServerSocket serverSocket = awaitSocket;
+            awaitThread = null;
+            awaitSocket = null;
+
+            // Close the server socket and return
+            if (serverSocket != null) {
+                try {
+                    serverSocket.close();
+                } catch (IOException e) {
+                    // Ignore
+                }
+            }
         }
     }
 
 
-    public void stopAwait() {
-//        stopAwait = true;
-//        Thread t = awaitThread;
-//        if (t != null) {
-//            ServerSocket s = awaitSocket;
-//            if (s != null) {
-//                awaitSocket = null;
-//                try {
-//                    s.close();
-//                } catch (IOException e) {
-//                    // Ignored
-//                }
-//            }
-//            t.interrupt();
-//            try {
-//                t.join(1000);
-//            } catch (InterruptedException e) {
-//                // Ignored
-//            }
-//        }
-        throw new UnsupportedOperationException();
-    }
-
-
-    @Override
-    public void await() {
-        throw new UnsupportedOperationException();
-    }
-
+    /**
+     * @return the specified Service (if it exists); otherwise return <code>null</code>.
+     *
+     * @param name Name of the Service to be returned
+     */
     @Override
     public Service findService(String name) {
-//        return null;
-        throw new UnsupportedOperationException();
+        if (name == null) {
+            return null;
+        }
+        synchronized (servicesLock) {
+            for (Service service : services) {
+                if (name.equals(service.getName())) {
+                    return service;
+                }
+            }
+        }
+        return null;
     }
 
+
+    /**
+     * @return The array of Services defined within this Server.
+     */
     @Override
     public Service[] findServices() {
         return services;
     }
 
+    /**
+     * @return the JMX service names.
+     */
+    public ObjectName[] getServiceNames() {
+        ObjectName[] onames = new ObjectName[services.length];
+        for (int i = 0; i < services.length; i++) {
+            onames[i] = ((StandardService) services[i]).getObjectName();
+        }
+        return onames;
+    }
+
+
+    /**
+     * Remove the specified Service from the set associated from this Server.
+     *
+     * @param service The Service to be removed
+     */
     @Override
     public void removeService(Service service) {
-        throw new UnsupportedOperationException();
+
+        synchronized (servicesLock) {
+            int j = -1;
+            for (int i = 0; i < services.length; i++) {
+                if (service == services[i]) {
+                    j = i;
+                    break;
+                }
+            }
+            if (j < 0) {
+                return;
+            }
+            try {
+                services[j].stop();
+            } catch (LifecycleException e) {
+                // Ignore
+            }
+            int k = 0;
+            Service[] results = new Service[services.length - 1];
+            for (int i = 0; i < services.length; i++) {
+                if (i != j) {
+                    results[k++] = services[i];
+                }
+            }
+            services = results;
+
+            // Report this property change to interested listeners
+            support.firePropertyChange("service", service, null);
+        }
+
     }
+
 
     @Override
     public File getCatalinaBase() {
@@ -605,8 +798,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
 
-//        support.addPropertyChangeListener(listener);
-        throw new UnsupportedOperationException();
+        support.addPropertyChangeListener(listener);
+
     }
 
 
@@ -617,8 +810,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     public void removePropertyChangeListener(PropertyChangeListener listener) {
 
-//        support.removePropertyChangeListener(listener);
-        throw new UnsupportedOperationException();
+        support.removePropertyChangeListener(listener);
+
     }
 
 
@@ -634,26 +827,25 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     /**
      * Write the configuration information for this entire <code>Server</code> out to the server.xml configuration file.
      *
-     * @throws InstanceNotFoundException                   if the managed resource object cannot be found
-     * @throws MBeanException                              if the initializer of the object throws an exception, or
-     *                                                     persistence is not supported
-     * @throws javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
+     * @exception InstanceNotFoundException                   if the managed resource object cannot be found
+     * @exception MBeanException                              if the initializer of the object throws an exception, or
+     *                                                            persistence is not supported
+     * @exception javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
      */
     public synchronized void storeConfig() throws InstanceNotFoundException, MBeanException {
-//        try {
-//            // Note: Hard-coded domain used since this object is per Server/JVM
-//            ObjectName sname = new ObjectName("Catalina:type=StoreConfig");
-//            MBeanServer server = Registry.getRegistry(null, null).getMBeanServer();
-//            if (server.isRegistered(sname)) {
-//                server.invoke(sname, "storeConfig", null, null);
-//            } else {
-//                log.error(sm.getString("standardServer.storeConfig.notAvailable", sname));
-//            }
-//        } catch (Throwable t) {
-//            ExceptionUtils.handleThrowable(t);
-//            log.error(sm.getString("standardServer.storeConfig.error"), t);
-//        }
-        throw new UnsupportedOperationException();
+        try {
+            // Note: Hard-coded domain used since this object is per Server/JVM
+            ObjectName sname = new ObjectName("Catalina:type=StoreConfig");
+            MBeanServer server = Registry.getRegistry(null, null).getMBeanServer();
+            if (server.isRegistered(sname)) {
+                server.invoke(sname, "storeConfig", null, null);
+            } else {
+                log.error(sm.getString("standardServer.storeConfig.notAvailable", sname));
+            }
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.error(sm.getString("standardServer.storeConfig.error"), t);
+        }
     }
 
 
@@ -661,26 +853,26 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Write the configuration information for <code>Context</code> out to the specified configuration file.
      *
      * @param context the context which should save its configuration
-     * @throws InstanceNotFoundException                   if the managed resource object cannot be found
-     * @throws MBeanException                              if the initializer of the object throws an exception or
-     *                                                     persistence is not supported
-     * @throws javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
+     *
+     * @exception InstanceNotFoundException                   if the managed resource object cannot be found
+     * @exception MBeanException                              if the initializer of the object throws an exception or
+     *                                                            persistence is not supported
+     * @exception javax.management.RuntimeOperationsException if an exception is reported by the persistence mechanism
      */
-    public synchronized void storeContext(org.apache.catalina.Context context) throws InstanceNotFoundException, MBeanException {
-//        try {
-//            // Note: Hard-coded domain used since this object is per Server/JVM
-//            ObjectName sname = new ObjectName("Catalina:type=StoreConfig");
-//            MBeanServer server = Registry.getRegistry(null, null).getMBeanServer();
-//            if (server.isRegistered(sname)) {
-//                server.invoke(sname, "store", new Object[] { context }, new String[] { "java.lang.String" });
-//            } else {
-//                log.error(sm.getString("standardServer.storeConfig.notAvailable", sname));
-//            }
-//        } catch (Throwable t) {
-//            ExceptionUtils.handleThrowable(t);
-//            log.error(sm.getString("standardServer.storeConfig.contextError", context.getName()), t);
-//        }
-        throw new UnsupportedOperationException();
+    public synchronized void storeContext(Context context) throws InstanceNotFoundException, MBeanException {
+        try {
+            // Note: Hard-coded domain used since this object is per Server/JVM
+            ObjectName sname = new ObjectName("Catalina:type=StoreConfig");
+            MBeanServer server = Registry.getRegistry(null, null).getMBeanServer();
+            if (server.isRegistered(sname)) {
+                server.invoke(sname, "store", new Object[] { context }, new String[] { "java.lang.String" });
+            } else {
+                log.error(sm.getString("standardServer.storeConfig.notAvailable", sname));
+            }
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.error(sm.getString("standardServer.storeConfig.contextError", context.getName()), t);
+        }
     }
 
 
@@ -702,8 +894,8 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Start nested components ({@link Service}s) and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
-     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
-     *                            used
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
      */
     @Override
     protected void startInternal() throws LifecycleException {
@@ -734,20 +926,19 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
 
     private void startPeriodicLifecycleEvent() {
-//        if (periodicLifecycleEventFuture == null || periodicLifecycleEventFuture.isDone()) {
-//            if (periodicLifecycleEventFuture != null && periodicLifecycleEventFuture.isDone()) {
-//                // There was an error executing the scheduled task, get it and log it
-//                try {
-//                    periodicLifecycleEventFuture.get();
-//                } catch (InterruptedException | ExecutionException e) {
-//                    log.error(sm.getString("standardServer.periodicEventError"), e);
-//                }
-//            }
-//            periodicLifecycleEventFuture =
-//                    getUtilityExecutor().scheduleAtFixedRate(() -> fireLifecycleEvent(PERIODIC_EVENT, null),
-//                            periodicEventDelay, periodicEventDelay, TimeUnit.SECONDS);
-//        }
-        throw new UnsupportedOperationException();
+        if (periodicLifecycleEventFuture == null || periodicLifecycleEventFuture.isDone()) {
+            if (periodicLifecycleEventFuture != null && periodicLifecycleEventFuture.isDone()) {
+                // There was an error executing the scheduled task, get it and log it
+                try {
+                    periodicLifecycleEventFuture.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error(sm.getString("standardServer.periodicEventError"), e);
+                }
+            }
+            periodicLifecycleEventFuture =
+                    getUtilityExecutor().scheduleAtFixedRate(() -> fireLifecycleEvent(PERIODIC_EVENT, null),
+                            periodicEventDelay, periodicEventDelay, TimeUnit.SECONDS);
+        }
     }
 
 
@@ -755,7 +946,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * Stop nested components ({@link Service}s) and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
      *
-     * @throws LifecycleException if this component detects a fatal error that needs to be reported
+     * @exception LifecycleException if this component detects a fatal error that needs to be reported
      */
     @Override
     protected void stopInternal() throws LifecycleException {
@@ -797,35 +988,23 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void initInternal() throws LifecycleException {
-        /* 1. 调用父类的初始化方法 */
-        // 通过 super.initInternal(); 调用其父类的 initInternal 方法，这是常见的做法，以确保所有父类逻辑被正确执行。
+
         super.initInternal();
-        /* 2. 注册全局字符串缓存 */
-        // 创建一个新的 StringCache 实例，并使用 register 方法将其注册到 JMX 或类似系统中。这个缓存虽然是全局的，
-        // 但如果在 JVM 中存在多个服务器实例（在嵌入式环境中可能发生），同一个缓存可能会被注册多次，每次都使用不同的名称。
+
         // Register global String cache
         // Note although the cache is global, if there are multiple Servers
         // present in the JVM (may happen when embedding) then the same cache
         // will be registered under multiple names
-        // 翻译：
-        // 注册全局字符串缓存注意虽然缓存是全局的，但是如果JVM中存在多个Server（嵌入时可能会发生）那么同一个缓存将被注册在多个名称下
         onameStringCache = register(new StringCache(), "type=StringCache");
-        /* 3. 注册 MBeanFactory */
+
         // Register the MBeanFactory
-        // 创建一个新的 MBeanFactory 实例，并设置其容器为当前对象（this）
         MBeanFactory factory = new MBeanFactory();
         factory.setContainer(this);
-        // 使用 register 方法将 MBeanFactory 注册到系统中。这个工厂用于管理 MBeans，
-        // 是 JMX（Java Management Extensions）管理功能的一部分。
         onameMBeanFactory = register(factory, "type=MBeanFactory");
-        /* 4. 初始化全局命名资源 */
-        // 调用 globalNamingResources.init(); 来初始化全局命名资源。这可能涉及到设置和准备
-        // JNDI (Java Naming and Directory Interface) 资源，用于在整个应用中提供命名和目录服务。
+
         // Register the naming resources
         globalNamingResources.init();
-        /* 5. 初始化定义的服务 */
-        // 遍历 services 数组，该数组包含了组件内定义的所有服务。对于每个服务，调用其 init() 方法来进行初始化。
-        // 这可能涉及到启动服务相关的进程或任务，准备它们以供后续使用。
+
         // Initialize our defined Services
         for (Service service : services) {
             service.init();
@@ -834,19 +1013,18 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
     @Override
     protected void destroyInternal() throws LifecycleException {
-//        // Destroy our defined Services
-//        for (Service service : services) {
-//            service.destroy();
-//        }
-//
-//        globalNamingResources.destroy();
-//
-//        unregister(onameMBeanFactory);
-//
-//        unregister(onameStringCache);
-//
-//        super.destroyInternal();
-        throw new UnsupportedOperationException();
+        // Destroy our defined Services
+        for (Service service : services) {
+            service.destroy();
+        }
+
+        globalNamingResources.destroy();
+
+        unregister(onameMBeanFactory);
+
+        unregister(onameStringCache);
+
+        super.destroyInternal();
     }
 
     /**
@@ -854,14 +1032,13 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     public ClassLoader getParentClassLoader() {
-//        if (parentClassLoader != null) {
-//            return parentClassLoader;
-//        }
-//        if (catalina != null) {
-//            return catalina.getParentClassLoader();
-//        }
-//        return ClassLoader.getSystemClassLoader();
-        throw new UnsupportedOperationException();
+        if (parentClassLoader != null) {
+            return parentClassLoader;
+        }
+        if (catalina != null) {
+            return catalina.getParentClassLoader();
+        }
+        return ClassLoader.getSystemClassLoader();
     }
 
     /**

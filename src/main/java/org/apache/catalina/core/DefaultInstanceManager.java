@@ -300,42 +300,43 @@ public class DefaultInstanceManager implements InstanceManager {
                 String preDestroyFromXml = preDestroyMethods.get(clazz.getName());
                 for (Method method : methods) {
                     if (context != null) {
-                        // Resource injection only if JNDI is enabled
-                        if (injections != null && Introspection.isValidSetter(method)) {
-                            String fieldName = Introspection.getPropertyName(method);
-                            injectionsMatchedToSetter.add(fieldName);
-                            if (injections.containsKey(fieldName)) {
-                                annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
-                                        injections.get(fieldName), AnnotationCacheEntryType.SETTER));
-                                continue;
-                            }
-                        }
-                        Resource resourceAnnotation;
-                        Annotation ejbAnnotation;
-                        Annotation webServiceRefAnnotation;
-                        Annotation persistenceContextAnnotation;
-                        Annotation persistenceUnitAnnotation;
-                        if ((resourceAnnotation = method.getAnnotation(Resource.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
-                                    resourceAnnotation.name(), AnnotationCacheEntryType.SETTER));
-                        } else if (EJB_PRESENT && (ejbAnnotation = method.getAnnotation(EJB.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
-                                    ((EJB) ejbAnnotation).name(), AnnotationCacheEntryType.SETTER));
-                        } else if (WS_PRESENT &&
-                                (webServiceRefAnnotation = method.getAnnotation(WebServiceRef.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
-                                    ((WebServiceRef) webServiceRefAnnotation).name(), AnnotationCacheEntryType.SETTER));
-                        } else if (JPA_PRESENT && (persistenceContextAnnotation =
-                                method.getAnnotation(PersistenceContext.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
-                                    ((PersistenceContext) persistenceContextAnnotation).name(),
-                                    AnnotationCacheEntryType.SETTER));
-                        } else if (JPA_PRESENT &&
-                                (persistenceUnitAnnotation = method.getAnnotation(PersistenceUnit.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
-                                    ((PersistenceUnit) persistenceUnitAnnotation).name(),
-                                    AnnotationCacheEntryType.SETTER));
-                        }
+//                        // Resource injection only if JNDI is enabled
+//                        if (injections != null && Introspection.isValidSetter(method)) {
+//                            String fieldName = Introspection.getPropertyName(method);
+//                            injectionsMatchedToSetter.add(fieldName);
+//                            if (injections.containsKey(fieldName)) {
+//                                annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
+//                                        injections.get(fieldName), AnnotationCacheEntryType.SETTER));
+//                                continue;
+//                            }
+//                        }
+//                        Resource resourceAnnotation;
+//                        Annotation ejbAnnotation;
+//                        Annotation webServiceRefAnnotation;
+//                        Annotation persistenceContextAnnotation;
+//                        Annotation persistenceUnitAnnotation;
+//                        if ((resourceAnnotation = method.getAnnotation(Resource.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
+//                                    resourceAnnotation.name(), AnnotationCacheEntryType.SETTER));
+//                        } else if (EJB_PRESENT && (ejbAnnotation = method.getAnnotation(EJB.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
+//                                    ((EJB) ejbAnnotation).name(), AnnotationCacheEntryType.SETTER));
+//                        } else if (WS_PRESENT &&
+//                                (webServiceRefAnnotation = method.getAnnotation(WebServiceRef.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
+//                                    ((WebServiceRef) webServiceRefAnnotation).name(), AnnotationCacheEntryType.SETTER));
+//                        } else if (JPA_PRESENT && (persistenceContextAnnotation =
+//                                method.getAnnotation(PersistenceContext.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
+//                                    ((PersistenceContext) persistenceContextAnnotation).name(),
+//                                    AnnotationCacheEntryType.SETTER));
+//                        } else if (JPA_PRESENT &&
+//                                (persistenceUnitAnnotation = method.getAnnotation(PersistenceUnit.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(method.getName(), method.getParameterTypes(),
+//                                    ((PersistenceUnit) persistenceUnitAnnotation).name(),
+//                                    AnnotationCacheEntryType.SETTER));
+//                        }
+                        throw new UnsupportedOperationException();
                     }
 
                     postConstruct = findPostConstruct(postConstruct, postConstructFromXml, method);
@@ -359,42 +360,43 @@ public class DefaultInstanceManager implements InstanceManager {
                 }
 
                 if (context != null) {
-                    // Initialize fields annotations for resource injection if
-                    // JNDI is enabled
-                    Field[] fields = Introspection.getDeclaredFields(clazz);
-                    for (Field field : fields) {
-                        Resource resourceAnnotation;
-                        Annotation ejbAnnotation;
-                        Annotation webServiceRefAnnotation;
-                        Annotation persistenceContextAnnotation;
-                        Annotation persistenceUnitAnnotation;
-                        String fieldName = field.getName();
-                        if (injections != null && injections.containsKey(fieldName) &&
-                                !injectionsMatchedToSetter.contains(fieldName)) {
-                            annotations.add(new AnnotationCacheEntry(fieldName, null, injections.get(fieldName),
-                                    AnnotationCacheEntryType.FIELD));
-                        } else if ((resourceAnnotation = field.getAnnotation(Resource.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(fieldName, null, resourceAnnotation.name(),
-                                    AnnotationCacheEntryType.FIELD));
-                        } else if (EJB_PRESENT && (ejbAnnotation = field.getAnnotation(EJB.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(fieldName, null, ((EJB) ejbAnnotation).name(),
-                                    AnnotationCacheEntryType.FIELD));
-                        } else if (WS_PRESENT &&
-                                (webServiceRefAnnotation = field.getAnnotation(WebServiceRef.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(fieldName, null,
-                                    ((WebServiceRef) webServiceRefAnnotation).name(), AnnotationCacheEntryType.FIELD));
-                        } else if (JPA_PRESENT && (persistenceContextAnnotation =
-                                field.getAnnotation(PersistenceContext.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(fieldName, null,
-                                    ((PersistenceContext) persistenceContextAnnotation).name(),
-                                    AnnotationCacheEntryType.FIELD));
-                        } else if (JPA_PRESENT &&
-                                (persistenceUnitAnnotation = field.getAnnotation(PersistenceUnit.class)) != null) {
-                            annotations.add(new AnnotationCacheEntry(fieldName, null,
-                                    ((PersistenceUnit) persistenceUnitAnnotation).name(),
-                                    AnnotationCacheEntryType.FIELD));
-                        }
-                    }
+//                    // Initialize fields annotations for resource injection if
+//                    // JNDI is enabled
+//                    Field[] fields = Introspection.getDeclaredFields(clazz);
+//                    for (Field field : fields) {
+//                        Resource resourceAnnotation;
+//                        Annotation ejbAnnotation;
+//                        Annotation webServiceRefAnnotation;
+//                        Annotation persistenceContextAnnotation;
+//                        Annotation persistenceUnitAnnotation;
+//                        String fieldName = field.getName();
+//                        if (injections != null && injections.containsKey(fieldName) &&
+//                                !injectionsMatchedToSetter.contains(fieldName)) {
+//                            annotations.add(new AnnotationCacheEntry(fieldName, null, injections.get(fieldName),
+//                                    AnnotationCacheEntryType.FIELD));
+//                        } else if ((resourceAnnotation = field.getAnnotation(Resource.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(fieldName, null, resourceAnnotation.name(),
+//                                    AnnotationCacheEntryType.FIELD));
+//                        } else if (EJB_PRESENT && (ejbAnnotation = field.getAnnotation(EJB.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(fieldName, null, ((EJB) ejbAnnotation).name(),
+//                                    AnnotationCacheEntryType.FIELD));
+//                        } else if (WS_PRESENT &&
+//                                (webServiceRefAnnotation = field.getAnnotation(WebServiceRef.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(fieldName, null,
+//                                    ((WebServiceRef) webServiceRefAnnotation).name(), AnnotationCacheEntryType.FIELD));
+//                        } else if (JPA_PRESENT && (persistenceContextAnnotation =
+//                                field.getAnnotation(PersistenceContext.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(fieldName, null,
+//                                    ((PersistenceContext) persistenceContextAnnotation).name(),
+//                                    AnnotationCacheEntryType.FIELD));
+//                        } else if (JPA_PRESENT &&
+//                                (persistenceUnitAnnotation = field.getAnnotation(PersistenceUnit.class)) != null) {
+//                            annotations.add(new AnnotationCacheEntry(fieldName, null,
+//                                    ((PersistenceUnit) persistenceUnitAnnotation).name(),
+//                                    AnnotationCacheEntryType.FIELD));
+//                        }
+//                    }
+                    throw new UnsupportedOperationException();
                 }
 
                 if (annotations.isEmpty()) {

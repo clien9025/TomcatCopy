@@ -710,13 +710,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      */
     @Override
     public Container findChild(String name) {
-//        if (name == null) {
-//            return null;
-//        }
-//        synchronized (children) {
-//            return children.get(name);
-//        }
-        throw new UnsupportedOperationException();
+        if (name == null) {
+            return null;
+        }
+        synchronized (children) {
+            return children.get(name);
+        }
     }
 
 
