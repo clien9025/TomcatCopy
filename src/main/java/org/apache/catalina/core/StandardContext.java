@@ -4325,32 +4325,31 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     public boolean filterStart() {
 
-//        if (getLogger().isDebugEnabled()) {
-//            getLogger().debug("Starting filters");
-//        }
-//        // Instantiate and record a FilterConfig for each defined filter
-//        boolean ok = true;
-//        synchronized (filterDefs) {
-//            filterConfigs.clear();
-//            for (Entry<String,FilterDef> entry : filterDefs.entrySet()) {
-//                String name = entry.getKey();
-//                if (getLogger().isDebugEnabled()) {
-//                    getLogger().debug(" Starting filter '" + name + "'");
-//                }
-//                try {
-//                    ApplicationFilterConfig filterConfig = new ApplicationFilterConfig(this, entry.getValue());
-//                    filterConfigs.put(name, filterConfig);
-//                } catch (Throwable t) {
-//                    t = ExceptionUtils.unwrapInvocationTargetException(t);
-//                    ExceptionUtils.handleThrowable(t);
-//                    getLogger().error(sm.getString("standardContext.filterStart", name), t);
-//                    ok = false;
-//                }
-//            }
-//        }
-//
-//        return ok;
-        throw new UnsupportedOperationException();
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("Starting filters");
+        }
+        // Instantiate and record a FilterConfig for each defined filter
+        boolean ok = true;
+        synchronized (filterDefs) {
+            filterConfigs.clear();
+            for (Entry<String,FilterDef> entry : filterDefs.entrySet()) {
+                String name = entry.getKey();
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug(" Starting filter '" + name + "'");
+                }
+                try {
+                    ApplicationFilterConfig filterConfig = new ApplicationFilterConfig(this, entry.getValue());
+                    filterConfigs.put(name, filterConfig);
+                } catch (Throwable t) {
+                    t = ExceptionUtils.unwrapInvocationTargetException(t);
+                    ExceptionUtils.handleThrowable(t);
+                    getLogger().error(sm.getString("standardContext.filterStart", name), t);
+                    ok = false;
+                }
+            }
+        }
+
+        return ok;
     }
 
 
