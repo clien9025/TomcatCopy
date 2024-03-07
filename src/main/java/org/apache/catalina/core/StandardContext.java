@@ -2837,27 +2837,27 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     public void addConstraint(SecurityConstraint constraint) {
 
         // Validate the proposed constraint
-//        SecurityCollection collections[] = constraint.findCollections();
-//        for (SecurityCollection collection : collections) {
-//            String patterns[] = collection.findPatterns();
-//            for (int j = 0; j < patterns.length; j++) {
-//                patterns[j] = adjustURLPattern(patterns[j]);
-//                if (!validateURLPattern(patterns[j])) {
-//                    throw new IllegalArgumentException(sm.getString("standardContext.securityConstraint.pattern", patterns[j]));
-//                }
-//            }
-//            if (collection.findMethods().length > 0 && collection.findOmittedMethods().length > 0) {
-//                throw new IllegalArgumentException(sm.getString("standardContext.securityConstraint.mixHttpMethod"));
-//            }
-//        }
-//
-//        // Add this constraint to the set for our web application
-//        synchronized (constraintsLock) {
-//            SecurityConstraint[] results = Arrays.copyOf(constraints, constraints.length + 1);
-//            results[constraints.length] = constraint;
-//            constraints = results;
-//        }
-        throw new UnsupportedOperationException();
+        SecurityCollection collections[] = constraint.findCollections();
+        for (SecurityCollection collection : collections) {
+            String patterns[] = collection.findPatterns();
+            for (int j = 0; j < patterns.length; j++) {
+                patterns[j] = adjustURLPattern(patterns[j]);
+                if (!validateURLPattern(patterns[j])) {
+                    throw new IllegalArgumentException(
+                            sm.getString("standardContext.securityConstraint.pattern", patterns[j]));
+                }
+            }
+            if (collection.findMethods().length > 0 && collection.findOmittedMethods().length > 0) {
+                throw new IllegalArgumentException(sm.getString("standardContext.securityConstraint.mixHttpMethod"));
+            }
+        }
+
+        // Add this constraint to the set for our web application
+        synchronized (constraintsLock) {
+            SecurityConstraint[] results = Arrays.copyOf(constraints, constraints.length + 1);
+            results[constraints.length] = constraint;
+            constraints = results;
+        }
 
     }
 
@@ -2928,11 +2928,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     public void addFilterMap(FilterMap filterMap) {
-//        validateFilterMap(filterMap);
-//        // Add this filter mapping to our registered set
-//        filterMaps.add(filterMap);
-//        fireContainerEvent("addFilterMap", filterMap);
-        throw new UnsupportedOperationException();
+        validateFilterMap(filterMap);
+        // Add this filter mapping to our registered set
+        filterMaps.add(filterMap);
+        fireContainerEvent("addFilterMap", filterMap);
     }
 
 
@@ -2960,24 +2959,23 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * @param filterMap the filter mapping
      */
     private void validateFilterMap(FilterMap filterMap) {
-//        // Validate the proposed filter mapping
-//        String filterName = filterMap.getFilterName();
-//        String[] servletNames = filterMap.getServletNames();
-//        String[] urlPatterns = filterMap.getURLPatterns();
-//        if (findFilterDef(filterName) == null) {
-//            throw new IllegalArgumentException(sm.getString("standardContext.filterMap.name", filterName));
-//        }
-//
-//        if (!filterMap.getMatchAllServletNames() && !filterMap.getMatchAllUrlPatterns() && (servletNames.length == 0) &&
-//                (urlPatterns.length == 0)) {
-//            throw new IllegalArgumentException(sm.getString("standardContext.filterMap.either"));
-//        }
-//        for (String urlPattern : urlPatterns) {
-//            if (!validateURLPattern(urlPattern)) {
-//                throw new IllegalArgumentException(sm.getString("standardContext.filterMap.pattern", urlPattern));
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        // Validate the proposed filter mapping
+        String filterName = filterMap.getFilterName();
+        String[] servletNames = filterMap.getServletNames();
+        String[] urlPatterns = filterMap.getURLPatterns();
+        if (findFilterDef(filterName) == null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.filterMap.name", filterName));
+        }
+
+        if (!filterMap.getMatchAllServletNames() && !filterMap.getMatchAllUrlPatterns() && (servletNames.length == 0) &&
+                (urlPatterns.length == 0)) {
+            throw new IllegalArgumentException(sm.getString("standardContext.filterMap.either"));
+        }
+        for (String urlPattern : urlPatterns) {
+            if (!validateURLPattern(urlPattern)) {
+                throw new IllegalArgumentException(sm.getString("standardContext.filterMap.pattern", urlPattern));
+            }
+        }
     }
 
 
@@ -4406,105 +4404,104 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     public boolean listenerStart() {
 
-//        if (log.isDebugEnabled()) {
-//            log.debug("Configuring application event listeners");
-//        }
-//
-//        // Instantiate the required listeners
-//        String listeners[] = findApplicationListeners();
-//        Object results[] = new Object[listeners.length];
-//        boolean ok = true;
-//        for (int i = 0; i < results.length; i++) {
-//            if (getLogger().isDebugEnabled()) {
-//                getLogger().debug(" Configuring event listener class '" + listeners[i] + "'");
-//            }
-//            try {
-//                String listener = listeners[i];
-//                results[i] = getInstanceManager().newInstance(listener);
-//            } catch (Throwable t) {
-//                t = ExceptionUtils.unwrapInvocationTargetException(t);
-//                ExceptionUtils.handleThrowable(t);
-//                getLogger().error(sm.getString("standardContext.applicationListener", listeners[i]), t);
-//                ok = false;
-//            }
-//        }
-//        if (!ok) {
-//            getLogger().error(sm.getString("standardContext.applicationSkipped"));
-//            return false;
-//        }
-//
-//        // Sort listeners in two arrays
-//        List<Object> eventListeners = new ArrayList<>();
-//        List<Object> lifecycleListeners = new ArrayList<>();
-//        for (Object result : results) {
-//            if ((result instanceof ServletContextAttributeListener) ||
-//                    (result instanceof ServletRequestAttributeListener) || (result instanceof ServletRequestListener) ||
-//                    (result instanceof HttpSessionIdListener) || (result instanceof HttpSessionAttributeListener)) {
-//                eventListeners.add(result);
-//            }
-//            if ((result instanceof ServletContextListener) || (result instanceof HttpSessionListener)) {
-//                lifecycleListeners.add(result);
-//            }
-//        }
-//
-//        // Listener instances may have been added directly to this Context by
-//        // ServletContextInitializers and other code via the pluggability APIs.
-//        // Put them these listeners after the ones defined in web.xml and/or
-//        // annotations then overwrite the list of instances with the new, full
-//        // list.
-//        eventListeners.addAll(Arrays.asList(getApplicationEventListeners()));
-//        setApplicationEventListeners(eventListeners.toArray());
-//        for (Object lifecycleListener : getApplicationLifecycleListeners()) {
-//            lifecycleListeners.add(lifecycleListener);
-//            if (lifecycleListener instanceof ServletContextListener) {
-//                noPluggabilityListeners.add(lifecycleListener);
-//            }
-//        }
-//        setApplicationLifecycleListeners(lifecycleListeners.toArray());
-//
-//        // Send application start events
-//
-//        if (getLogger().isDebugEnabled()) {
-//            getLogger().debug("Sending application start events");
-//        }
-//
-//        // Ensure context is not null
-//        getServletContext();
-//        context.setNewServletContextListenerAllowed(false);
-//
-//        Object instances[] = getApplicationLifecycleListeners();
-//        if (instances == null || instances.length == 0) {
-//            return ok;
-//        }
-//
-//        ServletContextEvent event = new ServletContextEvent(getServletContext());
-//        ServletContextEvent tldEvent = null;
-//        if (noPluggabilityListeners.size() > 0) {
-//            noPluggabilityServletContext = new NoPluggabilityServletContext(getServletContext());
-//            tldEvent = new ServletContextEvent(noPluggabilityServletContext);
-//        }
-//        for (Object instance : instances) {
-//            if (!(instance instanceof ServletContextListener)) {
-//                continue;
-//            }
-//            ServletContextListener listener = (ServletContextListener) instance;
-//            try {
-//                fireContainerEvent("beforeContextInitialized", listener);
-//                if (noPluggabilityListeners.contains(listener)) {
-//                    listener.contextInitialized(tldEvent);
-//                } else {
-//                    listener.contextInitialized(event);
-//                }
-//                fireContainerEvent("afterContextInitialized", listener);
-//            } catch (Throwable t) {
-//                ExceptionUtils.handleThrowable(t);
-//                fireContainerEvent("afterContextInitialized", listener);
-//                getLogger().error(sm.getString("standardContext.listenerStart", instance.getClass().getName()), t);
-//                ok = false;
-//            }
-//        }
-//        return ok;
-        throw new UnsupportedOperationException();
+        if (log.isDebugEnabled()) {
+            log.debug("Configuring application event listeners");
+        }
+
+        // Instantiate the required listeners
+        String listeners[] = findApplicationListeners();
+        Object results[] = new Object[listeners.length];
+        boolean ok = true;
+        for (int i = 0; i < results.length; i++) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug(" Configuring event listener class '" + listeners[i] + "'");
+            }
+            try {
+                String listener = listeners[i];
+                results[i] = getInstanceManager().newInstance(listener);
+            } catch (Throwable t) {
+                t = ExceptionUtils.unwrapInvocationTargetException(t);
+                ExceptionUtils.handleThrowable(t);
+                getLogger().error(sm.getString("standardContext.applicationListener", listeners[i]), t);
+                ok = false;
+            }
+        }
+        if (!ok) {
+            getLogger().error(sm.getString("standardContext.applicationSkipped"));
+            return false;
+        }
+
+        // Sort listeners in two arrays
+        List<Object> eventListeners = new ArrayList<>();
+        List<Object> lifecycleListeners = new ArrayList<>();
+        for (Object result : results) {
+            if ((result instanceof ServletContextAttributeListener) ||
+                    (result instanceof ServletRequestAttributeListener) || (result instanceof ServletRequestListener) ||
+                    (result instanceof HttpSessionIdListener) || (result instanceof HttpSessionAttributeListener)) {
+                eventListeners.add(result);
+            }
+            if ((result instanceof ServletContextListener) || (result instanceof HttpSessionListener)) {
+                lifecycleListeners.add(result);
+            }
+        }
+
+        // Listener instances may have been added directly to this Context by
+        // ServletContextInitializers and other code via the pluggability APIs.
+        // Put them these listeners after the ones defined in web.xml and/or
+        // annotations then overwrite the list of instances with the new, full
+        // list.
+        eventListeners.addAll(Arrays.asList(getApplicationEventListeners()));
+        setApplicationEventListeners(eventListeners.toArray());
+        for (Object lifecycleListener : getApplicationLifecycleListeners()) {
+            lifecycleListeners.add(lifecycleListener);
+            if (lifecycleListener instanceof ServletContextListener) {
+                noPluggabilityListeners.add(lifecycleListener);
+            }
+        }
+        setApplicationLifecycleListeners(lifecycleListeners.toArray());
+
+        // Send application start events
+
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("Sending application start events");
+        }
+
+        // Ensure context is not null
+        getServletContext();
+        context.setNewServletContextListenerAllowed(false);
+
+        Object instances[] = getApplicationLifecycleListeners();
+        if (instances == null || instances.length == 0) {
+            return ok;
+        }
+
+        ServletContextEvent event = new ServletContextEvent(getServletContext());
+        ServletContextEvent tldEvent = null;
+        if (noPluggabilityListeners.size() > 0) {
+            noPluggabilityServletContext = new NoPluggabilityServletContext(getServletContext());
+            tldEvent = new ServletContextEvent(noPluggabilityServletContext);
+        }
+        for (Object instance : instances) {
+            if (!(instance instanceof ServletContextListener)) {
+                continue;
+            }
+            ServletContextListener listener = (ServletContextListener) instance;
+            try {
+                fireContainerEvent("beforeContextInitialized", listener);
+                if (noPluggabilityListeners.contains(listener)) {
+                    listener.contextInitialized(tldEvent);
+                } else {
+                    listener.contextInitialized(event);
+                }
+                fireContainerEvent("afterContextInitialized", listener);
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                fireContainerEvent("afterContextInitialized", listener);
+                getLogger().error(sm.getString("standardContext.listenerStart", instance.getClass().getName()), t);
+                ok = false;
+            }
+        }
+        return ok;
 
     }
 
@@ -5020,12 +5017,11 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
 
     private void checkConstraintsForUncoveredMethods(SecurityConstraint[] constraints) {
-//        SecurityConstraint[] newConstraints =
-//                SecurityConstraint.findUncoveredHttpMethods(constraints, getDenyUncoveredHttpMethods(), getLogger());
-//        for (SecurityConstraint constraint : newConstraints) {
-//            addConstraint(constraint);
-//        }
-        throw new UnsupportedOperationException();
+        SecurityConstraint[] newConstraints =
+                SecurityConstraint.findUncoveredHttpMethods(constraints, getDenyUncoveredHttpMethods(), getLogger());
+        for (SecurityConstraint constraint : newConstraints) {
+            addConstraint(constraint);
+        }
     }
 
 
@@ -5885,30 +5881,29 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     private boolean validateURLPattern(String urlPattern) {
 
-//        if (urlPattern == null) {
-//            return false;
-//        }
-//        if (urlPattern.indexOf('\n') >= 0 || urlPattern.indexOf('\r') >= 0) {
-//            return false;
-//        }
-//        if (urlPattern.equals("")) {
-//            return true;
-//        }
-//        if (urlPattern.startsWith("*.")) {
-//            if (urlPattern.indexOf('/') < 0) {
-//                checkUnusualURLPattern(urlPattern);
-//                return true;
-//            } else {
-//                return false;
-//            }
-//        }
-//        if (urlPattern.startsWith("/") && !urlPattern.contains("*.")) {
-//            checkUnusualURLPattern(urlPattern);
-//            return true;
-//        } else {
-//            return false;
-//        }
-        throw new UnsupportedOperationException();
+        if (urlPattern == null) {
+            return false;
+        }
+        if (urlPattern.indexOf('\n') >= 0 || urlPattern.indexOf('\r') >= 0) {
+            return false;
+        }
+        if (urlPattern.equals("")) {
+            return true;
+        }
+        if (urlPattern.startsWith("*.")) {
+            if (urlPattern.indexOf('/') < 0) {
+                checkUnusualURLPattern(urlPattern);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (urlPattern.startsWith("/") && !urlPattern.contains("*.")) {
+            checkUnusualURLPattern(urlPattern);
+            return true;
+        } else {
+            return false;
+        }
 
     }
 
@@ -5917,16 +5912,15 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * Check for unusual but valid <code>&lt;url-pattern&gt;</code>s. See Bugzilla 34805, 43079 & 43080
      */
     private void checkUnusualURLPattern(String urlPattern) {
-//        if (log.isInfoEnabled()) {
-//            // First group checks for '*' or '/foo*' style patterns
-//            // Second group checks for *.foo.bar style patterns
-//            if ((urlPattern.endsWith("*") &&
-//                    (urlPattern.length() < 2 || urlPattern.charAt(urlPattern.length() - 2) != '/')) ||
-//                    urlPattern.startsWith("*.") && urlPattern.length() > 2 && urlPattern.lastIndexOf('.') > 1) {
-//                log.info(sm.getString("standardContext.suspiciousUrl", urlPattern, getName()));
-//            }
-//        }
-        throw new UnsupportedOperationException();
+        if (log.isInfoEnabled()) {
+            // First group checks for '*' or '/foo*' style patterns
+            // Second group checks for *.foo.bar style patterns
+            if ((urlPattern.endsWith("*") &&
+                    (urlPattern.length() < 2 || urlPattern.charAt(urlPattern.length() - 2) != '/')) ||
+                    urlPattern.startsWith("*.") && urlPattern.length() > 2 && urlPattern.lastIndexOf('.') > 1) {
+                log.info(sm.getString("standardContext.suspiciousUrl", urlPattern, getName()));
+            }
+        }
     }
 
 
