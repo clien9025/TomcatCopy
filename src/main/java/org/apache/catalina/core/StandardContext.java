@@ -2944,11 +2944,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     public void addFilterMapBefore(FilterMap filterMap) {
-//        validateFilterMap(filterMap);
-//        // Add this filter mapping to our registered set
-//        filterMaps.addBefore(filterMap);
-//        fireContainerEvent("addFilterMap", filterMap);
-        throw new UnsupportedOperationException();
+        validateFilterMap(filterMap);
+        // Add this filter mapping to our registered set
+        filterMaps.addBefore(filterMap);
+        fireContainerEvent("addFilterMap", filterMap);
     }
 
 
@@ -3097,30 +3096,29 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     @Override
     public void addServletMappingDecoded(String pattern, String name, boolean jspWildCard) {
-//        // Validate the proposed mapping
-//        if (findChild(name) == null) {
-//            throw new IllegalArgumentException(sm.getString("standardContext.servletMap.name", name));
-//        }
-//        String adjustedPattern = adjustURLPattern(pattern);
-//        if (!validateURLPattern(adjustedPattern)) {
-//            throw new IllegalArgumentException(sm.getString("standardContext.servletMap.pattern", adjustedPattern));
-//        }
-//
-//        // Add this mapping to our registered set
-//        synchronized (servletMappingsLock) {
-//            String name2 = servletMappings.get(adjustedPattern);
-//            if (name2 != null) {
-//                // Don't allow more than one servlet on the same pattern
-//                Wrapper wrapper = (Wrapper) findChild(name2);
-//                wrapper.removeMapping(adjustedPattern);
-//            }
-//            servletMappings.put(adjustedPattern, name);
-//        }
-//        Wrapper wrapper = (Wrapper) findChild(name);
-//        wrapper.addMapping(adjustedPattern);
-//
-//        fireContainerEvent("addServletMapping", adjustedPattern);
-        throw new UnsupportedOperationException();
+        // Validate the proposed mapping
+        if (findChild(name) == null) {
+            throw new IllegalArgumentException(sm.getString("standardContext.servletMap.name", name));
+        }
+        String adjustedPattern = adjustURLPattern(pattern);
+        if (!validateURLPattern(adjustedPattern)) {
+            throw new IllegalArgumentException(sm.getString("standardContext.servletMap.pattern", adjustedPattern));
+        }
+
+        // Add this mapping to our registered set
+        synchronized (servletMappingsLock) {
+            String name2 = servletMappings.get(adjustedPattern);
+            if (name2 != null) {
+                // Don't allow more than one servlet on the same pattern
+                Wrapper wrapper = (Wrapper) findChild(name2);
+                wrapper.removeMapping(adjustedPattern);
+            }
+            servletMappings.put(adjustedPattern, name);
+        }
+        Wrapper wrapper = (Wrapper) findChild(name);
+        wrapper.addMapping(adjustedPattern);
+
+        fireContainerEvent("addServletMapping", adjustedPattern);
     }
 
 
@@ -5372,20 +5370,19 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      */
     protected String adjustURLPattern(String urlPattern) {
 
-//        if (urlPattern == null) {
-//            return urlPattern;
-//        }
-//        if (urlPattern.startsWith("/") || urlPattern.startsWith("*.")) {
-//            return urlPattern;
-//        }
-//        if (!isServlet22()) {
-//            return urlPattern;
-//        }
-//        if (log.isDebugEnabled()) {
-//            log.debug(sm.getString("standardContext.urlPattern.patternWarning", urlPattern));
-//        }
-//        return "/" + urlPattern;
-        throw new UnsupportedOperationException();
+        if (urlPattern == null) {
+            return urlPattern;
+        }
+        if (urlPattern.startsWith("/") || urlPattern.startsWith("*.")) {
+            return urlPattern;
+        }
+        if (!isServlet22()) {
+            return urlPattern;
+        }
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("standardContext.urlPattern.patternWarning", urlPattern));
+        }
+        return "/" + urlPattern;
 
     }
 

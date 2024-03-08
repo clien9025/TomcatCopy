@@ -413,14 +413,13 @@ public class MapperListener extends LifecycleMBeanBase implements ContainerListe
      * context.
      */
     private void prepareWrapperMappingInfo(Context context, Wrapper wrapper, List<WrapperMappingInfo> wrappers) {
-//        String wrapperName = wrapper.getName();
-//        boolean resourceOnly = context.isResourceOnlyServlet(wrapperName);
-//        String[] mappings = wrapper.findMappings();
-//        for (String mapping : mappings) {
-//            boolean jspWildCard = (wrapperName.equals("jsp") && mapping.endsWith("/*"));
-//            wrappers.add(new WrapperMappingInfo(mapping, wrapper, jspWildCard, resourceOnly));
-//        }
-         throw new UnsupportedOperationException();
+        String wrapperName = wrapper.getName();
+        boolean resourceOnly = context.isResourceOnlyServlet(wrapperName);
+        String[] mappings = wrapper.findMappings();
+        for (String mapping : mappings) {
+            boolean jspWildCard = (wrapperName.equals("jsp") && mapping.endsWith("/*"));
+            wrappers.add(new WrapperMappingInfo(mapping, wrapper, jspWildCard, resourceOnly));
+        }
     }
 
     @Override

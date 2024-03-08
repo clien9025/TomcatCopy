@@ -205,23 +205,22 @@ public class Cache {
     }
 
     protected void backgroundProcess() {
-//        // Create an ordered set of all cached resources with the least recently
-//        // used first. This is a background process so we can afford to take the
-//        // time to order the elements first
-//        TreeSet<CachedResource> orderedResources = new TreeSet<>(
-//                Comparator.comparingLong(CachedResource::getNextCheck));
-//        orderedResources.addAll(resourceCache.values());
-//
-//        Iterator<CachedResource> iter = orderedResources.iterator();
-//
-//        long targetSize = maxSize * (100 - TARGET_FREE_PERCENT_BACKGROUND) / 100;
-//        long newSize = evict(targetSize, iter);
-//
-//        if (newSize > targetSize) {
-//            log.info(sm.getString("cache.backgroundEvictFail", Long.valueOf(TARGET_FREE_PERCENT_BACKGROUND),
-//                    root.getContext().getName(), Long.valueOf(newSize / 1024)));
-//        }
-        throw new UnsupportedOperationException();
+        // Create an ordered set of all cached resources with the least recently
+        // used first. This is a background process so we can afford to take the
+        // time to order the elements first
+        TreeSet<CachedResource> orderedResources = new TreeSet<>(
+                Comparator.comparingLong(CachedResource::getNextCheck));
+        orderedResources.addAll(resourceCache.values());
+
+        Iterator<CachedResource> iter = orderedResources.iterator();
+
+        long targetSize = maxSize * (100 - TARGET_FREE_PERCENT_BACKGROUND) / 100;
+        long newSize = evict(targetSize, iter);
+
+        if (newSize > targetSize) {
+            log.info(sm.getString("cache.backgroundEvictFail", Long.valueOf(TARGET_FREE_PERCENT_BACKGROUND),
+                    root.getContext().getName(), Long.valueOf(newSize / 1024)));
+        }
     }
 
     private boolean noCache(String path) {

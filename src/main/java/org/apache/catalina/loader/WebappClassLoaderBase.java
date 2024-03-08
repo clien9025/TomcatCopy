@@ -2440,14 +2440,13 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      */
     protected Class<?> findLoadedClass0(String name) {
 
-//        String path = binaryNameToPath(name, true);
-//
-//        ResourceEntry entry = resourceEntries.get(path);
-//        if (entry != null) {
-//            return entry.loadedClass;
-//        }
-//        return null;
-        throw new UnsupportedOperationException();
+        String path = binaryNameToPath(name, true);
+
+        ResourceEntry entry = resourceEntries.get(path);
+        if (entry != null) {
+            return entry.loadedClass;
+        }
+        return null;
     }
 
 

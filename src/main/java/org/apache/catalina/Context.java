@@ -1098,8 +1098,7 @@ public interface Context extends Container, ContextBind {
      * @param name Name of the corresponding servlet to execute
      */
     default void addServletMappingDecoded(String pattern, String name) {
-//        addServletMappingDecoded(pattern, name, false);
-        throw new UnsupportedOperationException();
+        addServletMappingDecoded(pattern, name, false);
     }
 
 

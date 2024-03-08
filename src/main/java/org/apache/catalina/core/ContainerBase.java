@@ -1,6 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.catalina.core;
 
-import org.apache.catalina.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.management.ObjectName;
+
+import org.apache.catalina.AccessLog;
+import org.apache.catalina.Cluster;
+import org.apache.catalina.Container;
+import org.apache.catalina.ContainerEvent;
+import org.apache.catalina.ContainerListener;
+import org.apache.catalina.Context;
+import org.apache.catalina.Engine;
+import org.apache.catalina.Globals;
+import org.apache.catalina.Host;
+import org.apache.catalina.Lifecycle;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.LifecycleState;
+import org.apache.catalina.Loader;
+import org.apache.catalina.Pipeline;
+import org.apache.catalina.Realm;
+import org.apache.catalina.Server;
+import org.apache.catalina.Valve;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.util.ContextName;
@@ -12,19 +66,6 @@ import org.apache.tomcat.util.MultiThrowable;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.InlineExecutorService;
 
-import javax.management.ObjectName;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Abstract implementation of the <b>Container</b> interface, providing common functionality required by nearly every
@@ -220,6 +261,47 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
 
     // ------------------------------------------------------------- Properties
+
+    @Override
+    public int getStartStopThreads() {
+        return startStopThreads;
+    }
+
+    @Override
+    public void setStartStopThreads(int startStopThreads) {
+        int oldStartStopThreads = this.startStopThreads;
+        this.startStopThreads = startStopThreads;
+
+        // Use local copies to ensure thread safety
+        if (oldStartStopThreads != startStopThreads && startStopExecutor != null) {
+            reconfigureStartStopExecutor(getStartStopThreads());
+        }
+    }
+
+
+    /**
+     * Get the delay between the invocation of the backgroundProcess method on this container and its children. Child
+     * containers will not be invoked if their delay value is not negative (which would mean they are using their own
+     * thread). Setting this to a positive value will cause a thread to be spawn. After waiting the specified amount of
+     * time, the thread will invoke the executePeriodic method on this container and all its children.
+     */
+    @Override
+    public int getBackgroundProcessorDelay() {
+        return backgroundProcessorDelay;
+    }
+
+
+    /**
+     * Set the delay between the invocation of the execute method on this container and its children.
+     *
+     * @param delay The delay in seconds between the invocation of backgroundProcess methods
+     */
+    @Override
+    public void setBackgroundProcessorDelay(int delay) {
+        backgroundProcessorDelay = delay;
+    }
+
+
     /**
      * Return the Logger for this Container.
      */
@@ -232,10 +314,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         return logger;
     }
 
+
     /**
      * @return the abbreviated name of this container for logging messages
-     * <p>
-     * 用于生成并返回当前容器的日志名称。该方法适用于日志记录，在日志消息中提供关于容器的标识信息。
      */
     @Override
     public String getLogName() {
@@ -252,225 +333,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             } else if (name.startsWith("##")) {
                 name = "/" + name;
             }
-            // 将当前层的容器名称添加到 loggerName 字符串中，格式为 "[name]"。如果 loggerName 已经包含名称，则在前面添加 "."
             loggerName = "[" + name + "]" + ((loggerName != null) ? ("." + loggerName) : "");
             current = current.getParent();
         }
-        /* 最终日志名称 */
-        // 完成遍历后，将 loggerName 拼接到 ContainerBase.class.getName() 的结果之后，得到最终的 logName
         logName = ContainerBase.class.getName() + "." + loggerName;
         return logName;
 
-    }
-
-    @Override
-    public int getStartStopThreads() {
-        return startStopThreads;
-    }
-
-    /**
-     * Return the Pipeline object that manages the Valves associated with this Container.
-     */
-    @Override
-    public Pipeline getPipeline() {
-        return this.pipeline;
-    }
-
-
-    /**
-     * Set a name string (suitable for use by humans) that describes this Container. Within the set of child containers
-     * belonging to a particular parent, Container names must be unique.
-     *
-     * @param name New name of this container
-     * @throws IllegalStateException if this Container has already been added to the children of a parent Container
-     *                               (after which the name may not be changed)
-     *                               <p>
-     *                               这个方法的作用是提供一个标准的方式来设置容器的名称，并确保关联的监听器能够被通知名称的更改。
-     *                               这是Java Beans属性更改监听机制的一个典型应用，允许开发者对容器对象的名称属性更改进行监控，
-     *                               例如，用于更新配置界面、日志记录或其他需要响应属性更改的场景
-     */
-    @Override
-    public void setName(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException(sm.getString("containerBase.nullName"));
-        }
-        String oldName = this.name;
-        this.name = name;
-        // 使用 PropertyChangeSupport对象support，调用 firePropertyChange 方法来通知监听器属性已更改。
-        // 事件的属性名是 "name"，旧值是 oldName，新值是新设置的 this.name。
-        support.firePropertyChange("name", oldName, this.name);
-    }
-
-
-    /**
-     * Return the Container for which this Container is a child, if there is one. If there is no defined parent, return
-     * <code>null</code>.
-     */
-    @Override
-    public Container getParent() {
-        return parent;
-    }
-
-
-    /**
-     * Set the parent Container to which this Container is being added as a child. This Container may refuse to become
-     * attached to the specified Container by throwing an exception.
-     *
-     * @param container Container to which this Container is being added as a child
-     * @throws IllegalArgumentException if this Container refuses to become attached to the specified Container
-     */
-    @Override
-    public void setParent(Container container) {
-
-        Container oldParent = this.parent;
-        this.parent = container;
-        support.firePropertyChange("parent", oldParent, this.parent);
-
-    }
-
-    /**
-     * Set the parent class loader (if any) for this web application. This call is meaningful only
-     * <strong>before</strong> a Loader has been configured, and the specified value (if non-null) should be passed as
-     * an argument to the class loader constructor.
-     *
-     * @param parent The new parent class loader
-     */
-    @Override
-    public void setParentClassLoader(ClassLoader parent) {
-        ClassLoader oldParentClassLoader = this.parentClassLoader;
-        this.parentClassLoader = parent;
-        support.firePropertyChange("parentClassLoader", oldParentClassLoader, this.parentClassLoader);
-
-    }
-
-    /**
-     * Set the delay between the invocation of the execute method on this container and its children.
-     *
-     * @param delay The delay in seconds between the invocation of backgroundProcess methods
-     */
-    @Override
-    public void setBackgroundProcessorDelay(int delay) {
-        backgroundProcessorDelay = delay;
-    }
-
-    /*
-     * Provide access to just the cluster component attached to this container.
-     */
-    protected Cluster getClusterInternal() {
-        Lock readLock = clusterLock.readLock();
-        readLock.lock();
-        try {
-            return cluster;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-
-    /**
-     * Return the Realm with which this Container is associated. If there is no associated Realm, return the Realm
-     * associated with our parent Container (if any); otherwise return <code>null</code>.
-     */
-    @Override
-    public Realm getRealm() {
-
-        Lock l = realmLock.readLock();
-        l.lock();
-        try {
-            if (realm != null) {
-                return realm;
-            }
-            if (parent != null) {
-                return parent.getRealm();
-            }
-            return null;
-        } finally {
-            l.unlock();
-        }
-    }
-
-
-    protected Realm getRealmInternal() {
-        Lock l = realmLock.readLock();
-        l.lock();
-        try {
-            return realm;
-        } finally {
-            l.unlock();
-        }
-    }
-
-    /**
-     * Set the Realm with which this Container is associated.
-     *
-     * @param realm The newly associated Realm
-     */
-    @Override
-    public void setRealm(Realm realm) {
-        // private final ReadWriteLock realmLock = new ReentrantReadWriteLock();
-        Lock l = realmLock.writeLock();
-        l.lock();
-        try {
-            // Change components if necessary
-            Realm oldRealm = this.realm;
-            if (oldRealm == realm) {
-                return;
-            }
-            this.realm = realm;
-
-            // Stop the old component if necessary
-            if (getState().isAvailable() && (oldRealm instanceof Lifecycle)) {
-//                try {
-//                    ((Lifecycle) oldRealm).stop();
-//                } catch (LifecycleException e) {
-//                    log.error(sm.getString("containerBase.realm.stop"), e);
-//                }
-                // todo 这里我知道是什么意思，而且后面的方法没实现，这里的代码暂时没有被调用
-                throw new UnsupportedOperationException();
-            }
-
-            // Start the new component if necessary
-            if (realm != null) {
-                realm.setContainer(this);
-            }
-            if (getState().isAvailable() && (realm instanceof Lifecycle)) {
-//                try {
-//                    ((Lifecycle) realm).start();
-//                } catch (LifecycleException e) {
-//                    log.error(sm.getString("containerBase.realm.start"), e);
-//                }
-                // todo 这里我知道是什么意思，而且后面的方法没实现，这里的代码暂时没有被调用
-                throw new UnsupportedOperationException();
-            }
-
-            // Report this property change to interested listeners
-            support.firePropertyChange("realm", oldRealm, this.realm);
-        } finally {
-            l.unlock();
-        }
-
-    }
-
-
-    /**
-     * Return a name string (suitable for use by humans) that describes this Container. Within the set of child
-     * containers belonging to a particular parent, Container names must be unique.
-     */
-    @Override
-    public String getName() {
-        return name;
-    }
-
-
-    /**
-     * Get the delay between the invocation of the backgroundProcess method on this container and its children. Child
-     * containers will not be invoked if their delay value is not negative (which would mean they are using their own
-     * thread). Setting this to a positive value will cause a thread to be spawn. After waiting the specified amount of
-     * time, the thread will invoke the executePeriodic method on this container and all its children.
-     */
-    @Override
-    public int getBackgroundProcessorDelay() {
-        return backgroundProcessorDelay;
     }
 
 
@@ -492,6 +360,20 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             }
 
             return null;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+
+    /*
+     * Provide access to just the cluster component attached to this container.
+     */
+    protected Cluster getClusterInternal() {
+        Lock readLock = clusterLock.readLock();
+        readLock.lock();
+        try {
+            return cluster;
         } finally {
             readLock.unlock();
         }
@@ -547,6 +429,35 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
+    /**
+     * Return a name string (suitable for use by humans) that describes this Container. Within the set of child
+     * containers belonging to a particular parent, Container names must be unique.
+     */
+    @Override
+    public String getName() {
+        return name;
+    }
+
+
+    /**
+     * Set a name string (suitable for use by humans) that describes this Container. Within the set of child containers
+     * belonging to a particular parent, Container names must be unique.
+     *
+     * @param name New name of this container
+     *
+     * @exception IllegalStateException if this Container has already been added to the children of a parent Container
+     *                                      (after which the name may not be changed)
+     */
+    @Override
+    public void setName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException(sm.getString("containerBase.nullName"));
+        }
+        String oldName = this.name;
+        this.name = name;
+        support.firePropertyChange("name", oldName, this.name);
+    }
+
 
     /**
      * Return if children of this container will be started automatically when they are added to this container.
@@ -571,6 +482,33 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
+    /**
+     * Return the Container for which this Container is a child, if there is one. If there is no defined parent, return
+     * <code>null</code>.
+     */
+    @Override
+    public Container getParent() {
+        return parent;
+    }
+
+
+    /**
+     * Set the parent Container to which this Container is being added as a child. This Container may refuse to become
+     * attached to the specified Container by throwing an exception.
+     *
+     * @param container Container to which this Container is being added as a child
+     *
+     * @exception IllegalArgumentException if this Container refuses to become attached to the specified Container
+     */
+    @Override
+    public void setParent(Container container) {
+
+        Container oldParent = this.parent;
+        this.parent = container;
+        support.firePropertyChange("parent", oldParent, this.parent);
+
+    }
+
 
     /**
      * Return the parent class loader (if any) for this web application. This call is meaningful only
@@ -588,16 +526,110 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
+    /**
+     * Set the parent class loader (if any) for this web application. This call is meaningful only
+     * <strong>before</strong> a Loader has been configured, and the specified value (if non-null) should be passed as
+     * an argument to the class loader constructor.
+     *
+     * @param parent The new parent class loader
+     */
+    @Override
+    public void setParentClassLoader(ClassLoader parent) {
+        ClassLoader oldParentClassLoader = this.parentClassLoader;
+        this.parentClassLoader = parent;
+        support.firePropertyChange("parentClassLoader", oldParentClassLoader, this.parentClassLoader);
+
+    }
 
 
+    /**
+     * Return the Pipeline object that manages the Valves associated with this Container.
+     */
+    @Override
+    public Pipeline getPipeline() {
+        return this.pipeline;
+    }
 
 
+    /**
+     * Return the Realm with which this Container is associated. If there is no associated Realm, return the Realm
+     * associated with our parent Container (if any); otherwise return <code>null</code>.
+     */
+    @Override
+    public Realm getRealm() {
+
+        Lock l = realmLock.readLock();
+        l.lock();
+        try {
+            if (realm != null) {
+                return realm;
+            }
+            if (parent != null) {
+                return parent.getRealm();
+            }
+            return null;
+        } finally {
+            l.unlock();
+        }
+    }
 
 
-    // ------------------------------------------------------ Container Methods
+    protected Realm getRealmInternal() {
+        Lock l = realmLock.readLock();
+        l.lock();
+        try {
+            return realm;
+        } finally {
+            l.unlock();
+        }
+    }
 
+    /**
+     * Set the Realm with which this Container is associated.
+     *
+     * @param realm The newly associated Realm
+     */
+    @Override
+    public void setRealm(Realm realm) {
 
-    /* ++++++++++++++++++++++++++++ */
+        Lock l = realmLock.writeLock();
+        l.lock();
+        try {
+            // Change components if necessary
+            Realm oldRealm = this.realm;
+            if (oldRealm == realm) {
+                return;
+            }
+            this.realm = realm;
+
+            // Stop the old component if necessary
+            if (getState().isAvailable() && (oldRealm instanceof Lifecycle)) {
+                try {
+                    ((Lifecycle) oldRealm).stop();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("containerBase.realm.stop"), e);
+                }
+            }
+
+            // Start the new component if necessary
+            if (realm != null) {
+                realm.setContainer(this);
+            }
+            if (getState().isAvailable() && (realm instanceof Lifecycle)) {
+                try {
+                    ((Lifecycle) realm).start();
+                } catch (LifecycleException e) {
+                    log.error(sm.getString("containerBase.realm.start"), e);
+                }
+            }
+
+            // Report this property change to interested listeners
+            support.firePropertyChange("realm", oldRealm, this.realm);
+        } finally {
+            l.unlock();
+        }
+
+    }
 
 
     // ------------------------------------------------------ Container Methods
@@ -610,17 +642,15 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * attached to the specified Container, in which case it is not added
      *
      * @param child New child Container to be added
-     * @throws IllegalArgumentException if this exception is thrown by the <code>setParent()</code> method of the
-     *                                  child Container
-     * @throws IllegalArgumentException if the new child does not have a name unique from that of existing children
-     *                                  of this Container
-     * @throws IllegalStateException    if this Container does not support child Containers
+     *
+     * @exception IllegalArgumentException if this exception is thrown by the <code>setParent()</code> method of the
+     *                                         child Container
+     * @exception IllegalArgumentException if the new child does not have a name unique from that of existing children
+     *                                         of this Container
+     * @exception IllegalStateException    if this Container does not support child Containers
      */
     @Override
     public void addChild(Container child) {
-        /* 这部分代码检查是否启用了Java安全管理器。如果启用了安全管理器，它将使用特权操作PrivilegedAddChild来添加子容器，
-        这是在受限环境（如Web应用服务器）中执行敏感操作的常用模式。否则，它直接调用addChildInternal */
-        // public static final boolean IS_SECURITY_ENABLED = (System.getSecurityManager() != null);
         if (Globals.IS_SECURITY_ENABLED) {
             PrivilegedAction<Void> dp = new PrivilegedAddChild(child);
             AccessController.doPrivileged(dp);
@@ -629,52 +659,30 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
-    /**
-     * 这段代码负责将一个新的子容器安全、有效地添加到一个父容器中。它涵盖了安全检查、唯一性验证、设置父子关系、容器事件通知以及
-     * 条件性地启动子容器等一系列步骤。在整个过程中，它还通过异常处理来管理错误情况，确保操作的健壮性。
-     *
-     * @param child
-     */
     private void addChildInternal(Container child) {
-        /* 1. 日志记录 */
-        // 这行代码在调试模式下记录添加子容器的操作
+
         if (log.isDebugEnabled()) {
             log.debug("Add child " + child + " " + this);
         }
-        /* 2. 同步代码块 */
-        // 这个同步块确保了在修改children这个存储所有子容器的HashMap时的线程安全
-        // protected final HashMap<String,Container> children = new HashMap<>();
+
         synchronized (children) {
-            /* 3. 检查唯一性 */
-            // 在同步块内，代码首先检查是否已存在具有相同名字的子容器。
-            // 如果存在，抛出IllegalArgumentException异常，表示子容器的名字必须唯一
             if (children.get(child.getName()) != null) {
                 throw new IllegalArgumentException(sm.getString("containerBase.child.notUnique", child.getName()));
             }
-            /* 4. 设置父容器 */
-            // 设置当前容器为 child (child 也是一个容器) 的 父容器
             child.setParent(this); // May throw IAE
-            /* 5. 添加到子容器集合 */
-            // 将 child (子容器) 添加到 当前容器 （ContainerBase的实例） 的 子容器集合（HashMap<String,Container> 类型的 children） 中
             children.put(child.getName(), child);
         }
-        /* 6. 触发容器事件 */
-        // 触发一个事件，通知其他组件有新的子容器被添加。这在Tomcat的内部事件系统中用于各种管理和监控目的。
-        // String ADD_CHILD_EVENT = "addChild";
+
         fireContainerEvent(ADD_CHILD_EVENT, child);
 
-        /* 7. 启动子容器 */
         // Start child
         // Don't do this inside sync block - start can be a slow process and
         // locking the children object can cause problems elsewhere
-        // 在同步块外部，代码尝试启动新添加的子容器。这是在确保了子容器已成功添加并且不在同步块内进行的，以避免长时间的锁定
         try {
-            // 如果 当前容器的状态是可用的 或 正在准备启动 ，并且 startChildren 标志为true（表示需要启动子容器），那么就调用子容器的start方法
             if ((getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState())) && startChildren) {
                 child.start();
             }
         } catch (LifecycleException e) {
-            // 如果 子容器 启动失败，抛出IllegalStateException异常
             throw new IllegalStateException(sm.getString("containerBase.child.start"), e);
         }
     }
@@ -726,11 +734,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public Container[] findChildren() {
         synchronized (children) {
-            /* 这行代码是在将 children这 个 HashMap 中所有的值（即所有的子容器对象）收集到一个新的 Container 数组中，并返回这个数组。
-            这里的 children.values() 方法返回了一个 Collection<Container>，表示所有的子容器。
-            toArray(new Container[0])是将这个集合转换成一个数组。这里传入的new Container[0]是指定了目标数组的类型，
-            即 Container 类型的数组。如果 children 是空的，这个方法就会返回一个长度为0的 Container 数组。
-            这种方式是一种常见的集合到数组的转换方法，在Java中广泛使用。*/
             return children.values().toArray(new Container[0]);
         }
     }
@@ -754,42 +757,41 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public void removeChild(Container child) {
 
-//        if (child == null) {
-//            return;
-//        }
-//
-//        try {
-//            if (child.getState().isAvailable()) {
-//                child.stop();
-//            }
-//        } catch (LifecycleException e) {
-//            log.error(sm.getString("containerBase.child.stop"), e);
-//        }
-//
-//        boolean destroy = false;
-//        try {
-//            // child.destroy() may have already been called which would have
-//            // triggered this call. If that is the case, no need to destroy the
-//            // child again.
-//            if (!LifecycleState.DESTROYING.equals(child.getState())) {
-//                child.destroy();
-//                destroy = true;
-//            }
-//        } catch (LifecycleException e) {
-//            log.error(sm.getString("containerBase.child.destroy"), e);
-//        }
-//
-//        if (!destroy) {
-//            fireContainerEvent(REMOVE_CHILD_EVENT, child);
-//        }
-//
-//        synchronized (children) {
-//            if (children.get(child.getName()) == null) {
-//                return;
-//            }
-//            children.remove(child.getName());
-//        }
-        throw new UnsupportedOperationException();
+        if (child == null) {
+            return;
+        }
+
+        try {
+            if (child.getState().isAvailable()) {
+                child.stop();
+            }
+        } catch (LifecycleException e) {
+            log.error(sm.getString("containerBase.child.stop"), e);
+        }
+
+        boolean destroy = false;
+        try {
+            // child.destroy() may have already been called which would have
+            // triggered this call. If that is the case, no need to destroy the
+            // child again.
+            if (!LifecycleState.DESTROYING.equals(child.getState())) {
+                child.destroy();
+                destroy = true;
+            }
+        } catch (LifecycleException e) {
+            log.error(sm.getString("containerBase.child.destroy"), e);
+        }
+
+        if (!destroy) {
+            fireContainerEvent(REMOVE_CHILD_EVENT, child);
+        }
+
+        synchronized (children) {
+            if (children.get(child.getName()) == null) {
+                return;
+            }
+            children.remove(child.getName());
+        }
 
     }
 
@@ -818,27 +820,16 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     }
 
 
-    /**
-     * 根据提供的线程数 threads 来配置 startStopExecutor。这个执行器用于在容器（Tomcat中的容器）中启动和停止各种组件。
-     *
-     * @param threads
-     */
     private void reconfigureStartStopExecutor(int threads) {
-        /* 1. 单线程情况 */
-        // 如果提供的 threads 参数等于 1，表示只需要单线程执行
         if (threads == 1) {
             // Use a fake executor
             if (!(startStopExecutor instanceof InlineExecutorService)) {
                 startStopExecutor = new InlineExecutorService();
             }
         } else {
-            /* 2. 多线程情况 */
             // Delegate utility execution to the Service
-            // 首先通过 Container.getService(this).getServer() 获取服务器实例。
             Server server = Container.getService(this).getServer();
-            // 然后调用 server.setUtilityThreads(threads)，设置服务器的实用工具线程数量。
             server.setUtilityThreads(threads);
-            // 最后，通过 server.getUtilityExecutor() 获取服务器的实用工具执行器，并将其赋值给 startStopExecutor。
             startStopExecutor = server.getUtilityExecutor();
         }
     }
@@ -848,40 +839,35 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * Start this component and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
-     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
-     *                            used
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-        /* 1. 配置启动/停止执行器 */
+
         reconfigureStartStopExecutor(getStartStopThreads());
-        /* 2. 初始化日志 */
+
         // Start our subordinate components, if any
         logger = null;
         getLogger();
-        /* 3. 启动集群组件 */
         Cluster cluster = getClusterInternal();
         if (cluster instanceof Lifecycle) {
             ((Lifecycle) cluster).start();
         }
-        /* 4. 启动领域（Realm）组件 */
         Realm realm = getRealmInternal();
         if (realm instanceof Lifecycle) {
             ((Lifecycle) realm).start();
         }
-        /* 5. 启动子容器 */
+
         // Start our child containers, if any
-        // 获取所有子容器
         Container[] children = findChildren();
         List<Future<Void>> results = new ArrayList<>(children.length);
         for (Container child : children) {
-            // 使用 startStopExecutor（一个执行器）异步地为每个子容器调用 StartChild 任务，
-            // 并将每个任务的 Future 对象添加到 results 列表中。这允许并行启动所有子容器
             results.add(startStopExecutor.submit(new StartChild(child)));
         }
-        /* 6. 处理启动异常 */
+
         MultiThrowable multiThrowable = null;
-        // 遍历 results 中的每个 Future 对象，通过调用 result.get() 等待每个子容器的启动过程完成。
+
         for (Future<Void> result : results) {
             try {
                 result.get();
@@ -894,24 +880,19 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             }
 
         }
-        // 捕获并处理任何异常，将它们添加到 multiThrowable 对象中。如果有异常发生，则最终会抛出一个 LifecycleException。
         if (multiThrowable != null) {
             throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
                     multiThrowable.getThrowable());
         }
-        /* 7. 启动管道中的阀门 */
-        // 如果 pipeline 是 Lifecycle 实例，则调用其 start 方法。管道和阀门是Tomcat中用于处理请求和响应的组件
+
         // Start the Valves in our pipeline (including the basic), if any
         if (pipeline instanceof Lifecycle) {
             ((Lifecycle) pipeline).start();
         }
-        /* 8. 设置容器状态 */
-        // 将容器的状态设置为 LifecycleState.STARTING
+
         setState(LifecycleState.STARTING);
-        /* 9. 启动后台处理器监控线程 */
+
         // Start our thread
-        // 如果 backgroundProcessorDelay 大于 0，使用 scheduleWithFixedDelay 方法安排一个
-        // ContainerBackgroundProcessorMonitor 任务定期执行。这个监控任务用于监控容器的健康状况或执行定期维护。
         if (backgroundProcessorDelay > 0) {
             monitorFuture = Container.getService(ContainerBase.this).getServer().getUtilityExecutor()
                     .scheduleWithFixedDelay(new ContainerBackgroundProcessorMonitor(), 0, 60, TimeUnit.SECONDS);
@@ -923,8 +904,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
      * Stop this component and implement the requirements of
      * {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
      *
-     * @throws LifecycleException if this component detects a fatal error that prevents this component from being
-     *                            used
+     * @exception LifecycleException if this component detects a fatal error that prevents this component from being
+     *                                   used
      */
     @Override
     protected synchronized void stopInternal() throws LifecycleException {
@@ -983,32 +964,31 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     protected void destroyInternal() throws LifecycleException {
 
-//        Realm realm = getRealmInternal();
-//        if (realm instanceof Lifecycle) {
-//            ((Lifecycle) realm).destroy();
-//        }
-//        Cluster cluster = getClusterInternal();
-//        if (cluster instanceof Lifecycle) {
-//            ((Lifecycle) cluster).destroy();
-//        }
-//
-//        // Stop the Valves in our pipeline (including the basic), if any
-//        if (pipeline instanceof Lifecycle) {
-//            ((Lifecycle) pipeline).destroy();
-//        }
-//
-//        // Remove children now this container is being destroyed
-//        for (Container child : findChildren()) {
-//            removeChild(child);
-//        }
-//
-//        // Required if the child is destroyed directly.
-//        if (parent != null) {
-//            parent.removeChild(this);
-//        }
-//
-//        super.destroyInternal();
-        throw new UnsupportedOperationException();
+        Realm realm = getRealmInternal();
+        if (realm instanceof Lifecycle) {
+            ((Lifecycle) realm).destroy();
+        }
+        Cluster cluster = getClusterInternal();
+        if (cluster instanceof Lifecycle) {
+            ((Lifecycle) cluster).destroy();
+        }
+
+        // Stop the Valves in our pipeline (including the basic), if any
+        if (pipeline instanceof Lifecycle) {
+            ((Lifecycle) pipeline).destroy();
+        }
+
+        // Remove children now this container is being destroyed
+        for (Container child : findChildren()) {
+            removeChild(child);
+        }
+
+        // Required if the child is destroyed directly.
+        if (parent != null) {
+            parent.removeChild(this);
+        }
+
+        super.destroyInternal();
     }
 
 
@@ -1019,19 +999,18 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     public void logAccess(Request request, Response response, long time, boolean useDefault) {
 
-//        boolean logged = false;
-//
-//        if (getAccessLog() != null) {
-//            getAccessLog().log(request, response, time);
-//            logged = true;
-//        }
-//
-//        if (getParent() != null) {
-//            // No need to use default logger once request/response has been logged
-//            // once
-//            getParent().logAccess(request, response, time, (useDefault && !logged));
-//        }
-        throw new UnsupportedOperationException();
+        boolean logged = false;
+
+        if (getAccessLog() != null) {
+            getAccessLog().log(request, response, time);
+            logged = true;
+        }
+
+        if (getParent() != null) {
+            // No need to use default logger once request/response has been logged
+            // once
+            getParent().logAccess(request, response, time, (useDefault && !logged));
+        }
     }
 
     @Override
@@ -1088,8 +1067,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     /**
      * Execute a periodic task, such as reloading, etc. This method will be invoked inside the classloading context of
      * this container. Unexpected throwables will be caught and logged.
-     *
-     * 执行周期性任务，例如重新加载等。该方法将在此容器的类加载上下文中调用。除此之外 throwables 将被捕获并记录。
      */
     @Override
     public void backgroundProcess() {
@@ -1150,56 +1127,28 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
 
     // ------------------------------------------------------ Protected Methods
-    /* +++++++++++++++++++++++++ */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ------------------------------------------------------ Protected Methods
 
     /**
      * Notify all container event listeners that a particular event has occurred for this Container. The default
      * implementation performs this notification synchronously using the calling thread.
-     * <p>
-     * 它在 Tomcat 的容器内被用来通知所有 注册的容器事件监听器 ，指定类型的事件已经发生。
-     * <p>
-     * 这个 fireContainerEvent 方法的作用是允许容器在发生特定事件（如添加或删除子容器、启动或停止容器等）时，
-     * 通知所有感兴趣的监听器。监听器可以是任何关心容器状态变化的组件，它们通过实现ContainerListener接口并注册到容器上来接收事件通知。
      *
      * @param type Event type
      * @param data Event data
      */
     @Override
     public void fireContainerEvent(String type, Object data) {
-        /* 1. 检查监听器数量 */
-        // 这行代码检查是否有注册的事件监听器。如果没有监听器注册，方法直接返回，不做任何操作。
+
         if (listeners.size() < 1) {
             return;
         }
-        /* 2. 创建事件对象 */
-        // 这行代码创建了一个新的ContainerEvent对象。这个事件对象包含了三个部分的信息：
-        // 发生事件的容器（this），事件的类型（type），以及与事件相关的数据（data）。
-        ContainerEvent event = new ContainerEvent(this, type, data);
 
-        /* 3. 通知所有监听器 */
-        // 方法遍历所有注册的容器事件监听器，并对每一个监听器调用其containerEvent方法，传入之前创建的事件对象。
-        // 这一步是同步进行的，使用的是调用 fireContainerEvent 方法的线程。
+        ContainerEvent event = new ContainerEvent(this, type, data);
         // Note for each uses an iterator internally so this is safe
         for (ContainerListener listener : listeners) {
-            // 这个方法是ContainerListener接口的一部分，任何实现了这个接口的类都必须提供这个方法的具体实现。
             listener.containerEvent(event);
         }
     }
+
 
     // -------------------- JMX and Registration --------------------
 
@@ -1214,11 +1163,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
     }
 
-    /**
-     * 用于生成管理Bean（MBean）的关键属性字符串。
-     *
-     * @return
-     */
+
     @Override
     public String getMBeanKeyProperties() {
         Container c = this;
@@ -1253,53 +1198,41 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
             }
             c = c.getParent();
         }
-        // 循环结束后，keyProperties 包含了表示容器层次结构的完整关键属性字符串。
         return keyProperties.toString();
     }
 
 
     public ObjectName[] getChildren() {
-//        List<ObjectName> names;
-//        synchronized (children) {
-//            names = new ArrayList<>(children.size());
-//            for (Container next : children.values()) {
-//                if (next instanceof ContainerBase) {
-//                    names.add(next.getObjectName());
-//                }
-//            }
-//        }
-//        return names.toArray(new ObjectName[0]);
-        throw new UnsupportedOperationException();
+        List<ObjectName> names;
+        synchronized (children) {
+            names = new ArrayList<>(children.size());
+            for (Container next : children.values()) {
+                if (next instanceof ContainerBase) {
+                    names.add(next.getObjectName());
+                }
+            }
+        }
+        return names.toArray(new ObjectName[0]);
     }
+
 
     // -------------------- Background Thread --------------------
 
     /**
      * Start the background thread that will periodically check for session timeouts.
-     * <p>
-     * 启动后台线程，定期检查会话超时
      */
     protected void threadStart() {
         if (backgroundProcessorDelay > 0 &&
                 (getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState())) &&
-                // 这确保了不会重复启动正在运行的后台处理器
                 (backgroundProcessorFuture == null || backgroundProcessorFuture.isDone())) {
-            /* 处理以前的后台处理器任务 */
-            // 如果 backgroundProcessorFuture 不为 null 且已经完成，这可能意味着之前的后台处理任务执行过程中发生了错误。
             if (backgroundProcessorFuture != null && backgroundProcessorFuture.isDone()) {
                 // There was an error executing the scheduled task, get it and log it
-                // 在这种情况下，尝试通过 backgroundProcessorFuture.get() 获取任务的结果或异常，并记录任何异常。
                 try {
                     backgroundProcessorFuture.get();
                 } catch (InterruptedException | ExecutionException e) {
                     log.error(sm.getString("containerBase.backgroundProcess.error"), e);
                 }
             }
-            // 通过调用 Container.getService(this).getServer().getUtilityExecutor() 获取一个执行器（Executor）。
-            // 使用这个执行器，调度一个新的 ContainerBackgroundProcessor 任务，使用 scheduleWithFixedDelay 方法。
-            // 这个任务将在初始延迟（backgroundProcessorDelay）之后开始执行，
-            // 然后以固定的延迟（也是 backgroundProcessorDelay）重复执行。
-            // 执行周期和延迟单位设置为秒（TimeUnit.SECONDS）。
             backgroundProcessorFuture = Container.getService(this).getServer().getUtilityExecutor()
                     .scheduleWithFixedDelay(new ContainerBackgroundProcessor(), backgroundProcessorDelay,
                             backgroundProcessorDelay, TimeUnit.SECONDS);
@@ -1309,18 +1242,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
 
     /**
      * Stop the background thread that is periodically checking for session timeouts.
-     * <p>
-     * 停止一个定期检查会话超时的后台线程。
      */
     protected void threadStop() {
-        // 如果 backgroundProcessorFuture 不为 null，这意味着存在一个正在运行或等待运行的后台处理任务。
         if (backgroundProcessorFuture != null) {
-            /* 取消后台处理任务 */
-            // 如果存在后台处理任务，尝试取消任务的执行
-            // 传递给 cancel 方法的 true 参数意味着如果任务正在运行，应该尝试中断它（即使任务正在执行，也要尝试停止它）
             backgroundProcessorFuture.cancel(true);
-            // 重置后台处理器引用
-            // 将 backgroundProcessorFuture 设置为 null，表示当前没有关联的后台处理任务
             backgroundProcessorFuture = null;
         }
     }
@@ -1340,6 +1265,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         sb.append(']');
         return sb.toString();
     }
+
     // ------------------------------- ContainerBackgroundProcessor Inner Class
 
     protected class ContainerBackgroundProcessorMonitor implements Runnable {
@@ -1373,23 +1299,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                         return;
                     }
 
-                    /*下面这行代码的关键作用是确保后台进程任务（如定时任务、资源清理等）在与Web应用相关联的类加载器环境中执行。
-                    这是必要的，因为Web应用可能会使用一些特定的类和资源，这些只能通过它自己的类加载器访问。
-                    在多Web应用运行环境（如Tomcat服务器）中，这种做法可以避免类加载冲突和资源访问问题。*/
-
                     // Ensure background processing for Contexts and Wrappers
                     // is performed under the web app's class loader
-                    /* 类加载器切换 */
-                    // bind 方法在这里被用来切换当前线程使用的类加载器。它将当前线程的类加载器设置为Web应用的类加载器。
-                    // 这意味着在执行背景处理任务时，任何类或资源的加载都将使用这个Web应用的类加载器，而不是系统默认的类加载器
-                    /* 存储原始类加载器 */
-                    // bind 方法返回原始的类加载器，这允许方法在完成背景处理任务后，能够将类加载器切换回原来的状态。这个返回值被
-                    // 存储在 originalClassLoader 变量中。
                     originalClassLoader = ((Context) container).bind(false, null);
                 }
-                //  执行容器的 后台进程 任务
                 container.backgroundProcess();
-                /* 处理子容器 */
                 Container[] children = container.findChildren();
                 for (Container child : children) {
                     if (child.getBackgroundProcessorDelay() <= 0) {
@@ -1401,12 +1315,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
                 log.error(sm.getString("containerBase.backgroundProcess.error"), t);
             } finally {
                 if (container instanceof Context) {
-                    // 将当前线程的类加载器重置为原始的类加载器
                     ((Context) container).unbind(false, originalClassLoader);
                 }
             }
         }
     }
+
 
     // ---------------------------- Inner classes used with start/stop Executor
 
