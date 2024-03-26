@@ -667,6 +667,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         try {
             load("MbeansDescriptorsDigesterSource", dURL, null);
         } catch (Exception ex) {
+            log.error("1111",ex);
             log.error(sm.getString("registry.loadError", dURL));
         }
     }

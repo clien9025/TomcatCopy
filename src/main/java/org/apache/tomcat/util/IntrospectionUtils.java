@@ -1,33 +1,41 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package org.apache.tomcat.util;
-
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.res.StringManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.res.StringManager;
+import org.apache.tomcat.util.security.PermissionCheck;
+
 /**
  * Utils for introspection and reflection
- * <p>
- * org.apache.tomcat.util.IntrospectionUtils 是 Apache Tomcat 服务器中的一个实用工具类，主要用于内省和反射。
- * 内省（Introspection）是一种通过反射来检查或修改程序运行时的状态的能力，这通常涉及到动态地调用方法、访问属性或检查对象类型等操作。
- * <p>
- * 在Tomcat中，IntrospectionUtils 主要用途包括：
- * 1. 属性设置：动态地为对象的属性赋值。它可以根据提供的属性名（通常是字符串）来查找相应的 setter 方法，并使用反射来调用这些方法，从而动态地设置对象的属性。
- * 2. 方法调用：通过反射机制调用对象的方法。
- * 3. 类型转换：将字符串转换为特定的类型，例如将字符串转换为布尔值或数字等。
- * 4. 查找方法：查找对象的特定方法，特别是带有特定名称和/或参数的方法。
  */
 public final class IntrospectionUtils {
 
     private static final Log log = LogFactory.getLog(IntrospectionUtils.class);
     private static final StringManager sm = StringManager.getManager(IntrospectionUtils.class);
-
 
     /**
      * Find a method with the right name If found, call the method ( if param is
@@ -47,47 +55,38 @@ public final class IntrospectionUtils {
         return setProperty(o, name, value, invokeSetProperty, null);
     }
 
-
     @SuppressWarnings("null") // setPropertyMethodVoid is not null when used
     public static boolean setProperty(Object o, String name, String value,
                                       boolean invokeSetProperty, StringBuilder actualMethod) {
-        // log 的级别不够就会返回 false ，然后就不开启调试
         if (log.isDebugEnabled()) {
             log.debug("IntrospectionUtils: setProperty(" +
                     o.getClass() + " " + name + "=" + value + ")");
         }
-        // XReflectionIntrospectionUtils.isEnabled() 这个方法永远返回 false；actualMethod 上面默认传入是 null（2023/1/6暂时理解）
+
         if (actualMethod == null && XReflectionIntrospectionUtils.isEnabled()) {
-            // 这方法里面永远抛出的是 throw new UnsupportedOperationException();
             return XReflectionIntrospectionUtils.setPropertyInternal(o, name, value, invokeSetProperty);
         }
 
         String setter = "set" + capitalize(name);
 
         try {
-            Method methods[] = findMethods(o.getClass());// 获取类里面的方法们
+            Method methods[] = findMethods(o.getClass());
             Method setPropertyMethodVoid = null;
             Method setPropertyMethodBool = null;
 
-            /* 第一步、找 setFoo( String ) 类型的方法 */
             // First, the ideal case - a setFoo( String ) method
             for (Method item : methods) {
                 Class<?> paramT[] = item.getParameterTypes();
-                // 判断是否是 setPort 方法以及传入的元素类型的长度是不是1以及（若前面的两个条件都满足的话，才会到达这个判断）获取的元素数组
-                // 的第一个元素是不是 String 类型的
                 if (setter.equals(item.getName()) && paramT.length == 1
                         && "java.lang.String".equals(paramT[0].getName())) {
-                    item.invoke(o, new Object[]{value});// 调用方法，以及将 value（参数） 放入创建的数组（数组可以放入多个参数，如果有需要的话）
+                    item.invoke(o, new Object[]{value});
                     if (actualMethod != null) {
-                        // 如果actualMethod不是null，这段代码会构建一个字符串，形式类似于someMethod("someValue")，
-                        // 其中someMethod是item.getName()的结果，而someValue是经过转义的value。
-                        // 这可能是在记录、构建动态代码或进行某种形式的处理中使用。
                         actualMethod.append(item.getName()).append("(\"").append(escape(value)).append("\")");
                     }
                     return true;
                 }
             }
-            /* 第二步、找 setFoo( int ) or ( boolean ) 类型的方法 */
+
             // Try a setFoo ( int ) or ( boolean )
             for (Method method : methods) {
                 boolean ok = true;
@@ -143,9 +142,7 @@ public final class IntrospectionUtils {
                         }
                         // Unknown type
                     } else {
-                        // 如果开启调试模式了 ---> logger.isLoggable(Level.FINE);
                         if (log.isDebugEnabled()) {
-                            // 就打印日志内容
                             log.debug("IntrospectionUtils: Unknown type " +
                                     paramType.getName());
                         }
@@ -156,20 +153,19 @@ public final class IntrospectionUtils {
                         return true;
                     }
                 }
-                /* 第三步、找 setProperty 方法 */
-                // save "setProperty" for later（如果有 setProperty 方法的话）
+
+                // save "setProperty" for later
                 if ("setProperty".equals(method.getName())) {
                     if (method.getReturnType() == Boolean.TYPE) {
-                        setPropertyMethodBool = method;// 保存到 布尔值类型
+                        setPropertyMethodBool = method;
                     } else {
-                        setPropertyMethodVoid = method;// 保存到 无返回值类型
+                        setPropertyMethodVoid = method;
                     }
 
                 }
             }
-            /* 第四步、找 setProperty("name", "value") 类型的方法 */
+
             // Ok, no setXXX found, try a setProperty("name", "value")
-            // invokeSetProperty 的值上面传的是 true
             if (invokeSetProperty && (setPropertyMethodBool != null ||
                     setPropertyMethodVoid != null)) {
                 if (actualMethod != null) {
@@ -182,13 +178,13 @@ public final class IntrospectionUtils {
                     try {
                         return ((Boolean) setPropertyMethodBool.invoke(o,
                                 params)).booleanValue();
-                    } catch (IllegalArgumentException biae) {
+                    }catch (IllegalArgumentException biae) {
                         //the boolean method had the wrong
                         //parameter types. lets try the other
-                        if (setPropertyMethodVoid != null) {
+                        if (setPropertyMethodVoid!=null) {
                             setPropertyMethodVoid.invoke(o, params);
                             return true;
-                        } else {
+                        }else {
                             throw biae;
                         }
                     }
@@ -207,27 +203,10 @@ public final class IntrospectionUtils {
         return false;
     }
 
-
     /**
-     * Reverse of Introspector.decapitalize.
-     *
-     * @param name The name
-     * @return the capitalized string
-     */
-    public static String capitalize(String name) {
-        if (name == null || name.length() == 0) {
-            return name;
-        }
-        char chars[] = name.toCharArray();
-        chars[0] = Character.toUpperCase(chars[0]);
-        return new String(chars);
-    }
-
-    /**
-     * @param s the input string
+     * @param s
+     *            the input string
      * @return escaped string, per Java rule
-     * <p>
-     * 根据 Java 规则转义字符串
      */
     public static String escape(String s) {
 
@@ -253,34 +232,17 @@ public final class IntrospectionUtils {
         return b.toString();
     }
 
-    /**
-     * 总体来说，这个方法实现了一种灵活的属性获取机制，首先尝试使用专门的反射工具（如果可用），然后尝试标准的 Java Bean getter 方法，
-     * 最后尝试 getProperty 方法。这种方法使得代码能够在不同的环境和约定下工作，增加了其适用性和健壮性。
-     *
-     * @param o
-     * @param name
-     * @return
-     */
     public static Object getProperty(Object o, String name) {
-        /* 1. 检查反射工具的启用状态 */
-        // 首先检查 XReflectionIntrospectionUtils.isEnabled() 是否返回 true。如果是，
-        // 使用 XReflectionIntrospectionUtils.getPropertyInternal(o, name) 来获取属性值，并返回
         if (XReflectionIntrospectionUtils.isEnabled()) {
             return XReflectionIntrospectionUtils.getPropertyInternal(o, name);
         }
-        /* 2. 构造 getter 方法名 */
-        // 如果上述工具未启用，代码构造标准的 Java Bean getter 方法名。对于属性名 name，标准的 getter 方法名是 "get" + name，
-        // 且第一个字母大写。对于布尔属性，还会尝试 "is" + name 形式的方法名
         String getter = "get" + capitalize(name);
         String isGetter = "is" + capitalize(name);
 
         try {
             Method methods[] = findMethods(o.getClass());
             Method getPropertyMethod = null;
-            /* 3. 查找并调用 getter 方法 */
-            // 使用 findMethods(o.getClass()) 获取对象 o 的所有方法。
-            // 遍历这些方法，寻找名为 getter 或 isGetter 且无参数的方法。
-            // 一旦找到，使用 method.invoke(o, (Object[]) null) 来调用该方法，并返回其返回值
+
             // First, the ideal case - a getFoo() method
             for (Method method : methods) {
                 Class<?> paramT[] = method.getParameterTypes();
@@ -290,8 +252,7 @@ public final class IntrospectionUtils {
                 if (isGetter.equals(method.getName()) && paramT.length == 0) {
                     return method.invoke(o, (Object[]) null);
                 }
-                /* 4. 尝试使用 getProperty 方法 */
-                // 如果没有找到标准的 getter 方法，代码会查找名为 "getProperty" 的方法。如果找到，尝试以属性名 name 作为参数调用该方法
+
                 if ("getProperty".equals(method.getName())) {
                     getPropertyMethod = method;
                 }
@@ -317,15 +278,144 @@ public final class IntrospectionUtils {
         return null;
     }
 
-    // -------------------- other utils --------------------
-//    public static void clear() {
-//        objectMethods.clear();
-//    }
+    /**
+     * Replaces ${NAME} in the value with the value of the property 'NAME'.
+     * Replaces ${NAME:DEFAULT} with the value of the property 'NAME:DEFAULT',
+     * if the property 'NAME:DEFAULT' is not set,
+     * the expression is replaced with the value of the property 'NAME',
+     * if the property 'NAME' is not set,
+     * the expression is replaced with 'DEFAULT'.
+     * If the property is not set and there is no default the value will be
+     * returned unmodified.
+     *
+     * @param value The value
+     * @param staticProp Replacement properties
+     * @param dynamicProp Replacement properties
+     * @param classLoader Class loader associated with the code requesting the
+     *                    property
+     *
+     * @return the replacement value
+     */
+    public static String replaceProperties(String value,
+                                           Hashtable<Object,Object> staticProp, PropertySource dynamicProp[],
+                                           ClassLoader classLoader) {
+//        return replaceProperties(value, staticProp, dynamicProp, classLoader, 0);
+        throw new UnsupportedOperationException();
+    }
 
-    private static final Map<Class<?>, Method[]> objectMethods = new ConcurrentHashMap<>();
+    private static String replaceProperties(String value,
+                                            Hashtable<Object,Object> staticProp, PropertySource dynamicProp[],
+                                            ClassLoader classLoader, int iterationCount) {
+//        if (value == null || value.indexOf("${") < 0) {
+//            return value;
+//        }
+//        if (iterationCount >=20) {
+//            log.warn("System property failed to update and remains [" + value + "]");
+//            return value;
+//        }
+//        StringBuilder sb = new StringBuilder();
+//        int prev = 0;
+//        // assert value!=nil
+//        int pos;
+//        while ((pos = value.indexOf('$', prev)) >= 0) {
+//            if (pos > 0) {
+//                sb.append(value.substring(prev, pos));
+//            }
+//            if (pos == (value.length() - 1)) {
+//                sb.append('$');
+//                prev = pos + 1;
+//            } else if (value.charAt(pos + 1) != '{') {
+//                sb.append('$');
+//                prev = pos + 1; // XXX
+//            } else {
+//                int endName = value.indexOf('}', pos);
+//                if (endName < 0) {
+//                    sb.append(value.substring(pos));
+//                    prev = value.length();
+//                    continue;
+//                }
+//                String n = value.substring(pos + 2, endName);
+//                String v = getProperty(n, staticProp, dynamicProp, classLoader);
+//                if (v == null) {
+//                    // {name:default}
+//                    int col = n.indexOf(":-");
+//                    if (col != -1) {
+//                        String dV = n.substring(col + 2);
+//                        n = n.substring(0, col);
+//                        v = getProperty(n, staticProp, dynamicProp, classLoader);
+//                        if (v == null) {
+//                            v = dV;
+//                        }
+//                    } else {
+//                        v = "${" + n + "}";
+//                    }
+//                }
+//                sb.append(v);
+//                prev = endName + 1;
+//            }
+//        }
+//        if (prev < value.length()) {
+//            sb.append(value.substring(prev));
+//        }
+//        String newval = sb.toString();
+//        if (newval.indexOf("${") < 0) {
+//            return newval;
+//        }
+//        if (newval.equals(value)) {
+//            return value;
+//        }
+//        if (log.isDebugEnabled()) {
+//            log.debug("IntrospectionUtils.replaceProperties iter on: " + newval);
+//        }
+//        return replaceProperties(newval, staticProp, dynamicProp, classLoader, iterationCount+1);
+        throw new UnsupportedOperationException();
+    }
+
+    private static String getProperty(String name, Hashtable<Object, Object> staticProp,
+                                      PropertySource[] dynamicProp, ClassLoader classLoader) {
+//        String v = null;
+//        if (staticProp != null) {
+//            v = (String) staticProp.get(name);
+//        }
+//        if (v == null && dynamicProp != null) {
+//            for (PropertySource propertySource : dynamicProp) {
+//                if (propertySource instanceof SecurePropertySource) {
+//                    v = ((SecurePropertySource) propertySource).getProperty(name, classLoader);
+//                } else {
+//                    v = propertySource.getProperty(name);
+//                }
+//                if (v != null) {
+//                    break;
+//                }
+//            }
+//        }
+//        return v;
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Reverse of Introspector.decapitalize.
+     * @param name The name
+     * @return the capitalized string
+     */
+    public static String capitalize(String name) {
+//        if (name == null || name.length() == 0) {
+//            return name;
+//        }
+//        char chars[] = name.toCharArray();
+//        chars[0] = Character.toUpperCase(chars[0]);
+//        return new String(chars);
+        throw new UnsupportedOperationException();
+    }
+
+    // -------------------- other utils --------------------
+    public static void clear() {
+        objectMethods.clear();
+    }
+
+    private static final Map<Class<?>,Method[]> objectMethods = new ConcurrentHashMap<>();
 
     public static Method[] findMethods(Class<?> c) {
-        /* 先从 map 里面获取类，没有找到就使用反射去获取方法们 */
         Method methods[] = objectMethods.get(c);
         if (methods != null) {
             return methods;
@@ -334,5 +424,216 @@ public final class IntrospectionUtils {
         methods = c.getMethods();
         objectMethods.put(c, methods);
         return methods;
+    }
+
+    public static Method findMethod(Class<?> c, String name,
+                                    Class<?> params[]) {
+//        Method methods[] = findMethods(c);
+//        for (Method method : methods) {
+//            if (method.getName().equals(name)) {
+//                Class<?> methodParams[] = method.getParameterTypes();
+//                if (params == null) {
+//                    if (methodParams.length == 0) {
+//                        return method;
+//                    } else {
+//                        continue;
+//                    }
+//                }
+//                if (params.length != methodParams.length) {
+//                    continue;
+//                }
+//                boolean found = true;
+//                for (int j = 0; j < params.length; j++) {
+//                    if (params[j] != methodParams[j]) {
+//                        found = false;
+//                        break;
+//                    }
+//                }
+//                if (found) {
+//                    return method;
+//                }
+//            }
+//        }
+//        return null;
+        throw new UnsupportedOperationException();
+    }
+
+    public static Object callMethod1(Object target, String methodN,
+                                     Object param1, String typeParam1, ClassLoader cl) throws Exception {
+//        if (target == null || methodN == null || param1 == null) {
+//            throw new IllegalArgumentException(sm.getString("introspectionUtils.nullParameter"));
+//        }
+//        if (log.isDebugEnabled()) {
+//            log.debug("IntrospectionUtils: callMethod1 " +
+//                    target.getClass().getName() + " " +
+//                    param1.getClass().getName() + " " + typeParam1);
+//        }
+//
+//        Class<?> params[] = new Class[1];
+//        if (typeParam1 == null) {
+//            params[0] = param1.getClass();
+//        } else {
+//            params[0] = cl.loadClass(typeParam1);
+//        }
+//        Method m = findMethod(target.getClass(), methodN, params);
+//        if (m == null) {
+//            throw new NoSuchMethodException(target.getClass().getName() + " "
+//                    + methodN);
+//        }
+//        try {
+//            return m.invoke(target, new Object[] { param1 });
+//        } catch (InvocationTargetException ie) {
+//            ExceptionUtils.handleThrowable(ie.getCause());
+//            throw ie;
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+    public static Object callMethodN(Object target, String methodN,
+                                     Object params[], Class<?> typeParams[]) throws Exception {
+//        Method m = null;
+//        m = findMethod(target.getClass(), methodN, typeParams);
+//        if (m == null) {
+//            if (log.isDebugEnabled()) {
+//                log.debug("IntrospectionUtils: Can't find method " + methodN +
+//                        " in " + target + " CLASS " + target.getClass());
+//            }
+//            return null;
+//        }
+//        try {
+//            Object o = m.invoke(target, params);
+//
+//            if (log.isDebugEnabled()) {
+//                // debug
+//                StringBuilder sb = new StringBuilder();
+//                sb.append(target.getClass().getName()).append('.').append(methodN).append('(');
+//                for (int i = 0; i < params.length; i++) {
+//                    if (i > 0) {
+//                        sb.append(", ");
+//                    }
+//                    sb.append(params[i]);
+//                }
+//                sb.append(')');
+//                log.debug("IntrospectionUtils:" + sb.toString());
+//            }
+//            return o;
+//        } catch (InvocationTargetException ie) {
+//            ExceptionUtils.handleThrowable(ie.getCause());
+//            throw ie;
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+    public static Object convert(String object, Class<?> paramType) {
+//        Object result = null;
+//        if ("java.lang.String".equals(paramType.getName())) {
+//            result = object;
+//        } else if ("java.lang.Integer".equals(paramType.getName())
+//                || "int".equals(paramType.getName())) {
+//            try {
+//                result = Integer.valueOf(object);
+//            } catch (NumberFormatException ex) {
+//            }
+//            // Try a setFoo ( boolean )
+//        } else if ("java.lang.Boolean".equals(paramType.getName())
+//                || "boolean".equals(paramType.getName())) {
+//            result = Boolean.valueOf(object);
+//
+//            // Try a setFoo ( InetAddress )
+//        } else if ("java.net.InetAddress".equals(paramType
+//                .getName())) {
+//            try {
+//                result = InetAddress.getByName(object);
+//            } catch (UnknownHostException exc) {
+//                if (log.isDebugEnabled()) {
+//                    log.debug("IntrospectionUtils: Unable to resolve host name:" +
+//                            object);
+//                }
+//            }
+//
+//            // Unknown type
+//        } else {
+//            if (log.isDebugEnabled()) {
+//                log.debug("IntrospectionUtils: Unknown type " +
+//                        paramType.getName());
+//            }
+//        }
+//        if (result == null) {
+//            throw new IllegalArgumentException(sm.getString("introspectionUtils.conversionError", object, paramType.getName()));
+//        }
+//        return result;
+        throw new UnsupportedOperationException();
+    }
+
+
+    /**
+     * Checks to see if the specified class is an instance of or assignable from
+     * the specified type. The class <code>clazz</code>, all its superclasses,
+     * interfaces and those superinterfaces are tested for a match against
+     * the type name <code>type</code>.
+     *
+     * This is similar to <code>instanceof</code> or {@link Class#isAssignableFrom}
+     * except that the target type will not be resolved into a Class
+     * object, which provides some security and memory benefits.
+     *
+     * @param clazz The class to test for a match.
+     * @param type The name of the type that <code>clazz</code> must be.
+     *
+     * @return <code>true</code> if the <code>clazz</code> tested is an
+     *         instance of the specified <code>type</code>,
+     *         <code>false</code> otherwise.
+     */
+    public static boolean isInstance(Class<?> clazz, String type) {
+//        if (type.equals(clazz.getName())) {
+//            return true;
+//        }
+//
+//        Class<?>[] ifaces = clazz.getInterfaces();
+//        for (Class<?> iface : ifaces) {
+//            if (isInstance(iface, type)) {
+//                return true;
+//            }
+//        }
+//
+//        Class<?> superClazz = clazz.getSuperclass();
+//        if (superClazz == null) {
+//            return false;
+//        } else {
+//            return isInstance(superClazz, type);
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+
+    // -------------------- Get property --------------------
+    // This provides a layer of abstraction
+
+    public interface PropertySource {
+        default String getProperty(String key) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+
+    public interface SecurePropertySource extends PropertySource {
+
+        /**
+         * Obtain a property value, checking that code associated with the
+         * provided class loader has permission to access the property. If the
+         * {@code classLoader} is {@code null} or if {@code classLoader} does
+         * not implement {@link PermissionCheck} then the property value will be
+         * looked up <b>without</b> a call to
+         * {@link PermissionCheck#check(java.security.Permission)}
+         *
+         * @param key         The key of the requested property
+         * @param classLoader The class loader associated with the code that
+         *                    trigger the property lookup
+         * @return The property value or {@code null} if it could not be found
+         * or if {@link PermissionCheck#check(java.security.Permission)}
+         * fails
+         */
+        default String getProperty(String key, ClassLoader classLoader) {
+            throw new UnsupportedOperationException();
+        }
     }
 }
