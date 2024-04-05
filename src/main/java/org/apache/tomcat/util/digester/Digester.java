@@ -1589,11 +1589,10 @@ public class Digester extends DefaultHandler2 {
      */
     public void register(String publicId, String entityURL) {
 
-//        if (log.isDebugEnabled()) {
-//            log.debug("register('" + publicId + "', '" + entityURL + "'");
-//        }
-//        entityValidator.put(publicId, entityURL);
-        throw new UnsupportedOperationException();
+        if (log.isDebugEnabled()) {
+            log.debug("register('" + publicId + "', '" + entityURL + "'");
+        }
+        entityValidator.put(publicId, entityURL);
 
     }
 
